@@ -81,21 +81,15 @@
                         histoire.</p>
                     <a href="service.php#video" class="service-link">EN SAVOIR PLUS <i class="fas fa-arrow-right"></i></a>
                 </div>
-                <!-- Service 4: Conception Graphique -->
-                <div class="service-card">
-                    <div class="icon-box"><i class="fas fa-pencil-ruler"></i></div>
-                    <h3>Conception Graphique</h3>
-                    <p>Concu avec le logo. Création d'identités visuelles, supports marketing et design éditorial.</p>
-                    <a href="#" class="service-link">EN SAVOIR PLUS <i class="fas fa-arrow-right"></i></a>
-                </div>
-                <!-- Service 5: Prises de vue par Drone -->
+
+                <!-- Service 4: Prises de vue par Drone -->
                 <div class="service-card">
                     <div class="icon-box"><i class="fas fa-paper-plane"></i></div>
                     <h3>Prises de vue par Drone</h3>
                     <p>Prenez de la hauteur. Photos et vidéos aériennes spectaculaires pour valoriser vos projets immobiliers ou événementiels.</p>
                     <a href="service.php#drone" class="service-link">EN SAVOIR PLUS <i class="fas fa-arrow-right"></i></a>
                 </div>
-                <!-- Service 6: Productions Produits -->
+                <!-- Service 5: Productions Produits -->
                 <div class="service-card">
                     <div class="icon-box"><i class="fas fa-box"></i></div>
                     <h3>Photographie de Produits</h3>
