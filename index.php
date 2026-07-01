@@ -177,6 +177,170 @@
         </div>
     </section>
 
+    <!-- ============================================================
+         SECTION TÉMOIGNAGES CLIENTS
+         ============================================================ -->
+    <section id="temoignages" class="temoignages">
+        <div class="temoignages-bg-deco" aria-hidden="true"></div>
+        <div class="container">
+            <span class="section-pretitle temoignages-pretitle">ILS NOUS FONT CONFIANCE</span>
+            <h2 class="section-title temoignages-title">Ce que disent <span>nos clients</span></h2>
+
+            <!-- Carrousel wrapper -->
+            <div class="temoignages-track-wrap" id="temoignages-track-wrap">
+                <div class="temoignages-track" id="temoignages-track">
+
+                    <!-- Témoignage 1 -->
+                    <div class="temoignage-card">
+                        <div class="temoignage-quote-icon"><i class="fas fa-quote-left"></i></div>
+                        <div class="temoignage-stars">
+                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i><i class="fas fa-star"></i>
+                        </div>
+                        <p class="temoignage-text">
+                            "Un travail absolument remarquable ! Les photos de notre conférence annuelle ont dépassé toutes nos attentes. L'équipe NY TIA SARY sait capter l'émotion et le professionnalisme dans chaque cliché. Nous les recommandons vivement."
+                        </p>
+                        <div class="temoignage-author">
+                            <div class="temoignage-avatar" style="background-color: #377d49;">
+                                <span>RR</span>
+                            </div>
+                            <div class="temoignage-info">
+                                <strong>Ranja Rakotondrabe</strong>
+                                <span>Directeur Général — Groupe Tana Business</span>
+                            </div>
+                        </div>
+                        <div class="temoignage-service-badge"><i class="fas fa-calendar-alt"></i> Événementiel Corporate</div>
+                    </div>
+
+                    <!-- Témoignage 2 -->
+                    <div class="temoignage-card">
+                        <div class="temoignage-quote-icon"><i class="fas fa-quote-left"></i></div>
+                        <div class="temoignage-stars">
+                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i><i class="fas fa-star"></i>
+                        </div>
+                        <p class="temoignage-text">
+                            "Notre mariage était le plus beau jour de notre vie, et NY TIA SARY l'a immortalisé avec une sensibilité rare. Le clip cinématique nous fait revivre chaque instant. Merci du fond du cœur pour ce cadeau inestimable."
+                        </p>
+                        <div class="temoignage-author">
+                            <div class="temoignage-avatar" style="background-color: #d93d3d;">
+                                <span>SH</span>
+                            </div>
+                            <div class="temoignage-info">
+                                <strong>Sandra & Hery</strong>
+                                <span>Jeunes mariés — Antananarivo</span>
+                            </div>
+                        </div>
+                        <div class="temoignage-service-badge"><i class="fas fa-heart"></i> Reportage Mariage</div>
+                    </div>
+
+                    <!-- Témoignage 3 -->
+                    <div class="temoignage-card">
+                        <div class="temoignage-quote-icon"><i class="fas fa-quote-left"></i></div>
+                        <div class="temoignage-stars">
+                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
+                        </div>
+                        <p class="temoignage-text">
+                            "Les packshots réalisés pour notre catalogue ont transformé l'image de notre marque. Résultat ultra-professionnel, délais respectés et équipe très à l'écoute. Nos ventes en ligne ont augmenté de 30% après la publication des nouvelles photos !"
+                        </p>
+                        <div class="temoignage-author">
+                            <div class="temoignage-avatar" style="background-color: #2a5c8a;">
+                                <span>ML</span>
+                            </div>
+                            <div class="temoignage-info">
+                                <strong>Marie-Luce Andriamahefa</strong>
+                                <span>Fondatrice — Bijouterie Lova</span>
+                            </div>
+                        </div>
+                        <div class="temoignage-service-badge"><i class="fas fa-box"></i> Photographie Produit</div>
+                    </div>
+
+                    <!-- Témoignage 4 -->
+                    <div class="temoignage-card">
+                        <div class="temoignage-quote-icon"><i class="fas fa-quote-left"></i></div>
+                        <div class="temoignage-stars">
+                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i><i class="fas fa-star"></i>
+                        </div>
+                        <p class="temoignage-text">
+                            "Le film institutionnel réalisé pour notre ONG est d'une qualité cinématographique impressionnante. NY TIA SARY a su comprendre notre mission et la traduire en images puissantes. Un vrai partenaire créatif."
+                        </p>
+                        <div class="temoignage-author">
+                            <div class="temoignage-avatar" style="background-color: #7d5a2a;">
+                                <span>TF</span>
+                            </div>
+                            <div class="temoignage-info">
+                                <strong>Toky Fandresena</strong>
+                                <span>Coordinateur — ONG Avotra Mada</span>
+                            </div>
+                        </div>
+                        <div class="temoignage-service-badge"><i class="fas fa-video"></i> Production Vidéo</div>
+                    </div>
+
+                    <!-- Témoignage 5 -->
+                    <div class="temoignage-card">
+                        <div class="temoignage-quote-icon"><i class="fas fa-quote-left"></i></div>
+                        <div class="temoignage-stars">
+                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i><i class="fas fa-star"></i>
+                        </div>
+                        <p class="temoignage-text">
+                            "Les prises de vue drone de notre résidence hôtelière sont spectaculaires. La qualité aérienne a séduit nos partenaires investisseurs dès la première présentation. Professionnalisme et créativité au rendez-vous !"
+                        </p>
+                        <div class="temoignage-author">
+                            <div class="temoignage-avatar" style="background-color: #5a3a7d;">
+                                <span>JR</span>
+                            </div>
+                            <div class="temoignage-info">
+                                <strong>Jean-Paul Razafy</strong>
+                                <span>PDG — Résidence Belle Vue Nosy Be</span>
+                            </div>
+                        </div>
+                        <div class="temoignage-service-badge"><i class="fas fa-paper-plane"></i> Drone Immobilier</div>
+                    </div>
+
+                </div><!-- /.temoignages-track -->
+            </div><!-- /.temoignages-track-wrap -->
+
+            <!-- Contrôles de navigation -->
+            <div class="temoignages-controls">
+                <button class="temoignage-btn" id="temoignage-prev" aria-label="Témoignage précédent">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <div class="temoignage-dots" id="temoignage-dots">
+                    <span class="temoignage-dot active" data-index="0"></span>
+                    <span class="temoignage-dot" data-index="1"></span>
+                    <span class="temoignage-dot" data-index="2"></span>
+                    <span class="temoignage-dot" data-index="3"></span>
+                    <span class="temoignage-dot" data-index="4"></span>
+                </div>
+                <button class="temoignage-btn" id="temoignage-next" aria-label="Témoignage suivant">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+
+            <!-- Stats globales -->
+            <div class="temoignages-stats">
+                <div class="temoignages-stat">
+                    <strong>4.9<i class="fas fa-star"></i></strong>
+                    <span>Note moyenne</span>
+                </div>
+                <div class="temoignages-stat-sep"></div>
+                <div class="temoignages-stat">
+                    <strong>120+</strong>
+                    <span>Clients satisfaits</span>
+                </div>
+                <div class="temoignages-stat-sep"></div>
+                <div class="temoignages-stat">
+                    <strong>100%</strong>
+                    <span>Recommandés</span>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
     <!-- Footer page -->
      <?php include "composante/footer.php"?>
 

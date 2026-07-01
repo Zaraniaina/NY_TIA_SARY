@@ -149,4 +149,79 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
+    // 7. Carrousel Témoignages
+    const track      = document.getElementById('temoignages-track');
+    const prevBtn    = document.getElementById('temoignage-prev');
+    const nextBtn    = document.getElementById('temoignage-next');
+    const dots       = document.querySelectorAll('.temoignage-dot');
+
+    if (track && prevBtn && nextBtn && dots.length) {
+        const cards        = track.querySelectorAll('.temoignage-card');
+        const totalCards   = cards.length;
+        let currentIndex   = 0;
+        let autoPlayTimer  = null;
+
+        // Determine how many cards are visible based on viewport width
+        const getVisibleCount = () => {
+            if (window.innerWidth <= 680)  return 1;
+            if (window.innerWidth <= 1024) return 2;
+            return 3;
+        };
+
+        const maxIndex = () => totalCards - getVisibleCount();
+
+        const goTo = (index) => {
+            const max = maxIndex();
+            currentIndex = Math.max(0, Math.min(index, max));
+
+            // Card width = track width / visible count + gap contribution
+            const wrapWidth  = track.parentElement.offsetWidth;
+            const visible    = getVisibleCount();
+            const gap        = 30;
+            const cardWidth  = (wrapWidth - gap * (visible - 1)) / visible;
+            const offset     = currentIndex * (cardWidth + gap);
+
+            track.style.transform = `translateX(-${offset}px)`;
+
+            // Update dots
+            dots.forEach((d, i) => d.classList.toggle('active', i === currentIndex));
+        };
+
+        const next = () => goTo(currentIndex >= maxIndex() ? 0 : currentIndex + 1);
+        const prev = () => goTo(currentIndex <= 0 ? maxIndex() : currentIndex - 1);
+
+        nextBtn.addEventListener('click', () => { next(); resetAutoPlay(); });
+        prevBtn.addEventListener('click', () => { prev(); resetAutoPlay(); });
+
+        dots.forEach(dot => {
+            dot.addEventListener('click', () => {
+                goTo(parseInt(dot.dataset.index, 10));
+                resetAutoPlay();
+            });
+        });
+
+        // Auto-play every 5 seconds
+        const startAutoPlay = () => { autoPlayTimer = setInterval(next, 5000); };
+        const resetAutoPlay = () => { clearInterval(autoPlayTimer); startAutoPlay(); };
+
+        startAutoPlay();
+
+        // Pause on hover
+        track.addEventListener('mouseenter', () => clearInterval(autoPlayTimer));
+        track.addEventListener('mouseleave', startAutoPlay);
+
+        // Recalculate on resize
+        window.addEventListener('resize', () => goTo(currentIndex));
+
+        // Touch / swipe support
+        let touchStartX = 0;
+        track.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+        track.addEventListener('touchend', e => {
+            const diff = touchStartX - e.changedTouches[0].clientX;
+            if (Math.abs(diff) > 50) { diff > 0 ? next() : prev(); resetAutoPlay(); }
+        });
+
+        // Initial render
+        goTo(0);
+    }
 });
