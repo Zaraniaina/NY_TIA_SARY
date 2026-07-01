@@ -1168,3 +1168,202 @@
                 font-size: 0.9rem;
             }
         }
+
+        /* ============================================================
+           10. DETAILED SERVICES PAGE (Grand Plan Alterné)
+           ============================================================ */
+        .services-detail-container {
+            padding: 80px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 120px;
+        }
+
+        .service-detail-row {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 80px;
+            align-items: center;
+        }
+
+        .service-detail-row:nth-child(even) {
+            grid-template-columns: 0.9fr 1.1fr;
+        }
+
+        .service-detail-row:nth-child(even) .service-detail-image-box {
+            order: 2;
+        }
+
+        .service-detail-row:nth-child(even) .service-detail-content {
+            order: 1;
+        }
+
+        /* Image reference styling */
+        .service-detail-image-box {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            aspect-ratio: 4/3;
+        }
+
+        .service-detail-image-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        .service-detail-image-box:hover img {
+            transform: scale(1.05);
+        }
+
+        /* Decorative bracket or outline on image */
+        .service-detail-image-box::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            pointer-events: none;
+            z-index: 2;
+            transition: var(--transition-smooth);
+        }
+
+        .service-detail-image-box:hover::before {
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            bottom: 15px;
+            border-color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Content styling */
+        .service-detail-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .service-detail-tag {
+            font-family: var(--font-headings);
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--primary-green);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            display: inline-block;
+        }
+
+        .service-detail-content h2 {
+            font-family: var(--font-headings);
+            font-size: 2.8rem;
+            font-weight: 800;
+            color: var(--logo-black);
+            line-height: 1.2;
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+        }
+
+        .service-detail-content h2 span {
+            color: var(--primary-red);
+        }
+
+        .service-detail-content p {
+            font-size: 1.1rem;
+            color: var(--text-body);
+            line-height: 1.8;
+            margin-bottom: 30px;
+        }
+
+        /* Sub-services layout grid */
+        .sub-services-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .sub-service-card {
+            background-color: var(--white);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-green);
+            box-shadow: var(--shadow-subtle);
+            transition: var(--transition-smooth);
+        }
+
+        .service-detail-row:nth-child(even) .sub-service-card {
+            border-left-color: var(--primary-red);
+        }
+
+        .sub-service-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .sub-service-card h4 {
+            font-family: var(--font-headings);
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--logo-black);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sub-service-card h4 i {
+            color: var(--primary-green);
+            font-size: 0.95rem;
+        }
+
+        .service-detail-row:nth-child(even) .sub-service-card h4 i {
+            color: var(--primary-red);
+        }
+
+        .sub-service-card p {
+            font-size: 0.9rem;
+            color: var(--text-body);
+            line-height: 1.5;
+            margin-bottom: 0;
+        }
+
+        /* Responsive styling for detailed services */
+        @media (max-width: 992px) {
+            .services-detail-container {
+                gap: 80px;
+            }
+
+            .service-detail-row {
+                grid-template-columns: 1fr !important;
+                gap: 40px;
+            }
+
+            .service-detail-row:nth-child(even) .service-detail-image-box {
+                order: 1;
+            }
+
+            .service-detail-row:nth-child(even) .service-detail-content {
+                order: 2;
+            }
+
+            .service-detail-content h2 {
+                font-size: 2.2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sub-services-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .service-detail-content h2 {
+                font-size: 1.8rem;
+            }
+        }
