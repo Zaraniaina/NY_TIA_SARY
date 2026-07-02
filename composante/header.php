@@ -17,7 +17,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <li class="nav-item"><a href="service.php" class="nav-link <?php echo ($current_page == 'service.php') ? 'active' : ''; ?>">Services</a></li>
                 <li class="nav-item"><a href="portfolio.php" class="nav-link <?php echo ($current_page == 'portfolio.php') ? 'active' : ''; ?>">Portfolio</a></li>
                 <li class="nav-item"><a href="#contact" class="nav-link">Contact</a></li>
-                <li class="nav-item"><a href="#booking" class="btn btn-outline btn-sm"><i
+                <li class="nav-item"><a href="login/login.php" class="btn btn-outline btn-sm"><i
                             class="far fa-calendar-check"></i>&nbsp; Réserver</a></li>
             </ul>
         </div>
