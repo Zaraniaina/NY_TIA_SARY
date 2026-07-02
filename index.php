@@ -198,7 +198,7 @@
                             <i class="fas fa-star"></i><i class="fas fa-star"></i>
                         </div>
                         <p class="temoignage-text">
-                            "Un travail absolument remarquable ! Les photos de notre conférence annuelle ont dépassé toutes nos attentes. L'équipe NY TIA SARY sait capter l'émotion et le professionnalisme dans chaque cliché. Nous les recommandons vivement."
+                            "Un travail absolument remarquable ! Les photos de notre conférence annuelle ont dépassé toutes nos attentes.<br/> L'équipe NY TIA SARY sait capter l'émotion et le professionnalisme dans chaque cliché.<br/>  Nous les recommandons vivement."
                         </p>
                         <div class="temoignage-author">
                             <div class="temoignage-avatar" style="background-color: #377d49;">
@@ -220,7 +220,7 @@
                             <i class="fas fa-star"></i><i class="fas fa-star"></i>
                         </div>
                         <p class="temoignage-text">
-                            "Notre mariage était le plus beau jour de notre vie, et NY TIA SARY l'a immortalisé avec une sensibilité rare. Le clip cinématique nous fait revivre chaque instant. Merci du fond du cœur pour ce cadeau inestimable."
+                            "Notre mariage était le plus beau jour de notre vie,<br/>  et NY TIA SARY l'a immortalisé avec une sensibilité rare.<br/>Le clip cinématique nous fait revivre chaque instant. <br/> Merci du fond du cœur pour ce cadeau inestimable."
                         </p>
                         <div class="temoignage-author">
                             <div class="temoignage-avatar" style="background-color: #d93d3d;">
@@ -242,7 +242,8 @@
                             <i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
                         </div>
                         <p class="temoignage-text">
-                            "Les packshots réalisés pour notre catalogue ont transformé l'image de notre marque. Résultat ultra-professionnel, délais respectés et équipe très à l'écoute. Nos ventes en ligne ont augmenté de 30% après la publication des nouvelles photos !"
+                            "Les packshots réalisés pour notre catalogue ont transformé l'image de notre marque.<br/> 
+                             Résultat ultra-professionnel, délais respectés et équipe très à l'écoute.<br/>  Nos ventes en ligne ont augmenté de 30% après la publication des nouvelles photos !"
                         </p>
                         <div class="temoignage-author">
                             <div class="temoignage-avatar" style="background-color: #2a5c8a;">
@@ -257,14 +258,15 @@
                     </div>
 
                     <!-- Témoignage 4 -->
-                    <div class="temoignage-card">
+                    <div class="temoignage-card" >
                         <div class="temoignage-quote-icon"><i class="fas fa-quote-left"></i></div>
                         <div class="temoignage-stars">
                             <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
                             <i class="fas fa-star"></i><i class="fas fa-star"></i>
                         </div>
                         <p class="temoignage-text">
-                            "Le film institutionnel réalisé pour notre ONG est d'une qualité cinématographique impressionnante. NY TIA SARY a su comprendre notre mission et la traduire en images puissantes. Un vrai partenaire créatif."
+                            "Le film institutionnel réalisé pour notre ONG est d'une qualité cinématographique impressionnante.<br/> 
+                            NY TIA SARY a su comprendre notre mission et la traduire en images puissantes. Un vrai partenaire créatif."
                         </p>
                         <div class="temoignage-author">
                             <div class="temoignage-avatar" style="background-color: #7d5a2a;">
@@ -286,7 +288,9 @@
                             <i class="fas fa-star"></i><i class="fas fa-star"></i>
                         </div>
                         <p class="temoignage-text">
-                            "Les prises de vue drone de notre résidence hôtelière sont spectaculaires. La qualité aérienne a séduit nos partenaires investisseurs dès la première présentation. Professionnalisme et créativité au rendez-vous !"
+                            "Les prises de vue drone de notre résidence hôtelière sont spectaculaires.<br/>
+                            La qualité aérienne a séduit nos partenaires investisseurs dès la première présentation. <br/>
+                            Professionnalisme et créativité au rendez-vous !"
                         </p>
                         <div class="temoignage-author">
                             <div class="temoignage-avatar" style="background-color: #5a3a7d;">

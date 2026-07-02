@@ -150,20 +150,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     // 7. Carrousel Témoignages
-    const track      = document.getElementById('temoignages-track');
-    const prevBtn    = document.getElementById('temoignage-prev');
-    const nextBtn    = document.getElementById('temoignage-next');
-    const dots       = document.querySelectorAll('.temoignage-dot');
+    const track = document.getElementById('temoignages-track');
+    const prevBtn = document.getElementById('temoignage-prev');
+    const nextBtn = document.getElementById('temoignage-next');
+    const dots = document.querySelectorAll('.temoignage-dot');
 
     if (track && prevBtn && nextBtn && dots.length) {
-        const cards        = track.querySelectorAll('.temoignage-card');
-        const totalCards   = cards.length;
-        let currentIndex   = 0;
-        let autoPlayTimer  = null;
+        const cards = track.querySelectorAll('.temoignage-card');
+        const totalCards = cards.length;
+        let currentIndex = 0;
+        let autoPlayTimer = null;
 
         // Determine how many cards are visible based on viewport width
         const getVisibleCount = () => {
-            if (window.innerWidth <= 680)  return 1;
+            if (window.innerWidth <= 680) return 1;
             if (window.innerWidth <= 1024) return 2;
             return 3;
         };
@@ -175,11 +175,11 @@ document.addEventListener('DOMContentLoaded', () => {
             currentIndex = Math.max(0, Math.min(index, max));
 
             // Card width = track width / visible count + gap contribution
-            const wrapWidth  = track.parentElement.offsetWidth;
-            const visible    = getVisibleCount();
-            const gap        = 30;
-            const cardWidth  = (wrapWidth - gap * (visible - 1)) / visible;
-            const offset     = currentIndex * (cardWidth + gap);
+            const wrapWidth = track.parentElement.offsetWidth;
+            const visible = getVisibleCount();
+            const gap = 30;
+            const cardWidth = (wrapWidth - gap * (visible - 1)) / visible;
+            const offset = currentIndex * (cardWidth + gap);
 
             track.style.transform = `translateX(-${offset}px)`;
 

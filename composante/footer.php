@@ -17,11 +17,11 @@
             <div class="footer-col">
                 <h4>Liens Utiles</h4>
                 <ul class="footer-links">
-                    <li><a href="#">Accueil</a></li>
-                    <li><a href="#about">À Propos</a></li>
-                    <li><a href="#services">Nos Services</a></li>
-                    <li><a href="#portfolio">Notre Portfolio</a></li>
-                    <li><a href="#booking">Réserver</a></li>
+                    <li><a href="index.php">Accueil</a></li>
+                    <li><a href="apropos.php">À Propos</a></li>
+                    <li><a href="service.php">Nos Services</a></li>
+                    <li><a href="portfolio.php">Notre Portfolio</a></li>
+                    <li><a href="#">Réserver</a></li>
                 </ul>
             </div>
 
