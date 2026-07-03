@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo = getPDO();
 
         // Requête préparée pour vérifier si l'utilisateur existe dans la base de données
-        $stmt = $pdo->prepare('SELECT * FROM AUTHENTFICATION WHERE EMAIL_AUTH = :email');
+        $stmt = $pdo->prepare('SELECT * FROM AUTHENTIFICATION WHERE EMAIL_AUTH = :email');
         $stmt->execute(['email' => $email]);
         $auth = $stmt->fetch();
 

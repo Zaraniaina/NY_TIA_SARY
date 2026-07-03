@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->beginTransaction();
 
         // Vérifier si l'adresse e-mail existe déjà dans la base de données
-        $stmtCheck = $pdo->prepare('SELECT COUNT(*) FROM AUTHENTFICATION WHERE EMAIL_AUTH = :email');
+        $stmtCheck = $pdo->prepare('SELECT COUNT(*) FROM AUTHENTIFICATION WHERE EMAIL_AUTH = :email');
         $stmtCheck->execute(['email' => $email_client]);
         if ($stmtCheck->fetchColumn() > 0) {
             throw new Exception("Cette adresse e-mail est déjà associée à un compte.");
@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Hachage sécurisé du mot de passe
         $hashedMdp = password_hash($mdp_client, PASSWORD_BCRYPT);
         // Insertion de l'authentification
-        $stmtAuth=$pdo->prepare("INSERT INTO AUTHENTFICATION (EMAIL_AUTH,MDP_AUTH,ROLE_AUTH) VALUES (:email,:mdp,:role_auth) ");
+        $stmtAuth=$pdo->prepare("INSERT INTO AUTHENTIFICATION (EMAIL_AUTH,MDP_AUTH,ROLE_AUTH) VALUES (:email,:mdp,:role_auth) ");
         $stmtAuth->execute([
             "email"=> $email_client,
             'mdp'=> $hashedMdp,
