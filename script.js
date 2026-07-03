@@ -149,49 +149,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
-    // 7. ScrollReveal animations
-    if (typeof ScrollReveal !== 'undefined') {
-        const sr = ScrollReveal({
-            distance: '12px',
-            origin: 'bottom',
-            opacity: 0,
-            scale: 0.99,
-            duration: 650,
-            easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-            interval: 60,
-            reset: false,
-            mobile: true,
-            viewFactor: 0.01,
-            cleanup: true,
-        });
 
-        sr.reveal('section, #services-detail, .hero-content, .service-card, .portfolio-item, .testimonial-card, .footer-col, .footer-logo-box', {
-            distance: '10px',
-            origin: 'bottom',
-            scale: 0.995,
-            interval: 60,
-            delay: 30,
-        });
-
-        sr.reveal('section h2, .section-title', {
-            duration: 600,
-            origin: 'top',
-            distance: '10px',
-            opacity: 0,
-            interval: 80,
-            delay: 20,
-        });
-
-        sr.reveal('.service-detail-row, .about-grid > *, .team-grid > *, .values .about-list li, .portfolio-grid > *', {
-            distance: '14px',
-            origin: 'bottom',
-            scale: 0.995,
-            interval: 80,
-            delay: 10,
-        });
-    }
-
-    // 8. Carrousel Témoignages
+    // 7. Carrousel Témoignages
     const track = document.getElementById('temoignages-track');
     const prevBtn = document.getElementById('temoignage-prev');
     const nextBtn = document.getElementById('temoignage-next');
