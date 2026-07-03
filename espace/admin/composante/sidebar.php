@@ -43,14 +43,7 @@ $root    = '../../';
 
         <div class="sidebar-divider"></div>
         <a href="<?= $root ?>index.php" target="_blank">
-            <i class="fas fa-globe"></i> Site public
-        </a>
-    </nav>
-
-    <div class="sidebar-logout">
-        <div class="sidebar-divider"></div>
-        <a href="<?= $root ?>espace/admin/logout.php" class="btn_deconnexion"> 
             <i class="fas fa-sign-out-alt"></i> Déconnexion
         </a>
-    </div>
+    </nav>
 </aside>

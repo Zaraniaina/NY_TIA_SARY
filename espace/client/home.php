@@ -73,7 +73,7 @@ $lastResas = $stmtLast->fetchAll();
         <!-- CONTENU -->
         <div class="dashboard-content">
             <div class="dash-page-header">
-                <h2>Bonjour, <?= htmlspecialchars($clientPrenom) ?> 👋</h2>
+                <h2>Bonjour, <?= htmlspecialchars($clientPrenom) ?> </h2>
                 <p>Bienvenue dans votre espace personnel NY TIA SARY.</p>
             </div>
 

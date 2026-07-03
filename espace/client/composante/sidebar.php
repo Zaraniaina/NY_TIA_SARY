@@ -32,14 +32,8 @@ $root    = '../../';
         <div class="sidebar-divider"></div>
         <div class="sidebar-section-label">Compte</div>
         <a href="<?= $root ?>index.php" target="_blank">
-            <i class="fas fa-globe"></i> Site public
+            <i class="fas fa-sign-out-alt"></i> Déconnexion
         </a>
     </nav>
 
-    <div class="sidebar-logout">
-        <div class="sidebar-divider"></div>
-        <a href="<?= $root ?>espace/client/logout.php">
-            <i class="fas fa-sign-out-alt"></i> Déconnexion
-        </a>
-    </div>
 </aside>
