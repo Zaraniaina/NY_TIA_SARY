@@ -24,14 +24,23 @@ $root    = '../../';
            class="<?= $current === 'devis.php' ? 'active' : '' ?>">
             <i class="fas fa-file-invoice"></i> Demande de Devis
         </a>
+        <div class="sidebar-section-label">Media</div>
         <a href="<?= $root ?>espace/client/mes_photos.php"
            class="<?= $current === 'mes_photos.php' ? 'active' : '' ?>">
             <i class="fas fa-images"></i> Mes Photos
         </a>
+        <a href="<?= $root ?>espace/client/mes_videos.php"
+           class="<?= $current === 'mes_videos.php' ? 'active' : '' ?>">
+            <i class="fas fa-video"></i> Videos
+        </a>
 
         <div class="sidebar-divider"></div>
         <div class="sidebar-section-label">Compte</div>
-        <a href="<?= $root ?>index.php" target="_blank">
+        <a href="<?= $root ?>espace/client/parametres.php"
+           class="<?= $current === 'parametres.php' ? 'active' : '' ?>">
+            <i class="fas fa-cogs"></i> Paramètres
+        </a>
+        <a href="<?= $root ?>index.php">
             <i class="fas fa-sign-out-alt"></i> Déconnexion
         </a>
     </nav>

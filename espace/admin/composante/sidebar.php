@@ -42,6 +42,10 @@ $root    = '../../';
         </a>
 
         <div class="sidebar-divider"></div>
+        <a href="<?= $root ?>espace/admin/parametres.php"
+           class="<?= $current === 'parametres.php' ? 'active' : '' ?>">
+            <i class="fas fa-cogs"></i> Paramètres
+        </a>
         <a href="<?= $root ?>index.php" target="_blank">
             <i class="fas fa-sign-out-alt"></i> Déconnexion
         </a>
