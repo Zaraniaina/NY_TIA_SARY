@@ -25,20 +25,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo = getPDO();
 
         // Requête préparée pour vérifier si l'utilisateur existe dans la base de données
-        $stmt = $pdo->prepare('SELECT * FROM CLIENT WHERE EMAIL_CLIENT = :email');
+        $stmt = $pdo->prepare('SELECT * FROM AUTHENTFICATION WHERE EMAIL_AUTH = :email');
         $stmt->execute(['email' => $email]);
-        $client = $stmt->fetch();
+        $auth = $stmt->fetch();
 
         // Si le client existe et que son mot de passe correspond à la colonne MDP_CLIENT
-        if ($client && password_verify($password, $client['MDP_CLIENT'])) {
-            // Stocker les données utiles dans la session de l'utilisateur
-            $_SESSION['client_id'] = $client['ID_CLIENT'];
-            $_SESSION['client_nom'] = $client['NOM_CLIENT'];
-            $_SESSION['client_prenom'] = $client['PRENOM_CLIENT'];
-            $_SESSION['client_email'] = $client['EMAIL_CLIENT'];
+        if ( $auth && password_verify($password,  $auth['MDP_AUTH'])) {
 
-            // Authentification réussie : Rediriger l'utilisateur vers la page d'accueil
-            redirectionClient("../index.php");
+            //on dois verifier son role
+            if($auth['ROLE_AUTH']=="ADMIN"){
+                // Stocker les données utiles dans la session de l'utilisateur
+                $_SESSION['admin_id'] = $auth['ID_AUTH'];
+                $_SESSION['admin_email'] = $auth['EMAIL_AUTH'];
+
+
+                // Authentification réussie : Rediriger l'administrateurs vers la page d'accueil
+                redirectionClient("../espace/admin/home.php");
+
+            }else{
+                // simple client on dois recuperer les information du client
+                $stmtClient= $pdo->prepare("SELECT * FROM CLIENT WHERE ID_AUTH=:id_auth");
+                $stmtClient->execute(["id_auth"=>  $auth['ID_AUTH']]);
+                $client=$stmtClient->fetch();
+                
+                // Stocker les données utiles dans la session de l'utilisateur
+                $_SESSION['client_id'] = $client['ID_CLIENT'];
+                $_SESSION['client_nom'] = $client['NOM_CLIENT'];
+                $_SESSION['client_prenom'] = $client['PRENOM_CLIENT'];
+                $_SESSION['client_email'] = $auth['EMAIL_AUTH'];
+
+                // Authentification réussie : Rediriger l'utilisateur vers la page d'accueil
+                redirectionClient("../espace/client/home.php");
+
+            }
+            
+            
         } else {
             // Identifiants erronés
             $_SESSION['login_error'] = "Adresse e-mail ou mot de passe incorrect.";

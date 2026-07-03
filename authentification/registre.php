@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->beginTransaction();
 
         // Vérifier si l'adresse e-mail existe déjà dans la base de données
-        $stmtCheck = $pdo->prepare('SELECT COUNT(*) FROM CLIENT WHERE EMAIL_CLIENT = :email');
+        $stmtCheck = $pdo->prepare('SELECT COUNT(*) FROM AUTHENTFICATION WHERE EMAIL_AUTH = :email');
         $stmtCheck->execute(['email' => $email_client]);
         if ($stmtCheck->fetchColumn() > 0) {
             throw new Exception("Cette adresse e-mail est déjà associée à un compte.");
@@ -44,28 +44,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Hachage sécurisé du mot de passe
         $hashedMdp = password_hash($mdp_client, PASSWORD_BCRYPT);
+        // Insertion de l'authentification
+        $stmtAuth=$pdo->prepare("INSERT INTO AUTHENTFICATION (EMAIL_AUTH,MDP_AUTH,ROLE_AUTH) VALUES (:email,:mdp,:role_auth) ");
+        $stmtAuth->execute([
+            "email"=> $email_client,
+            'mdp'=> $hashedMdp,
+            'role_auth'=>'CLIENT'// Valeur par défaut pour un nouveau compte client
+        ]);
 
+        
+        // Récupération de l'ID du client nouvellement créer
+        $idAuth = $pdo->lastInsertId();
         // Insertion du client
-        $stmtClient = $pdo->prepare('INSERT INTO CLIENT (NOM_CLIENT, PRENOM_CLIENT, TEL_CLIENT, EMAIL_CLIENT, TYPE_CLIENT, MDP_CLIENT) VALUES (:nom, :prenom, :tel, :email, :type, :mdp)');
+        $stmtClient = $pdo->prepare('INSERT INTO CLIENT (ID_AUTH,NOM_CLIENT, PRENOM_CLIENT, TEL_CLIENT, TYPE_CLIENT) VALUES (:id_auth,:nom, :prenom, :tel, :type)');
         $stmtClient->execute([
+            'id_auth'=> $idAuth,
             'nom'    => $nom_client,
             'prenom' => $prenom_client,
             'tel'    => $tel_client,
-            'email'  => $email_client,
             'type'   => 'Particulier', // Valeur par défaut pour un nouveau compte client
-            'mdp'    => $hashedMdp
         ]);
 
-        // Récupération de l'ID du client nouvellement créé
-        $idClient = $pdo->lastInsertId();
 
         // Hachage sécurisé de la réponse de sécurité (en minuscules pour éviter les soucis de casse)
         $hashedReponse = password_hash(strtolower($reponse), PASSWORD_BCRYPT);
 
         // Insertion de la question de sécurité dans la table SECUTITE
-        $stmtSecutite = $pdo->prepare('INSERT INTO SECUTITE (ID_CLIENT, QUESTION, REPONSE) VALUES (:id_client, :question, :reponse)');
+        $stmtSecutite = $pdo->prepare('INSERT INTO SECUTITE (ID_AUTH, QUESTION, REPONSE) VALUES (:id_auth, :question, :reponse)');
         $stmtSecutite->execute([
-            'id_client' => $idClient,
+            'id_auth' => $idAuth,
             'question'  => $question,
             'reponse'   => $hashedReponse
         ]);
