@@ -1,6 +1,5 @@
 <?php
 declare(strict_types=1);
-
 /**
  * auth_guard.php — Middleware de protection des espaces sécurisés
  * Studio NY TIA SARY

@@ -1,5 +1,10 @@
 <?php
 declare(strict_types=1);
+
+require_once __DIR__.'../../../util/redirectionpage.php';
+
+if($_GET['action']==='deconnexion'){
+    
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -9,5 +14,7 @@ if (empty($_SESSION)) {
     session_unset();
     session_destroy();
 }
-header('Location: ../../login/login.php');
-exit();
+
+redirectionClient('../../login/login.php');
+
+}

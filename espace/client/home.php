@@ -4,6 +4,7 @@ require_once __DIR__ . '/../../util/auth_guard.php';
 requireClient();
 require_once __DIR__ . '/../../config/database.php';
 
+
 $clientId    = (int) $_SESSION['client_id'];
 $clientNom   = $_SESSION['client_nom']   ?? 'Client';
 $clientPrenom= $_SESSION['client_prenom']?? '';

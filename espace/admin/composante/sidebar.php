@@ -46,8 +46,13 @@ $root    = '../../';
            class="<?= $current === 'parametres.php' ? 'active' : '' ?>">
             <i class="fas fa-cogs"></i> Paramètres
         </a>
-        <a href="<?= $root ?>index.php" target="_blank">
+        <!-- Déconnexion avec confirmation modal -->
+        <a href="#" class="logout-link">
             <i class="fas fa-sign-out-alt"></i> Déconnexion
         </a>
     </nav>
 </aside>
+<?php
+// le modal de déconnexion est inclus ici
+include __DIR__ . '/../../composante/modalDeconexionAdmin.php';
+?>
