@@ -42,15 +42,17 @@ $root    = '../../';
         </a>
 
         <div class="sidebar-divider"></div>
-        <a href="<?= $root ?>index.php" target="_blank">
-            <i class="fas fa-globe"></i> Site public
+        <a href="<?= $root ?>espace/admin/parametres.php"
+           class="<?= $current === 'parametres.php' ? 'active' : '' ?>">
+            <i class="fas fa-cogs"></i> Paramètres
         </a>
-    </nav>
-
-    <div class="sidebar-logout">
-        <div class="sidebar-divider"></div>
-        <a href="<?= $root ?>espace/admin/logout.php" class="btn_deconnexion"> 
+        <!-- Déconnexion avec confirmation modal -->
+        <a href="#" class="logout-link">
             <i class="fas fa-sign-out-alt"></i> Déconnexion
         </a>
-    </div>
+    </nav>
 </aside>
+<?php
+// le modal de déconnexion est inclus ici
+include __DIR__ . '/../../composante/modalDeconexionAdmin.php';
+?>

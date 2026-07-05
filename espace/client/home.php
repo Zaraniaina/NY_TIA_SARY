@@ -4,6 +4,7 @@ require_once __DIR__ . '/../../util/auth_guard.php';
 requireClient();
 require_once __DIR__ . '/../../config/database.php';
 
+
 $clientId    = (int) $_SESSION['client_id'];
 $clientNom   = $_SESSION['client_nom']   ?? 'Client';
 $clientPrenom= $_SESSION['client_prenom']?? '';
@@ -73,7 +74,7 @@ $lastResas = $stmtLast->fetchAll();
         <!-- CONTENU -->
         <div class="dashboard-content">
             <div class="dash-page-header">
-                <h2>Bonjour, <?= htmlspecialchars($clientPrenom) ?> 👋</h2>
+                <h2>Bonjour, <?= htmlspecialchars($clientPrenom) ?> </h2>
                 <p>Bienvenue dans votre espace personnel NY TIA SARY.</p>
             </div>
 
