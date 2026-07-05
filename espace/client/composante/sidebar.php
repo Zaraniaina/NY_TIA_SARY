@@ -24,22 +24,30 @@ $root    = '../../';
            class="<?= $current === 'devis.php' ? 'active' : '' ?>">
             <i class="fas fa-file-invoice"></i> Demande de Devis
         </a>
+        <div class="sidebar-section-label">Media</div>
         <a href="<?= $root ?>espace/client/mes_photos.php"
            class="<?= $current === 'mes_photos.php' ? 'active' : '' ?>">
             <i class="fas fa-images"></i> Mes Photos
         </a>
+        <a href="<?= $root ?>espace/client/mes_videos.php"
+           class="<?= $current === 'mes_videos.php' ? 'active' : '' ?>">
+            <i class="fas fa-video"></i> Videos
+        </a>
 
         <div class="sidebar-divider"></div>
         <div class="sidebar-section-label">Compte</div>
-        <a href="<?= $root ?>index.php" target="_blank">
-            <i class="fas fa-globe"></i> Site public
+        <a href="<?= $root ?>espace/client/parametres.php"
+           class="<?= $current === 'parametres.php' ? 'active' : '' ?>">
+            <i class="fas fa-cogs"></i> Paramètres
+        </a>
+        <!-- Déconnexion avec confirmation modal -->
+        <a href="#" class="logout-link">
+            <i class="fas fa-sign-out-alt"></i> Déconnexion
         </a>
     </nav>
 
-    <div class="sidebar-logout">
-        <div class="sidebar-divider"></div>
-        <a href="<?= $root ?>espace/client/logout.php">
-            <i class="fas fa-sign-out-alt"></i> Déconnexion
-        </a>
-    </div>
 </aside>
+<?php
+// le modal de déconnexion est inclus ici
+include __DIR__ . '/../../composante/modalDeconexionClient.php';
+?>

@@ -1,4 +1,5 @@
 <?php
+
 session_start();
 $error = $_SESSION['login_error'] ?? null;
 $success = $_SESSION['register_success'] ?? null;
@@ -23,9 +24,20 @@ unset($_SESSION['login_error'], $_SESSION['register_success']);
     <div class="bg-container"></div>
     <div class="bg-overlay"></div>
 
+
     <!-- Conteneur principal de la page de connexion -->
     <main class="login-container">
         <div class="login-card">
+
+           <!-- Bouton Retour vers la page vitrine -->
+            <div class="back-to-home">
+                <a href="../index.php" class="btn-back">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M19 12H6"/>
+                        <path d="M12 5l-7 7 7 7"/>
+                    </svg>
+                </a>
+            </div>
 
             <!-- Logo du studio -->
             <header class="logo">
