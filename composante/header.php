@@ -9,8 +9,14 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <img src="" alt="NY TIA SARY Logo" class="logo-img">
             </a>
 
-            <div class="menu-toggle" id="mobile-menu"><i class="fas fa-bars"></i></div>
+            <!-- menu emburguer-->
+            <div class="menu-toggle" id="mobile-menu" aria-label="Ouvrir le menu" aria-expanded="false">
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+            </div>
 
+            <!-- menu nav-->
             <ul class="nav-menu" id="nav-list">
                 <li class="nav-item"><a href="index.php" class="nav-link <?php echo ($current_page == 'index.php' || $current_page == '') ? 'active' : ''; ?>"><i class="fas fa-home"></i> Accueil</a></li>
                 <li class="nav-item"><a href="apropos.php" class="nav-link <?php echo ($current_page == 'apropos.php') ? 'active' : ''; ?>"><i class="fas fa-info-circle"></i> À Propos</a></li>

@@ -1,4 +1,4 @@
 <!-- Use default system font family -->
     <!-- FontAwesome icons for a polished look -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/mainStyle.css">
+    <link rel="stylesheet" href="css/mainStyle.css?v=2">

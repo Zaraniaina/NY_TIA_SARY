@@ -54,16 +54,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (mobileMenu && navList) {
         mobileMenu.addEventListener('click', () => {
-            navList.classList.toggle('active');
-            // Toggle hamburger icon animation or state
-            const icon = mobileMenu.querySelector('i');
-            if (icon) {
-                if (navList.classList.contains('active')) {
-                    icon.className = 'fas fa-times';
-                } else {
-                    icon.className = 'fas fa-bars';
-                }
-            }
+            const opened = navList.classList.toggle('active');
+            mobileMenu.classList.toggle('active', opened);
+            mobileMenu.setAttribute('aria-expanded', opened ? 'true' : 'false');
         });
 
         // Close menu when clicking on a link
@@ -71,10 +64,8 @@ document.addEventListener('DOMContentLoaded', () => {
         navLinks.forEach(link => {
             link.addEventListener('click', () => {
                 navList.classList.remove('active');
-                const icon = mobileMenu.querySelector('i');
-                if (icon) {
-                    icon.className = 'fas fa-bars';
-                }
+                mobileMenu.classList.remove('active');
+                mobileMenu.setAttribute('aria-expanded', 'false');
             });
         });
     }
