@@ -5,6 +5,7 @@ requireClient();
 require_once __DIR__ . '/../../config/database.php';
 
 $clientId     = (int) $_SESSION['client_id'];
+$typeMedia="VIDEOS";
 $clientNom    = $_SESSION['client_nom']    ?? 'Client';
 $clientPrenom = $_SESSION['client_prenom'] ?? '';
 $initiales    = getInitiales($clientNom, $clientPrenom);
@@ -12,15 +13,14 @@ $pdo          = getPDO();
 
 // Récupérer tous les médias liés aux réservations du client
 $stmt = $pdo->prepare(
-    'SELECT m.PATH_MEDIA, m.ID_MEDIA, p.LIB_PRESTATION, r.DATE_RESERVATION, c.LIB_CATEGORIE
+    'SELECT m.PATH_MEDIA, m.ID_MEDIA, p.LIB_PRESTATION, r.DATE_RESERVATION
      FROM MEDIA m
      JOIN RESERVATION r ON m.ID_RESERVATION = r.ID_RESERVATION
      JOIN PRESTATIONS p ON r.ID_PRESTATION = p.ID_PRESTATION
-     LEFT JOIN CATEGORIE c ON m.ID_CATEGORIE = c.ID_CATEGORIE
-     WHERE r.ID_CLIENT = ?
+     WHERE r.ID_CLIENT = ? and m.TYPE_MEDIA = ?
      ORDER BY r.DATE_RESERVATION DESC'
 );
-$stmt->execute([$clientId]);
+$stmt->execute([$clientId,$typeMedia]);
 $medias = $stmt->fetchAll();
 
 // Extensions image

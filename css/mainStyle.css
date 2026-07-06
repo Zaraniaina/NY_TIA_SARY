@@ -1882,9 +1882,10 @@
             position: relative;
             z-index: 1;
         }
-        }
+
 
         @media (max-width: 992px) {
+
             .vm .service-detail-row,
             .equipment .service-detail-row,
             .history .container,

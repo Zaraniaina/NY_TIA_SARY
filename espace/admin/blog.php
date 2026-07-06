@@ -32,12 +32,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (!$error) {
                 if ($action === 'create') {
-                    $stmt = $pdo->prepare('INSERT INTO BLOG (ID_CATEGORIE, TITRE_BLOG, CONTENU, IMAGE_COURVERTURE) VALUES (?,?,?,?)');
-                    $stmt->execute([$idCat, $titre, $contenu, $imgPath]);
+                    $stmt = $pdo->prepare('INSERT INTO BLOG (ID_TYPE_BLOG, TITRE_BLOG, CONTENU, IMAGE_COURVERTURE,STATUS_BLOG) VALUES (?,?,?,?)');
+                    $stmt->execute([$idCat, $titre, $contenu, $imgPath,"PUBLIER"]);
                     $success = "Article « $titre » publié avec succès.";
                 } else {
-                    $stmt = $pdo->prepare('UPDATE BLOG SET ID_CATEGORIE=?, TITRE_BLOG=?, CONTENU=?, IMAGE_COURVERTURE=?, DATE_MODIFICATION=CURDATE() WHERE ID_BLOG=?');
-                    $stmt->execute([$idCat, $titre, $contenu, $imgPath, $idBlog]);
+                    $stmt = $pdo->prepare('UPDATE BLOG SET ID_TYPE_BLOG=?, TITRE_BLOG=?, CONTENU=?, IMAGE_COURVERTURE=?, DATE_MODIFICATION=CURDATE(),STATUS_BLOG=? WHERE ID_BLOG=?');
+                    $stmt->execute([$idCat, $titre, $contenu, $imgPath,"PUBLIER", $idBlog]);
                     $success = "Article modifié avec succès.";
                 }
             }
@@ -49,8 +49,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // ── Données ───────────────────────────────────────────────────
-$articles   = $pdo->query('SELECT b.*, c.LIB_CATEGORIE FROM BLOG b LEFT JOIN CATEGORIE c ON b.ID_CATEGORIE = c.ID_CATEGORIE ORDER BY b.DATE_PUBLICATION DESC')->fetchAll();
-$categories = $pdo->query('SELECT ID_CATEGORIE, LIB_CATEGORIE FROM CATEGORIE ORDER BY LIB_CATEGORIE')->fetchAll();
+$articles   = $pdo->query('SELECT b.*, t.LIB_TYPE_BLOG FROM BLOG b LEFT JOIN TYPE_BLOG t ON b.ID_TYPE_BLOG  = t.ID_TYPE_BLOG ORDER BY b.DATE_PUBLICATION DESC')->fetchAll();
+$categories = $pdo->query('SELECT ID_TYPE_BLOG, LIB_TYPE_BLOG FROM TYPE_BLOG ORDER BY LIB_TYPE_BLOG')->fetchAll();
 
 // Article à éditer ?
 $editArticle = null;
