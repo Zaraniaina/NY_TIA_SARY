@@ -54,16 +54,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (mobileMenu && navList) {
         mobileMenu.addEventListener('click', () => {
-            navList.classList.toggle('active');
-            // Toggle hamburger icon animation or state
-            const icon = mobileMenu.querySelector('i');
-            if (icon) {
-                if (navList.classList.contains('active')) {
-                    icon.className = 'fas fa-times';
-                } else {
-                    icon.className = 'fas fa-bars';
-                }
-            }
+            const opened = navList.classList.toggle('active');
+            mobileMenu.classList.toggle('active', opened);
+            mobileMenu.setAttribute('aria-expanded', opened ? 'true' : 'false');
         });
 
         // Close menu when clicking on a link
@@ -71,10 +64,8 @@ document.addEventListener('DOMContentLoaded', () => {
         navLinks.forEach(link => {
             link.addEventListener('click', () => {
                 navList.classList.remove('active');
-                const icon = mobileMenu.querySelector('i');
-                if (icon) {
-                    icon.className = 'fas fa-bars';
-                }
+                mobileMenu.classList.remove('active');
+                mobileMenu.setAttribute('aria-expanded', 'false');
             });
         });
     }
@@ -149,49 +140,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
-    // 7. ScrollReveal animations
-    if (typeof ScrollReveal !== 'undefined') {
-        const sr = ScrollReveal({
-            distance: '12px',
-            origin: 'bottom',
-            opacity: 0,
-            scale: 0.99,
-            duration: 650,
-            easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-            interval: 60,
-            reset: false,
-            mobile: true,
-            viewFactor: 0.01,
-            cleanup: true,
-        });
 
-        sr.reveal('section, #services-detail, .hero-content, .service-card, .portfolio-item, .testimonial-card, .footer-col, .footer-logo-box', {
-            distance: '10px',
-            origin: 'bottom',
-            scale: 0.995,
-            interval: 60,
-            delay: 30,
-        });
-
-        sr.reveal('section h2, .section-title', {
-            duration: 600,
-            origin: 'top',
-            distance: '10px',
-            opacity: 0,
-            interval: 80,
-            delay: 20,
-        });
-
-        sr.reveal('.service-detail-row, .about-grid > *, .team-grid > *, .values .about-list li, .portfolio-grid > *', {
-            distance: '14px',
-            origin: 'bottom',
-            scale: 0.995,
-            interval: 80,
-            delay: 10,
-        });
-    }
-
-    // 8. Carrousel Témoignages
+    // 7. Carrousel Témoignages
     const track = document.getElementById('temoignages-track');
     const prevBtn = document.getElementById('temoignage-prev');
     const nextBtn = document.getElementById('temoignage-next');

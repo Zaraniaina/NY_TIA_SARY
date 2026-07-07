@@ -43,8 +43,5 @@
 
     </footer>
     
-    <!-- ScrollReveal animation library -->
-    <script src="https://unpkg.com/scrollreveal@4/dist/scrollreveal.min.js"></script>
     <!-- JavaScript logic for site-wide interactivity (menus, scrolls, controls) -->
-    <script src="https://unpkg.com/scrollreveal@4/dist/scrollreveal.min.js"></script>
     <script src="script.js"></script>
