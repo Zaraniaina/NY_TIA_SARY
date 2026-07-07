@@ -11,6 +11,11 @@ $clientPrenom= $_SESSION['client_prenom']?? '';
 $initiales   = getInitiales($clientNom, $clientPrenom);
 $pdo         = getPDO();
 
+$stmtPhoto = $pdo->prepare('SELECT PHOTO_CLIENT FROM CLIENT WHERE ID_CLIENT = ?');
+$stmtPhoto->execute([$clientId]);
+$photoClient = $stmtPhoto->fetchColumn() ?: 'assets/images/avatar.png';
+$isDefaultPhoto = ($photoClient === 'assets/images/avatar.png');
+
 // KPIs
 $stmtNb  = $pdo->prepare('SELECT COUNT(*) FROM RESERVATION WHERE ID_CLIENT = ?');
 $stmtNb->execute([$clientId]);
@@ -67,8 +72,7 @@ $lastResas = $stmtLast->fetchAll();
                     <span class="topbar-user-name"><?= htmlspecialchars($clientPrenom . ' ' . $clientNom) ?></span>
                     <span class="topbar-user-role">Client</span>
                 </div>
-                <div class="topbar-avatar"><?= htmlspecialchars($initiales) ?></div>
-            </div>
+                <img src="../../<?= htmlspecialchars($photoClient) ?>" alt="Avatar" class="topbar-avatar" style="object-fit: cover;">            </div>
         </div>
 
         <!-- CONTENU -->

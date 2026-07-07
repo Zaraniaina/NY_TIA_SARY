@@ -5,7 +5,13 @@ requireAdmin();
 require_once __DIR__ . '/../../config/database.php';
 
 $adminEmail = $_SESSION['admin_email'] ?? 'Admin';
+$adminId    = (int) ($_SESSION['admin_id'] ?? 0);
 $pdo        = getPDO();
+// Fetch admin photo
+$stmtPhoto = $pdo->prepare('SELECT PHOTO_CLIENT FROM CLIENT WHERE ID_AUTH = ?');
+$stmtPhoto->execute([$adminId]);
+$photoAdmin = $stmtPhoto->fetchColumn() ?: 'assets/images/avatar.png';
+$isDefaultPhoto = ($photoAdmin === 'assets/images/avatar.png');
 
 // ── KPIs ─────────────────────────────────────────────────────
 $nbClients  = (int) $pdo->query("SELECT COUNT(*) FROM AUTHENTIFICATION WHERE ROLE_AUTH='CLIENT'")->fetchColumn();
@@ -65,7 +71,11 @@ $chartValues = json_encode(array_column($chartData, 'total'));
                     <span class="topbar-user-name"><?= htmlspecialchars($adminEmail) ?></span>
                     <span class="topbar-user-role" style="color:var(--primary-red);">Administrateur</span>
                 </div>
-                <div class="topbar-avatar admin-avatar"><i class="fas fa-shield-alt" style="font-size:.85rem;"></i></div>
+                <?php if ($isDefaultPhoto): ?>
+                    <div class="topbar-avatar admin-avatar"><i class="fas fa-shield-alt" style="font-size:.85rem;"></i></div>
+                <?php else: ?>
+                    <img src="../../<?= htmlspecialchars($photoAdmin) ?>" alt="Avatar" class="topbar-avatar" style="object-fit: cover;">
+                <?php endif; ?>
             </div>
         </div>
 
