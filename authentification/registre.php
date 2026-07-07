@@ -45,11 +45,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Hachage sécurisé du mot de passe
         $hashedMdp = password_hash($mdp_client, PASSWORD_BCRYPT);
         // Insertion de l'authentification
-        $stmtAuth=$pdo->prepare("INSERT INTO AUTHENTIFICATION (EMAIL_AUTH,MDP_AUTH,ROLE_AUTH) VALUES (:email,:mdp,:role_auth) ");
+        $stmtAuth=$pdo->prepare("INSERT INTO AUTHENTIFICATION (EMAIL_AUTH,MDP_AUTH) VALUES (:email,:mdp) ");
         $stmtAuth->execute([
             "email"=> $email_client,
             'mdp'=> $hashedMdp,
-            'role_auth'=>'CLIENT'// Valeur par défaut pour un nouveau compte client
         ]);
 
         

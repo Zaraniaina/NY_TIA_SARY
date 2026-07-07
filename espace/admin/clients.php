@@ -5,10 +5,16 @@ requireAdmin();
 require_once __DIR__ . '/../../config/database.php';
 
 $adminEmail = $_SESSION['admin_email'] ?? 'Admin';
+$adminId    = (int) ($_SESSION['admin_id'] ?? 0);
 $pdo        = getPDO();
+// Fetch admin photo from CLIENT table (admin is stored as a client with role ADMIN)
+$stmtPhoto = $pdo->prepare('SELECT PHOTO_CLIENT FROM CLIENT WHERE ID_AUTH = ?');
+$stmtPhoto->execute([$adminId]);
+$photoAdmin = $stmtPhoto->fetchColumn() ?: 'assets/images/avatar.png';
+$isDefaultPhoto = ($photoAdmin === 'assets/images/avatar.png');
 $search     = trim($_GET['q'] ?? '');
 
-$sql = 'SELECT c.*, a.EMAIL_AUTH,
+$sql = 'SELECT c.*, a.EMAIL_AUTH, a.ROLE_AUTH,
         (SELECT COUNT(*) FROM RESERVATION r WHERE r.ID_CLIENT = c.ID_CLIENT) AS nb_resas
         FROM CLIENT c
         JOIN AUTHENTIFICATION a ON c.ID_AUTH = a.ID_AUTH and a.ROLE_AUTH = "CLIENT"';
@@ -28,7 +34,7 @@ $detailClient = null;
 $detailResas  = [];
 if (isset($_GET['id'])) {
     $idC = (int) $_GET['id'];
-    $sc  = $pdo->prepare('SELECT c.*, a.EMAIL_AUTH FROM CLIENT c JOIN AUTHENTIFICATION a ON c.ID_AUTH = a.ID_AUTH WHERE c.ID_CLIENT = ?');
+    $sc  = $pdo->prepare('SELECT c.*, a.EMAIL_AUTH, a.ROLE_AUTH FROM CLIENT c JOIN AUTHENTIFICATION a ON c.ID_AUTH = a.ID_AUTH WHERE c.ID_CLIENT = ?');
     $sc->execute([$idC]);
     $detailClient = $sc->fetch();
     if ($detailClient) {
@@ -65,7 +71,11 @@ if (isset($_GET['id'])) {
                     <span class="topbar-user-name"><?= htmlspecialchars($adminEmail) ?></span>
                     <span class="topbar-user-role" style="color:var(--primary-red);">Administrateur</span>
                 </div>
-                <div class="topbar-avatar admin-avatar"><i class="fas fa-shield-alt" style="font-size:.85rem;"></i></div>
+                <?php if ($isDefaultPhoto): ?>
+                    <div class="topbar-avatar admin-avatar"><i class="fas fa-shield-alt" style="font-size:.85rem;"></i></div>
+                <?php else: ?>
+                    <img src="../../<?= htmlspecialchars($photoAdmin) ?>" alt="Avatar" class="topbar-avatar" style="object-fit: cover;">
+                <?php endif; ?>
             </div>
         </div>
 
@@ -86,9 +96,13 @@ if (isset($_GET['id'])) {
                     <div class="dash-card-header"><h3><i class="fas fa-user" style="color:var(--primary-green);margin-right:8px;"></i> Profil</h3></div>
                     <div class="dash-card-body padded">
                         <div style="text-align:center;margin-bottom:20px;">
-                            <div class="topbar-avatar" style="width:64px;height:64px;font-size:1.4rem;margin:0 auto 12px;">
-                                <?= mb_strtoupper(mb_substr($detailClient['PRENOM_CLIENT'],0,1) . mb_substr($detailClient['NOM_CLIENT'],0,1)) ?>
-                            </div>
+                            <?php if ($detailClient['PHOTO_CLIENT'] !== 'assets/images/avatar.png'): ?>
+                                <img src="../../<?= htmlspecialchars($detailClient['PHOTO_CLIENT']) ?>" alt="Avatar" class="topbar-avatar" style="width:64px;height:64px;object-fit:cover;margin:0 auto 12px;">
+                            <?php else: ?>
+                                <div class="topbar-avatar" style="width:64px;height:64px;font-size:1.4rem;margin:0 auto 12px;">
+                                    <?= mb_strtoupper(mb_substr($detailClient['PRENOM_CLIENT'],0,1) . mb_substr($detailClient['NOM_CLIENT'],0,1)) ?>
+                                </div>
+                            <?php endif; ?>
                             <strong style="font-family:var(--font-headings);font-size:1.1rem;">
                                 <?= htmlspecialchars($detailClient['PRENOM_CLIENT'] . ' ' . $detailClient['NOM_CLIENT']) ?>
                             </strong>
@@ -97,6 +111,7 @@ if (isset($_GET['id'])) {
                             <tr><td style="color:#888;width:40%;">Email</td><td><?= htmlspecialchars($detailClient['EMAIL_AUTH']) ?></td></tr>
                             <tr><td style="color:#888;">Tél.</td><td><?= htmlspecialchars($detailClient['TEL_CLIENT']) ?></td></tr>
                             <tr><td style="color:#888;">Type</td><td><?= htmlspecialchars($detailClient['TYPE_CLIENT']) ?></td></tr>
+                            <tr><td style="color:#888;">Rôle</td><td><?= htmlspecialchars($detailClient['ROLE_AUTH']) ?></td></tr>
                             <tr><td style="color:#888;">Réservations</td><td><?= count($detailResas) ?></td></tr>
                         </table>
                     </div>
@@ -150,11 +165,18 @@ if (isset($_GET['id'])) {
                     <?php else: ?>
                     <div class="table-responsive">
                         <table class="dash-table">
-                            <thead><tr><th>#</th><th>Nom complet</th><th>Email</th><th>Téléphone</th><th>Type</th><th>Réservations</th><th>Détails</th></tr></thead>
+                            <thead><tr><th>Photo de profil</th><th>Nom complet</th><th>Email</th><th>Téléphone</th><th>Type</th><th>Rôle</th><th>Réservations</th><th>Détails</th></tr></thead>
                             <tbody>
                             <?php foreach ($clients as $c): ?>
+                                <?php $isDefaultClientPhoto = ($c['PHOTO_CLIENT'] === 'assets/images/avatar.png'); ?>
                                 <tr>
-                                    <td>#<?= (int)$c['ID_CLIENT'] ?></td>
+                                    <td>
+                                        <?php if ($isDefaultClientPhoto): ?>
+                                            <div class="topbar-avatar admin-avatar"><i class="fas fa-shield-alt" style="font-size:.85rem;"></i></div>
+                                        <?php else: ?>
+                                            <img src="../../<?= htmlspecialchars($c['PHOTO_CLIENT']) ?>" alt="Avatar" class="topbar-avatar" style="object-fit: cover;">
+                                        <?php endif; ?>
+                                    </td>
                                     <td>
                                         <div style="display:flex;align-items:center;gap:10px;">
                                             <div class="topbar-avatar" style="width:34px;height:34px;font-size:0.76rem;flex-shrink:0;">
@@ -166,6 +188,7 @@ if (isset($_GET['id'])) {
                                     <td><?= htmlspecialchars($c['EMAIL_AUTH']) ?></td>
                                     <td><?= htmlspecialchars($c['TEL_CLIENT']) ?></td>
                                     <td><?= htmlspecialchars($c['TYPE_CLIENT']) ?></td>
+                                    <td><span class="badge badge-confirm"><?= htmlspecialchars($c['ROLE_AUTH']) ?></span></td>
                                     <td><span class="badge badge-confirm"><?= (int)$c['nb_resas'] ?></span></td>
                                     <td><a href="?id=<?= (int)$c['ID_CLIENT'] ?>" class="btn-dash btn-dash-outline btn-dash-sm"><i class="fas fa-eye"></i> Voir</a></td>
                                 </tr>

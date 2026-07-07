@@ -1554,16 +1554,18 @@
         /* Image reference styling */
         .service-detail-image-box {
             position: relative;
-            border-radius: 12px;
+            border-radius: 14px;
             overflow: hidden;
             box-shadow: var(--shadow-md);
             aspect-ratio: 4/3;
+            min-height: 320px;
         }
 
         .service-detail-image-box img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            display: block;
             transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
         }
 
@@ -1711,6 +1713,10 @@
         }
 
         @media (max-width: 768px) {
+            section {
+                padding: 80px 0;
+            }
+
             .sub-services-grid {
                 grid-template-columns: 1fr;
                 gap: 15px;
@@ -1850,20 +1856,6 @@
             line-height: 1.8;
         }
 
-        .service-detail-image-box {
-            border-radius: 14px;
-            overflow: hidden;
-            box-shadow: var(--shadow-md);
-            min-height: 320px;
-        }
-
-        .service-detail-image-box img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
-
         .certifications .services-grid {
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 30px;
@@ -1922,9 +1914,10 @@
             position: relative;
             z-index: 1;
         }
-        
+
 
         @media (max-width: 992px) {
+
             .vm .service-detail-row,
             .equipment .service-detail-row,
             .history .container,
