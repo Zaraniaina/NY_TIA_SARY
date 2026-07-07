@@ -20,8 +20,8 @@
             --shadow-subtle: 0 4px 15px rgba(0, 0, 0, 0.04);
             --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.08);
 
-            --font-headings: 'Montserrat', sans-serif;
-            --font-body: 'Open Sans', sans-serif;
+            --font-headings: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-body: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             --transition-smooth: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
         }
 
@@ -193,6 +193,13 @@
             opacity: 0.8;
             padding: 5px 0;
             position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-link i {
+            font-size: 0.95rem;
         }
 
         .nav-link:hover,
@@ -219,9 +226,28 @@
 
         .menu-toggle {
             display: none;
-            font-size: 1.8rem;
-            cursor: pointer;
-            color: var(--logo-black);
+        }
+
+        .menu-toggle .bar {
+            width: 100%;
+            height: 3px;
+            background-color: var(--logo-black);
+            border-radius: 999px;
+            transition: transform 0.35s ease, opacity 0.35s ease, background-color 0.35s ease;
+        }
+
+        .menu-toggle.active .bar:nth-child(1) {
+            transform: translateY(10px) rotate(45deg);
+            background-color: var(--primary-green);
+        }
+
+        .menu-toggle.active .bar:nth-child(2) {
+            opacity: 0;
+        }
+
+        .menu-toggle.active .bar:nth-child(3) {
+            transform: translateY(-10px) rotate(-45deg);
+            background-color: var(--primary-green);
         }
 
         /* ============================================================
@@ -1199,26 +1225,40 @@
             }
 
             .menu-toggle {
-                display: block;
+                display: inline-flex;
+                width: 30px;
+                height: 26px;
+                cursor: pointer;
+                flex-direction: column;
+                justify-content: space-between;
+                gap: 5px;
             }
 
             .nav-menu {
+                display: flex;
                 position: absolute;
                 top: 100%;
                 left: 0;
                 width: 100%;
                 background-color: var(--white);
                 flex-direction: column;
-                padding: 30px 0;
+                padding: 0;
                 box-shadow: var(--shadow-md);
-                max-height: 0;
                 overflow: hidden;
-                transition: var(--transition-smooth);
+                max-height: 0;
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.4s ease, visibility 0s linear 0.4s;
             }
 
             .nav-menu.active {
-                max-height: 500px;
+                max-height: 1000px;
+                opacity: 1;
                 padding: 30px 0 50px 0;
+                visibility: visible;
+                pointer-events: auto;
+                transition: max-height 0.4s ease, opacity 0.35s ease, padding 0.4s ease, visibility 0s linear 0s;
             }
 
             .nav-item {
@@ -1514,16 +1554,18 @@
         /* Image reference styling */
         .service-detail-image-box {
             position: relative;
-            border-radius: 12px;
+            border-radius: 14px;
             overflow: hidden;
             box-shadow: var(--shadow-md);
             aspect-ratio: 4/3;
+            min-height: 320px;
         }
 
         .service-detail-image-box img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            display: block;
             transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
         }
 
@@ -1671,6 +1713,10 @@
         }
 
         @media (max-width: 768px) {
+            section {
+                padding: 80px 0;
+            }
+
             .sub-services-grid {
                 grid-template-columns: 1fr;
                 gap: 15px;
@@ -1808,20 +1854,6 @@
             color: var(--text-body);
             font-size: 0.98rem;
             line-height: 1.8;
-        }
-
-        .service-detail-image-box {
-            border-radius: 14px;
-            overflow: hidden;
-            box-shadow: var(--shadow-md);
-            min-height: 320px;
-        }
-
-        .service-detail-image-box img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
         }
 
         .certifications .services-grid {
