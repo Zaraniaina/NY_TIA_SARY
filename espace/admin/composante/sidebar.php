@@ -16,6 +16,11 @@ $root    = '../../';
            class="<?= $current === 'home.php' ? 'active' : '' ?>">
             <i class="fas fa-th-large"></i> Dashboard
         </a>
+        <div class="sidebar-section-label">Voir notification</div>
+        <a href="<?= $root ?>espace/admin/notifications.php"
+           class="<?= $current === 'notifications.php' ? 'active' : '' ?>">
+            <i class="fas fa-bell"></i> Notification
+        </a>
 
         <div class="sidebar-section-label">Gestion</div>
         <a href="<?= $root ?>espace/admin/reservations.php"
