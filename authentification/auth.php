@@ -38,6 +38,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['admin_id'] = $auth['ID_AUTH'];
                 $_SESSION['admin_email'] = $auth['EMAIL_AUTH'];
 
+                // simple client on dois recuperer les information du client
+                $stmtClient= $pdo->prepare("SELECT * FROM CLIENT WHERE ID_AUTH=:id_auth");
+                $stmtClient->execute(["id_auth"=>  $auth['ID_AUTH']]);
+                $client=$stmtClient->fetch();
+                
+                // Stocker les données utiles dans la session de l'utilisateur
+                $_SESSION['admin_nom'] = $client['NOM_CLIENT'];
+                $_SESSION['admin_prenom'] = $client['PRENOM_CLIENT'];
+
 
                 // Authentification réussie : Rediriger l'administrateurs vers la page d'accueil
                 redirectionClient("../espace/admin/home.php");

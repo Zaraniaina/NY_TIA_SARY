@@ -4,17 +4,15 @@ require_once __DIR__ . '/../../util/auth_guard.php';
 requireClient();
 require_once __DIR__ . '/../../config/database.php';
 
+require_once __DIR__ . '/composante/tolbarDto.php';
+$titre = "Mes Photos";
+
 $clientId     = (int) $_SESSION['client_id'];
 $typeMedia="PHOTOS";
 $clientNom    = $_SESSION['client_nom']    ?? 'Client';
 $clientPrenom = $_SESSION['client_prenom'] ?? '';
 $initiales    = getInitiales($clientNom, $clientPrenom);
 $pdo          = getPDO();
-
-$stmtPhoto = $pdo->prepare('SELECT PHOTO_CLIENT FROM CLIENT WHERE ID_CLIENT = ?');
-$stmtPhoto->execute([$clientId]);
-$photoClient = $stmtPhoto->fetchColumn() ?: 'assets/images/avatar.png';
-$isDefaultPhoto = ($photoClient === 'assets/images/avatar.png');
 
 // Récupérer tous les médias liés aux réservations du client
 $stmt = $pdo->prepare(
@@ -49,18 +47,7 @@ $imgExts = ['jpg','jpeg','png','webp','gif'];
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <div class="dashboard-main">
-        <div class="dashboard-topbar">
-            <div style="display:flex;align-items:center;gap:14px;">
-                <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
-                <span class="topbar-title">Mes Photos</span>
-            </div>
-            <div class="topbar-user">
-                <div class="topbar-user-info">
-                    <span class="topbar-user-name"><?= htmlspecialchars($clientPrenom . ' ' . $clientNom) ?></span>
-                    <span class="topbar-user-role">Client</span>
-                </div>
-                <img src="../../<?= htmlspecialchars($photoClient) ?>" alt="Avatar" class="topbar-avatar" style="object-fit: cover;">            </div>
-        </div>
+        <?php include __DIR__ . '/composante/tolbar.php'; ?>
 
         <div class="dashboard-content">
             <nav class="dash-breadcrumb">

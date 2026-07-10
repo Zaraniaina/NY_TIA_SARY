@@ -3,15 +3,9 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../util/auth_guard.php';
 requireAdmin();
 require_once __DIR__ . '/../../config/database.php';
-
-$adminEmail = $_SESSION['admin_email'] ?? 'Admin';
-$adminId    = (int) ($_SESSION['admin_id'] ?? 0);
-$pdo        = getPDO();
-// Fetch admin photo from CLIENT table (admin is stored as a client with role ADMIN)
-$stmtPhoto = $pdo->prepare('SELECT PHOTO_CLIENT FROM CLIENT WHERE ID_AUTH = ?');
-$stmtPhoto->execute([$adminId]);
-$photoAdmin = $stmtPhoto->fetchColumn() ?: 'assets/images/avatar.png';
-$isDefaultPhoto = ($photoAdmin === 'assets/images/avatar.png');
+require_once __DIR__.'/composante/tolbarDto.php';
+//on changer le titre
+$titre="Gestion des Clients";
 $search     = trim($_GET['q'] ?? '');
 
 $sql = 'SELECT c.*, a.EMAIL_AUTH, a.ROLE_AUTH,
@@ -61,23 +55,7 @@ if (isset($_GET['id'])) {
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <div class="dashboard-main">
-        <div class="dashboard-topbar">
-            <div style="display:flex;align-items:center;gap:14px;">
-                <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
-                <span class="topbar-title">Gestion des Clients</span>
-            </div>
-            <div class="topbar-user">
-                <div class="topbar-user-info">
-                    <span class="topbar-user-name"><?= htmlspecialchars($adminEmail) ?></span>
-                    <span class="topbar-user-role" style="color:var(--primary-red);">Administrateur</span>
-                </div>
-                <?php if ($isDefaultPhoto): ?>
-                    <div class="topbar-avatar admin-avatar"><i class="fas fa-shield-alt" style="font-size:.85rem;"></i></div>
-                <?php else: ?>
-                    <img src="../../<?= htmlspecialchars($photoAdmin) ?>" alt="Avatar" class="topbar-avatar" style="object-fit: cover;">
-                <?php endif; ?>
-            </div>
-        </div>
+            <?php include __DIR__ . '/composante/tolbar.php'; ?>
 
         <div class="dashboard-content">
             <nav class="dash-breadcrumb">
@@ -96,13 +74,7 @@ if (isset($_GET['id'])) {
                     <div class="dash-card-header"><h3><i class="fas fa-user" style="color:var(--primary-green);margin-right:8px;"></i> Profil</h3></div>
                     <div class="dash-card-body padded">
                         <div style="text-align:center;margin-bottom:20px;">
-                            <?php if ($detailClient['PHOTO_CLIENT'] !== 'assets/images/avatar.png'): ?>
-                                <img src="../../<?= htmlspecialchars($detailClient['PHOTO_CLIENT']) ?>" alt="Avatar" class="topbar-avatar" style="width:64px;height:64px;object-fit:cover;margin:0 auto 12px;">
-                            <?php else: ?>
-                                <div class="topbar-avatar" style="width:64px;height:64px;font-size:1.4rem;margin:0 auto 12px;">
-                                    <?= mb_strtoupper(mb_substr($detailClient['PRENOM_CLIENT'],0,1) . mb_substr($detailClient['NOM_CLIENT'],0,1)) ?>
-                                </div>
-                            <?php endif; ?>
+                            <img src="../../<?= htmlspecialchars($detailClient['PHOTO_CLIENT']) ?>" alt="Avatar" class="topbar-avatar" style="width:64px;height:64px;object-fit:cover;margin:0 auto 12px;">
                             <strong style="font-family:var(--font-headings);font-size:1.1rem;">
                                 <?= htmlspecialchars($detailClient['PRENOM_CLIENT'] . ' ' . $detailClient['NOM_CLIENT']) ?>
                             </strong>
@@ -171,17 +143,10 @@ if (isset($_GET['id'])) {
                                 <?php $isDefaultClientPhoto = ($c['PHOTO_CLIENT'] === 'assets/images/avatar.png'); ?>
                                 <tr>
                                     <td>
-                                        <?php if ($isDefaultClientPhoto): ?>
-                                            <div class="topbar-avatar admin-avatar"><i class="fas fa-shield-alt" style="font-size:.85rem;"></i></div>
-                                        <?php else: ?>
-                                            <img src="../../<?= htmlspecialchars($c['PHOTO_CLIENT']) ?>" alt="Avatar" class="topbar-avatar" style="object-fit: cover;">
-                                        <?php endif; ?>
+                                        <img src="../../<?= htmlspecialchars($c['PHOTO_CLIENT']) ?>" alt="Avatar" class="topbar-avatar" style="object-fit: cover;">
                                     </td>
                                     <td>
                                         <div style="display:flex;align-items:center;gap:10px;">
-                                            <div class="topbar-avatar" style="width:34px;height:34px;font-size:0.76rem;flex-shrink:0;">
-                                                <?= mb_strtoupper(mb_substr($c['PRENOM_CLIENT'],0,1) . mb_substr($c['NOM_CLIENT'],0,1)) ?>
-                                            </div>
                                             <strong><?= htmlspecialchars($c['PRENOM_CLIENT'] . ' ' . $c['NOM_CLIENT']) ?></strong>
                                         </div>
                                     </td>

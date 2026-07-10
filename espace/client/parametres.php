@@ -5,6 +5,9 @@ requireClient();
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../util/file_upload.php';
 
+require_once __DIR__ . '/composante/tolbarDto.php';
+$titre = "Paramètres";
+
 $clientId = (int) $_SESSION['client_id'];
 $pdo      = getPDO();
 
@@ -189,20 +192,8 @@ $isDefaultPhoto = ($photoClient === 'assets/images/avatar.png');
     <?php include __DIR__ . '/composante/sidebar.php'; ?>
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <div class="dashboard-main">
-        <div class="dashboard-topbar">
-            <div style="display:flex;align-items:center;gap:14px;">
-                <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
-                <span class="topbar-title">Paramètres</span>
-            </div>
-            <div class="topbar-user">
-                <div class="topbar-user-info">
-                    <span class="topbar-user-name"><?= htmlspecialchars($clientPrenom . ' ' . $clientNom) ?></span>
-                    <span class="topbar-user-role">Client</span>
-                </div>
-                <img src="../../<?= htmlspecialchars($photoClient) ?>" alt="Avatar" class="topbar-avatar" style="object-fit: cover;">
-            </div>
-        </div>
+<div class="dashboard-main">
+        <?php include __DIR__ . '/composante/tolbar.php'; ?>
 
         <div class="dashboard-content">
             <nav class="dash-breadcrumb">
@@ -210,11 +201,6 @@ $isDefaultPhoto = ($photoClient === 'assets/images/avatar.png');
                 <i class="fas fa-chevron-right" style="font-size:.65rem;"></i>
                 <span>Paramètres</span>
             </nav>
-
-            <div class="dash-page-header">
-                <h2>Paramètres</h2>
-                <p>Gérez vos informations personnelles et vos préférences</p>
-            </div>
 
             <?php if (!empty($success)): ?>
                 <div class="dash-alert dash-alert-success">
