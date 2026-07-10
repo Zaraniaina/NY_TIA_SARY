@@ -5,15 +5,9 @@ requireAdmin();
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../util/file_upload.php';
 
-$adminId = (int) $_SESSION['admin_id'];
-$pdo     = getPDO();
-
-// Fetch admin photo from CLIENT table (admin is stored as a client with role ADMIN)
-$stmtPhoto = $pdo->prepare('SELECT PHOTO_CLIENT FROM CLIENT WHERE ID_AUTH = ?');
-$stmtPhoto->execute([$adminId]);
-$photoAdmin = $stmtPhoto->fetchColumn() ?: 'assets/images/avatar.png';
-$isDefaultPhoto = ($photoAdmin === 'assets/images/avatar.png');
-
+require_once __DIR__.'/composante/tolbarDto.php';
+//on changer le titre
+$titre="Paramètre";
 $success  = '';
 $error    = '';
 $showSuccessModal = false;
@@ -194,25 +188,8 @@ $adminEmail = $_SESSION['admin_email'] ?? $adminData['EMAIL_AUTH'] ?? 'Admin';
 <div class="dashboard-wrapper">
     <?php include __DIR__ . '/composante/sidebar.php'; ?>
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
     <div class="dashboard-main">
-        <div class="dashboard-topbar">
-            <div style="display:flex;align-items:center;gap:14px;">
-                <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
-                <span class="topbar-title">Paramètres</span>
-            </div>
-            <div class="topbar-user">
-                <div class="topbar-user-info">
-                    <span class="topbar-user-name"><?= htmlspecialchars($adminEmail) ?></span>
-                    <span class="topbar-user-role" style="color:var(--primary-red);">Administrateur</span>
-                </div>
-                <?php if ($isDefaultPhoto): ?>
-                    <div class="topbar-avatar admin-avatar"><i class="fas fa-shield-alt" style="font-size:.85rem;"></i></div>
-                <?php else: ?>
-                    <img src="../../<?= htmlspecialchars($photoAdmin) ?>" alt="Avatar" class="topbar-avatar" style="object-fit: cover;">
-                <?php endif; ?>
-            </div>
-        </div>
+     <?php include __DIR__ . '/composante/tolbar.php'; ?>
 
         <div class="dashboard-content">
             <nav class="dash-breadcrumb">
@@ -251,12 +228,8 @@ $adminEmail = $_SESSION['admin_email'] ?? $adminData['EMAIL_AUTH'] ?? 'Admin';
                         </div>
                         <div class="dash-card-body padded">
                             <div style="display: flex; gap: 20px; align-items: flex-start; margin-bottom: 20px;">
-                                <div style="width: 100px; height: 100px; border-radius: 50%; overflow: hidden; border: 3px solid var(--light-green); flex-shrink: 0; display:flex; align-items:center; justify-content:center; background:var(--primary-red); color:var(--white); font-family:var(--font-headings); font-weight:700; font-size: 2rem;">
-                                    <?php if ($isDefaultPhoto): ?>
-                                        <span><?= htmlspecialchars($initiales) ?></span>
-                                    <?php else: ?>
-                                        <img src="../../<?= htmlspecialchars($photoAdmin) ?>" alt="Photo de profil" style="width: 100%; height: 100%; object-fit: cover;">
-                                    <?php endif; ?>
+                                  <div style="width: 100px; height: 100px; border-radius: 50%; overflow: hidden; border: 3px solid var(--light-green); flex-shrink: 0; display:flex; align-items:center; justify-content:center; background:var(--primary-green); color:var(--white); font-family:var(--font-headings); font-weight:700; font-size: 2rem;">
+                                    <img src="../../<?= htmlspecialchars($photoAdmin) ?>" alt="Avatar" class="topbar-avatar" style="width: 100%; height: 100%; object-fit: cover;">
                                 </div>
                                 <div style="flex:1;">
                                     <p style="font-size:0.85rem; color:#666; margin-bottom:15px;">Une photo de profil aide à personnaliser votre compte administrateur.</p>
@@ -286,9 +259,9 @@ $adminEmail = $_SESSION['admin_email'] ?? $adminData['EMAIL_AUTH'] ?? 'Admin';
                         <div class="dash-card-body padded">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
                                 <div>
-                                    <p style="font-size:0.9rem; color:#666; margin-bottom:5px;"><strong>Nom :</strong> <?= htmlspecialchars($adminData['NOM_ADMIN'] ?? '') ?></p>
-                                    <p style="font-size:0.9rem; color:#666; margin-bottom:5px;"><strong>Prénom :</strong> <?= htmlspecialchars($adminData['PRENOM_ADMIN'] ?? '') ?></p>
-                                    <p style="font-size:0.9rem; color:#666; margin-bottom:5px;"><strong>Téléphone :</strong> <?= htmlspecialchars($adminData['TEL_ADMIN'] ?? '') ?></p>
+                                    <p style="font-size:0.9rem; color:#666; margin-bottom:5px;"><strong>Nom :</strong> <?= htmlspecialchars($adminData['NOM_CLIENT'] ?? '') ?></p>
+                                    <p style="font-size:0.9rem; color:#666; margin-bottom:5px;"><strong>Prénom :</strong> <?= htmlspecialchars($adminData['PRENOM_CLIENT'] ?? '') ?></p>
+                                    <p style="font-size:0.9rem; color:#666; margin-bottom:5px;"><strong>Téléphone :</strong> <?= htmlspecialchars($adminData['TEL_CLIENT'] ?? '') ?></p>
                                     <p style="font-size:0.9rem; color:#666;"><strong>E-mail :</strong> <?= htmlspecialchars($adminData['EMAIL_AUTH'] ?? '') ?></p>
                                 </div>
                                 <button type="button" class="btn-dash btn-dash-primary btn-dash-sm" id="openInfoModal">
@@ -346,17 +319,17 @@ $adminEmail = $_SESSION['admin_email'] ?? $adminData['EMAIL_AUTH'] ?? 'Admin';
             <div class="form-grid-2">
                 <div class="dash-form-group">
                     <label>Nom <span class="required">*</span></label>
-                    <input type="text" class="dash-input" name="nom" value="<?= htmlspecialchars($adminData['NOM_ADMIN'] ?? '') ?>" required>
+                    <input type="text" class="dash-input" name="nom" value="<?= htmlspecialchars($adminData['NOM_CLIENT'] ?? '') ?>" required>
                 </div>
                 <div class="dash-form-group">
                     <label>Prénom <span class="required">*</span></label>
-                    <input type="text" class="dash-input" name="prenom" value="<?= htmlspecialchars($adminData['PRENOM_ADMIN'] ?? '') ?>" required>
+                    <input type="text" class="dash-input" name="prenom" value="<?= htmlspecialchars($adminData['PRENOM_CLIENT'] ?? '') ?>" required>
                 </div>
             </div>
 
             <div class="dash-form-group">
                 <label>Téléphone <span class="required">*</span></label>
-                <input type="text" class="dash-input" name="telephone" value="<?= htmlspecialchars($adminData['TEL_ADMIN'] ?? '') ?>" required>
+                <input type="text" class="dash-input" name="telephone" value="<?= htmlspecialchars($adminData['TEL_CLIENT'] ?? '') ?>" required>
             </div>
 
             <div class="dash-form-group">
@@ -418,11 +391,7 @@ $adminEmail = $_SESSION['admin_email'] ?? $adminData['EMAIL_AUTH'] ?? 'Admin';
             
             <div style="text-align: center; margin-bottom: 20px;">
                 <div style="width: 120px; height: 120px; border-radius: 50%; overflow: hidden; border: 3px solid var(--light-green); margin: 0 auto 15px; display:flex; align-items:center; justify-content:center; background:var(--primary-red); color:var(--white); font-family:var(--font-headings); font-weight:700; font-size: 2.5rem;">
-                    <?php if ($isDefaultPhoto): ?>
-                        <span style="font-size: 2.5rem;"><?= htmlspecialchars($initiales) ?></span>
-                    <?php else: ?>
-                        <img src="../../<?= htmlspecialchars($photoAdmin) ?>" alt="Photo de profil" id="previewPhoto" style="width: 100%; height: 100%; object-fit: cover;">
-                    <?php endif; ?>
+                     <img src="../../<?= htmlspecialchars($photoAdmin) ?>" alt="Photo de profil" id="previewPhoto" style="width: 100%; height: 100%; object-fit: cover;">
                 </div>
                 <p style="font-size:0.85rem; color:#666;">Cliquez sur une image pour la sélectionner</p>
             </div>

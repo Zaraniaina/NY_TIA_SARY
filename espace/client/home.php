@@ -4,17 +4,14 @@ require_once __DIR__ . '/../../util/auth_guard.php';
 requireClient();
 require_once __DIR__ . '/../../config/database.php';
 
+require_once __DIR__ . '/composante/tolbarDto.php';
+$titre = "Mon Espace Client";
 
 $clientId    = (int) $_SESSION['client_id'];
 $clientNom   = $_SESSION['client_nom']   ?? 'Client';
 $clientPrenom= $_SESSION['client_prenom']?? '';
 $initiales   = getInitiales($clientNom, $clientPrenom);
 $pdo         = getPDO();
-
-$stmtPhoto = $pdo->prepare('SELECT PHOTO_CLIENT FROM CLIENT WHERE ID_CLIENT = ?');
-$stmtPhoto->execute([$clientId]);
-$photoClient = $stmtPhoto->fetchColumn() ?: 'assets/images/avatar.png';
-$isDefaultPhoto = ($photoClient === 'assets/images/avatar.png');
 
 // KPIs
 $stmtNb  = $pdo->prepare('SELECT COUNT(*) FROM RESERVATION WHERE ID_CLIENT = ?');
