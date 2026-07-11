@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    
     // 1. Video Play/Pause Control
     const bannerVideo = document.getElementById('banner-video');
     const playPauseBtn = document.getElementById('play-pause-btn');
@@ -216,4 +217,92 @@ document.addEventListener('DOMContentLoaded', () => {
         // Initial render
         goTo(0);
     }
+
+    /*const devis = document.getElementById("btn-open-devis");
+    
+    devis.addEventListener('click',(e)=>{
+
+        alert('click');
+
+    });*/
+    // 8. Modal Demande de Devis
+const devisModal = document.getElementById('devis-modal');
+const btnOpenDevis = document.getElementById('btn-open-devis');
+const devisModalClose = document.getElementById('devis-modal-close');
+const devisModalOverlay = document.getElementById('devis-modal-overlay');
+const devisAnnuler = document.getElementById('devis-annuler');
+const devisForm = document.getElementById('devis-form');
+
+if (devisModal && btnOpenDevis) {
+    const openDevisModal = (e) => {
+        e.preventDefault();
+        devisModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    };
+
+    const closeDevisModal = () => {
+        devisModal.classList.remove('active');
+        document.body.style.overflow = '';
+    };
+
+    btnOpenDevis.addEventListener('click', openDevisModal);
+    devisModalClose.addEventListener('click', closeDevisModal);
+    devisModalOverlay.addEventListener('click', closeDevisModal);
+    devisAnnuler.addEventListener('click', closeDevisModal);
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && devisModal.classList.contains('active')) {
+            closeDevisModal();
+        }
+    });
+
+    // Optionnel : soumission en AJAX au lieu d'un rechargement de page
+    // devisForm.addEventListener('submit', (e) => {
+    //     e.preventDefault();
+    //     const formData = new FormData(devisForm);
+    //     fetch('traitement_devis.php', { method: 'POST', body: formData })
+    //         .then(res => res.json())
+    //         .then(data => { /* afficher message succès */ });
+    // });
+
+    // Menus déroulants dépendants : Prestation -> Catégorie
+const prestationSelect = document.getElementById('devis-prestation');
+const categorieSelect = document.getElementById('devis-categorie');
+
+if (prestationSelect && categorieSelect) {
+    prestationSelect.addEventListener('change', () => {
+        const idPrestation = prestationSelect.value;
+
+        categorieSelect.disabled = true;
+
+        if (!idPrestation) {
+            categorieSelect.innerHTML = '<option value="" selected>Choisissez d\'abord une prestation</option>';
+            return;
+        }
+
+        categorieSelect.innerHTML = '<option value="" selected>Chargement...</option>';
+
+        fetch(`categorie.php?id_prestation=${encodeURIComponent(idPrestation)}`)
+            .then(res => res.json())
+            .then(categories => {
+                if (!Array.isArray(categories) || categories.length === 0) {
+                    categorieSelect.innerHTML = '<option value="" selected>Aucune catégorie disponible</option>';
+                    return;
+                }
+
+                let optionsHtml = '<option value="" disabled selected>Sélectionnez une catégorie</option>';
+                categories.forEach(cat => {
+                    optionsHtml += `<option value="${cat.ID_CATEGORIE}">${cat.LIB_CATEGORIE}</option>`;
+                });
+                categorieSelect.innerHTML = optionsHtml;
+                categorieSelect.disabled = false;
+            })
+            .catch(() => {
+                categorieSelect.innerHTML = '<option value="" selected>Erreur de chargement</option>';
+            });
+    });
+}
+}
+
+    
 });

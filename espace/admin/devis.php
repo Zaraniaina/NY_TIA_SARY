@@ -12,18 +12,18 @@ $success = $error = '';
 // ── Traitement actions ────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action  = $_POST['action'] ?? '';
-    $idDevis = (int) ($_POST['id_devis'] ?? 0);
+    $idDevis = (int) ($_POST['id'] ?? 0);
 
     if ($action === 'valider' && $idDevis) {
         // Vérifier qu'une réservation existe (on crée un contrat symbolique)
-        $stmt = $pdo->prepare('SELECT * FROM DEVIS WHERE ID_DEVIS = ?');
+        $stmt = $pdo->prepare('SELECT * FROM DEVIS WHERE ID = ?');
         $stmt->execute([$idDevis]);
         $devis = $stmt->fetch();
         $success = "Devis #$idDevis marqué comme validé. Un contrat devra être associé à une réservation.";
     } elseif ($action === 'supprimer' && $idDevis) {
-        $stmt = $pdo->prepare('DELETE FROM PIECES_JOINTES WHERE ID_DEVIS = ?');
+        $stmt = $pdo->prepare('DELETE FROM PIECES_JOINTES WHERE ID = ?');
         $stmt->execute([$idDevis]);
-        $stmt2 = $pdo->prepare('DELETE FROM DEVIS WHERE ID_DEVIS = ?');
+        $stmt2 = $pdo->prepare('DELETE FROM DEVIS WHERE ID = ?');
         $stmt2->execute([$idDevis]);
         $success = "Devis #$idDevis supprimé.";
     }
@@ -31,11 +31,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // ── Liste des devis ───────────────────────────────────────────
 $devis = $pdo->query(
-    'SELECT d.*, p.LIB_PRESTATION,
-            (SELECT COUNT(*) FROM PIECES_JOINTES pj WHERE pj.ID_DEVIS = d.ID_DEVIS) AS nb_pj
-     FROM DEVIS d
-     JOIN PRESTATIONS p ON d.ID_PRESTATION = p.ID_PRESTATION
-     ORDER BY d.DATE_SOUHAITE DESC'
+    'SELECT d.*, p.LIB_PRESTATION, c.LIB_CATEGORIE, (SELECT COUNT(*) FROM PIECES_JOINTES pj WHERE pj.ID = d.ID AND 
+    pj.PATH_PIECE <> "aucun") AS nb_pj FROM DEVIS d JOIN PRESTATIONS p ON d.ID_PRESTATION = p.ID_PRESTATION 
+    LEFT JOIN CATEGORIES c ON d.ID_CATEGORIE = c.ID_CATEGORIE ORDER BY d.DATE_SOUHAITE DESC'
 )->fetchAll();
 ?>
 <!DOCTYPE html>
@@ -83,36 +81,37 @@ $devis = $pdo->query(
                     <div class="table-responsive">
                         <table class="dash-table">
                             <thead>
-                                <tr><th>#</th><th>Client</th><th>Téléphone</th><th>Prestation</th><th>Budget</th><th>Date souhaitée</th><th>PJ</th><th>Actions</th></tr>
+                                <tr><th>#</th><th>Client</th><th>Téléphone</th><th>Prestation</th><th>Catégorie</th><th>Budget</th><th>Date souhaitée</th><th>PJ</th><th>Actions</th></tr>
                             </thead>
                             <tbody>
                             <?php foreach ($devis as $d): ?>
                                 <tr>
-                                    <td>#<?= (int)$d['ID_DEVIS'] ?></td>
+                                    <td>#<?= (int)$d['ID'] ?></td>
                                     <td>
                                         <strong><?= htmlspecialchars($d['PRENOMS'] . ' ' . $d['NOM']) ?></strong>
-                                        <?php if ($d['ENTREPRISE'] && $d['ENTREPRISE'] !== '—'): ?>
-                                            <br><small style="color:#888;"><?= htmlspecialchars($d['ENTREPRISE']) ?></small>
+                                        <?php if ($d['TYPE_VISITEUR'] && $d['TYPE_VISITEUR'] !== '—'): ?>
+                                            <br><small style="color:#888;"><?= htmlspecialchars($d['TYPE_VISITEUR']) ?></small>
                                         <?php endif; ?>
                                     </td>
                                     <td><?= htmlspecialchars($d['TELEPHONE']) ?></td>
                                     <td><?= htmlspecialchars($d['LIB_PRESTATION']) ?></td>
-                                    <td><strong><?= htmlspecialchars($d['BUGET_ESTIMATIF']) ?></strong></td>
+                                    <td><?= htmlspecialchars($d['LIB_CATEGORIE']) ?></td>
+                                    <td><strong><?= htmlspecialchars($d['BUGET_ESTIMATIF']) . ' AR' ?></strong></td>
                                     <td><?= date('d/m/Y', strtotime($d['DATE_SOUHAITE'])) ?></td>
                                     <td>
                                         <?php if ((int)$d['nb_pj'] > 0): ?>
                                             <span class="badge badge-confirm"><i class="fas fa-paperclip"></i> <?= (int)$d['nb_pj'] ?></span>
                                         <?php else: ?>
-                                            <span style="color:#ccc;font-size:0.8rem;">—</span>
+                                            <span class="badge badge-confirm"><i class="fas fa-paperclip"></i>0</span>
                                         <?php endif; ?>
                                     </td>
                                     <td>
-                                        <button class="btn-dash btn-dash-sm btn-dash-outline" onclick="showDetail(<?= $d['ID_DEVIS'] ?>, '<?= addslashes(htmlspecialchars($d['DESCRIPTION'])) ?>')">
+                                        <button class="btn-dash btn-dash-sm btn-dash-outline" onclick="showDetail(<?= $d['ID'] ?>, '<?= addslashes(htmlspecialchars($d['DESCRIPTION'])) ?>')">
                                             <i class="fas fa-eye"></i>
                                         </button>
                                         <form method="POST" style="display:inline;" onsubmit="return confirm('Supprimer ce devis ?');">
                                             <input type="hidden" name="action" value="supprimer">
-                                            <input type="hidden" name="id_devis" value="<?= (int)$d['ID_DEVIS'] ?>">
+                                            <input type="hidden" name="ID" value="<?= (int)$d['ID'] ?>">
                                             <button type="submit" class="btn-dash btn-dash-sm btn-dash-danger"><i class="fas fa-trash"></i></button>
                                         </form>
                                     </td>
