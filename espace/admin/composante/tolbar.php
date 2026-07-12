@@ -8,7 +8,9 @@ require_once __DIR__.'/tolbarDto.php';?>
             <div class="topbar-user">
                 <a href="notifications.php" class="topbar-notification" aria-label="Notifications">
                     <i class="fas fa-bell"></i>
-                    <span class="topbar-notification-count">3</span>
+                    <?php if ($notifCount > 0): ?>
+                        <span class="topbar-notification-count"><?= $notifCount ?></span>
+                    <?php endif; ?>
                 </a>
                 <div class="topbar-user-info">
                     <span class="topbar-user-name"><?= htmlspecialchars($adminNom." ".$adminPrenom) ?></span>

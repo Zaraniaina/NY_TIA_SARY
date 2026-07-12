@@ -35,6 +35,24 @@ $devis = $pdo->query(
     pj.PATH_PIECE <> "aucun") AS nb_pj FROM DEVIS d JOIN PRESTATIONS p ON d.ID_PRESTATION = p.ID_PRESTATION 
     LEFT JOIN CATEGORIES c ON d.ID_CATEGORIE = c.ID_CATEGORIE ORDER BY d.DATE_SOUHAITE DESC'
 )->fetchAll();
+
+// ── Marquer la notification comme lue puis nettoyer l'URL ─────
+if (isset($_GET['mark_notif']) && (int) $_GET['mark_notif'] > 0) {
+    $idNotif = (int) $_GET['mark_notif'];
+    $idDevisSelect = (int) ($_GET['id'] ?? 0);
+
+    try {
+        $stmtMark = $pdo->prepare('UPDATE notification SET LU_NOTIF = 1 WHERE ID_NOTIF = ?');
+        $stmtMark->execute([$idNotif]);
+    } catch (PDOException $e) {
+        // on ignore silencieusement, la redirection se fait quand même
+    }
+
+    header('Location: devis.php' . ($idDevisSelect > 0 ? '?id=' . $idDevisSelect : ''));
+    exit;
+}
+
+$selectedDevisId = (int) ($_GET['id'] ?? 0);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -85,7 +103,8 @@ $devis = $pdo->query(
                             </thead>
                             <tbody>
                             <?php foreach ($devis as $d): ?>
-                                <tr>
+                                <?php $isSelected = $selectedDevisId > 0 && (int)$d['ID'] === $selectedDevisId; ?>
+                                <tr<?= $isSelected ? ' class="row-highlighted" id="devis-selected"' : '' ?>>
                                     <td>#<?= (int)$d['ID'] ?></td>
                                     <td>
                                         <strong><?= htmlspecialchars($d['PRENOMS'] . ' ' . $d['NOM']) ?></strong>
@@ -150,6 +169,11 @@ function showDetail(id, desc) {
 document.getElementById('devisModal')?.addEventListener('click', e => {
     if (e.target === document.getElementById('devisModal')) e.target.style.display = 'none';
 });
+
+const selectedRow = document.getElementById('devis-selected');
+if (selectedRow) {
+    selectedRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
 </script>
 </body>
 </html>

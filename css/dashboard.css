@@ -1183,3 +1183,11 @@ body {
         font-size: 1.5rem;
     }
 }
+.row-highlighted {
+    background: rgba(217, 61, 61, 0.08) !important;
+    animation: rowFlash 1.6s ease-in-out;
+}
+@keyframes rowFlash {
+    0%   { background: rgba(217, 61, 61, 0.25); }
+    100% { background: rgba(217, 61, 61, 0.08); }
+}

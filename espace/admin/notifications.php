@@ -176,32 +176,46 @@ require_once __DIR__.'/composante/tolbarDto.php';
 
                 <div class="notifications-list">
                     <?php
-                    $notifications = [
-                        [
-                            'title' => 'Devis notification',
-                            'nom' => 'Rajaonera',
-                            'prenom' => 'Mialy',
-                            'time' => 'Il y a 4h',
-                            'message' => 'Nouvelle notification de demande de devis de Mialy Rajaonera.',
-                            'unread' => true,
-                        ],
-                        [
-                            'title' => 'Reservation notification',
-                            'nom' => 'Rakoto',
-                            'prenom' => 'Jean',
-                            'time' => 'Il y a 6h',
-                            'message' => 'Nouvelle notification de réservation de Jean Rakoto.',
-                            'unread' => true,
-                        ],
-                        [
-                            'title' => 'Devis notification',
-                            'nom' => 'Andriami',
-                            'prenom' => 'Lina',
-                            'time' => 'Il y a 1j',
-                            'message' => 'Nouvelle notification de demande de devis de Lina Andriami.',
-                            'unread' => false,
-                        ],
-                    ];
+                    function timeAgo(string $date): string
+{
+    $diff = time() - strtotime($date);
+    if ($diff < 3600) {
+        return "Il y a " . max(1, (int) floor($diff / 60)) . "min";
+    }
+    if ($diff < 86400) {
+        return "Il y a " . (int) floor($diff / 3600) . "h";
+    }
+    return "Il y a " . (int) floor($diff / 86400) . "j";
+}
+
+$notifications = [];
+try {
+    $stmt = $pdo->prepare("
+        SELECT n.ID_NOTIF, n.TYPE_NOTIF, n.ID_REF_NOTIF, n.TITRE_NOTIF, n.MESS_NOTIF, n.LU_NOTIF, n.DATE_NOTIF,
+               d.NOM AS NOM_DEVIS, d.PRENOMS AS PRENOM_DEVIS
+        FROM notification n
+        LEFT JOIN devis d ON n.ID_REF_NOTIF = d.ID
+        WHERE n.SUP_NOTIF = 0
+        ORDER BY n.DATE_NOTIF DESC
+    ");
+    $stmt->execute();
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($rows as $row) {
+        $notifications[] = [
+            'id_notif' => (int) $row['ID_NOTIF'],
+            'id_ref'   => (int) $row['ID_REF_NOTIF'],
+            'title'   => $row['TITRE_NOTIF'],
+            'nom'     => $row['NOM_DEVIS'] ?? '',
+            'prenom'  => $row['PRENOM_DEVIS'] ?? '',
+            'time'    => timeAgo($row['DATE_NOTIF']),
+            'message' => $row['MESS_NOTIF'],
+            'unread'  => ((int) $row['LU_NOTIF']) === 0,
+        ];
+    }
+} catch (PDOException $e) {
+    $notifications = [];
+}
                     foreach ($notifications as $notification):
                         $cardClass = $notification['unread'] ? 'notification-card unread' : 'notification-card';
                     ?>
@@ -218,7 +232,7 @@ require_once __DIR__.'/composante/tolbarDto.php';
                                 </div>
                                 <p class="notification-message"><?= htmlspecialchars($notification['message']) ?></p>
                                 <div class="notification-footer">
-                                    <button class="notification-view-btn" type="button">Voir</button>
+                                    <a href="devis.php?id=<?= $notification['id_ref'] ?>&mark_notif=<?= $notification['id_notif'] ?>" class="notification-view-btn" type="button"  style="display:inline-block;text-decoration:none;">Voir</a>
                                     <span class="notification-time-wrap">
                                         <?php if ($notification['unread']): ?>
                                             <span class="notification-dot" aria-hidden="true"></span>

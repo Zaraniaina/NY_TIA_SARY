@@ -50,8 +50,9 @@
         </div>
     </div>
     
-     <!-- JavaScript logic for site-wide interactivity (menus, scrolls, controls) -->
-      <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-<!-- ton script.js existant vient juste après -->
+    <!-- ton script.js existant vient juste après -->
+    <script src="https://cdn.jsdelivr.net/npm/scrollreveal@4.0.9/dist/scrollreveal.min.js"></script>
+    <!-- JavaScript logic for site-wide interactivity (menus, scrolls, controls) -->
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script src="script.js"></script>
     
