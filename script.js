@@ -7,7 +7,7 @@ if (typeof ScrollReveal !== 'undefined') {
         duration: 900,
         distance: '60px',
         easing: 'cubic-bezier(0.165, 0.84, 0.44, 1)',
-        reset: false,
+        reset: true,
     });
 
     // ---------- HERO (index.php) ----------

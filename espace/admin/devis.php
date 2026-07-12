@@ -90,22 +90,33 @@ $selectedDevisId = (int) ($_GET['id'] ?? 0);
             <div class="dash-card">
                 <div class="dash-card-header">
                     <h3><i class="fas fa-file-alt" style="color:var(--primary-green);margin-right:8px;"></i> Demandes de devis reçues</h3>
-                    <span class="badge badge-waiting"><?= count($devis) ?> total</span>
+                    <span class="badge badge-waiting" id="devisCount"><?= count($devis) ?></span>
                 </div>
-                <div class="dash-card-body">
+                                <div class="dash-card-body">
+                                    <div style="padding:16px 20px;">
+                        <div class="dash-form-group" style="position:relative;margin-bottom:0;">
+                            <i class="fas fa-search" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#999;"></i>
+                            <input type="text" id="searchDevis" class="dash-input"
+                                style="padding-left:38px;padding-right:14px;width:100%;box-sizing:border-box;border-radius:8px;"
+                                placeholder="Rechercher par client, téléphone, prestation, catégorie...">
+                        </div>
+                    </div>
                     <?php if (empty($devis)): ?>
                         <div class="empty-state"><i class="fas fa-file-times"></i><p>Aucune demande de devis pour le moment.</p></div>
                     <?php else: ?>
                     <div class="table-responsive">
-                        <table class="dash-table">
+                        <table class="dash-table" id="devisTable">
                             <thead>
                                 <tr><th>#</th><th>Client</th><th>Téléphone</th><th>Prestation</th><th>Catégorie</th><th>Budget</th><th>Date souhaitée</th><th>PJ</th><th>Actions</th></tr>
                             </thead>
                             <tbody>
                             <?php foreach ($devis as $d): ?>
                                 <?php $isSelected = $selectedDevisId > 0 && (int)$d['ID'] === $selectedDevisId; ?>
-                                <tr<?= $isSelected ? ' class="row-highlighted" id="devis-selected"' : '' ?>>
-                                    <td>#<?= (int)$d['ID'] ?></td>
+                                <?php
+                                $searchBlob = mb_strtolower($d['PRENOMS'] . ' ' . $d['NOM'] . ' ' . $d['TELEPHONE'] . ' ' . $d['LIB_PRESTATION'] . ' ' . $d['LIB_CATEGORIE']);
+                                ?>
+                                <tr<?= $isSelected ? ' class="row-highlighted" id="devis-selected"' : '' ?> data-search="<?= htmlspecialchars($searchBlob, ENT_QUOTES) ?>">
+                                                                    <td>#<?= (int)$d['ID'] ?></td>
                                     <td>
                                         <strong><?= htmlspecialchars($d['PRENOMS'] . ' ' . $d['NOM']) ?></strong>
                                         <?php if ($d['TYPE_VISITEUR'] && $d['TYPE_VISITEUR'] !== '—'): ?>
@@ -136,6 +147,11 @@ $selectedDevisId = (int) ($_GET['id'] ?? 0);
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
+                            <tr id="noSearchResultsDevis" style="display:none;">
+                                <td colspan="9" style="text-align:center;color:#999;padding:20px;">
+                                    <i class="fas fa-search"></i> Aucune demande ne correspond à votre recherche.
+                                </td>
+                            </tr>
                             </tbody>
                         </table>
                     </div>
@@ -174,6 +190,30 @@ const selectedRow = document.getElementById('devis-selected');
 if (selectedRow) {
     selectedRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
+// ── Recherche / filtre en direct de la liste des devis ──
+const searchDevis      = document.getElementById('searchDevis');
+const devisTable       = document.getElementById('devisTable');
+const devisCount       = document.getElementById('devisCount');
+const noSearchResultsD = document.getElementById('noSearchResultsDevis');
+
+searchDevis?.addEventListener('input', () => {
+    const term = searchDevis.value.trim().toLowerCase();
+    const rows = devisTable.querySelectorAll('tbody tr[data-search]');
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+        const match = row.dataset.search.includes(term);
+        row.style.display = match ? '' : 'none';
+        if (match) visibleCount++;
+    });
+
+    if (noSearchResultsD) {
+        noSearchResultsD.style.display = (visibleCount === 0 && rows.length > 0) ? '' : 'none';
+    }
+    if (devisCount) {
+        devisCount.textContent = visibleCount;
+    }
+});
 </script>
 </body>
 </html>
