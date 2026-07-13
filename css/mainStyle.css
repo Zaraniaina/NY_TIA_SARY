@@ -2151,3 +2151,43 @@
     scrollbar-width: thin;
     scrollbar-color: var(--primary-green) var(--bg-body);
 }
+.devis-form-full {
+    width: 100%;
+}
+
+.devis-categories-fieldset {
+    width: 100%;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+}
+
+.devis-categories-fieldset legend {
+    padding: 0 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #377d49;
+}
+
+.devis-categories-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 20px;
+}
+
+.devis-category-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: normal;
+    cursor: pointer;
+}
+
+.devis-categories-loading,
+.devis-categories-empty,
+.devis-categories-error {
+    color: #777;
+    font-size: 0.9rem;
+    margin: 0;
+}

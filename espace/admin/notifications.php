@@ -176,19 +176,7 @@ require_once __DIR__.'/composante/tolbarDto.php';
 
                 <div class="notifications-list">
                     <?php
-                    function timeAgo(string $date): string
-{
-    $diff = time() - strtotime($date);
-    if ($diff < 3600) {
-        return "Il y a " . max(1, (int) floor($diff / 60)) . "min";
-    }
-    if ($diff < 86400) {
-        return "Il y a " . (int) floor($diff / 3600) . "h";
-    }
-    return "Il y a " . (int) floor($diff / 86400) . "j";
-}
-
-$notifications = [];
+                    $notifications = [];
 try {
     $stmt = $pdo->prepare("
         SELECT n.ID_NOTIF, n.TYPE_NOTIF, n.ID_REF_NOTIF, n.TITRE_NOTIF, n.MESS_NOTIF, n.LU_NOTIF, n.DATE_NOTIF,
@@ -208,7 +196,7 @@ try {
             'title'   => $row['TITRE_NOTIF'],
             'nom'     => $row['NOM_DEVIS'] ?? '',
             'prenom'  => $row['PRENOM_DEVIS'] ?? '',
-            'time'    => timeAgo($row['DATE_NOTIF']),
+            'time'    => date('d/m/Y', strtotime($row['DATE_NOTIF'])),
             'message' => $row['MESS_NOTIF'],
             'unread'  => ((int) $row['LU_NOTIF']) === 0,
         ];

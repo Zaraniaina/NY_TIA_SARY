@@ -2,15 +2,17 @@
 /**
  * traitement_devis.php
  * Traite la soumission du formulaire "Demande de devis" (modal du index.php).
- * Insère une ligne dans devis, puis TOUJOURS une ligne dans pieces_jointes
+ * Insère une ligne dans devis, une ligne par catégorie choisie dans
+ * devis_categories, TOUJOURS une ligne dans pieces_jointes
  * (PATH_PIECE = "aucun" si aucun fichier n'a été envoyé), puis une ligne
  * dans notification pour prévenir l'admin.
  *
- * Table devis         : ID, NOM, PRENOMS, EMAIL, TELEPHONE, TYPE_VISITEUR,
- *                        BUGET_ESTIMATIF, DATE_SOUHAITE, DESCRIPTION, ID_PRESTATION, ID_CATEGORIE
- * Table pieces_jointes : ID_PIECE, ID (FK -> devis.ID), PATH_PIECE
- * Table notification   : ID_NOTIF, TYPE_NOTIF, ID_REF_NOTIF, TITRE_NOTIF,
- *                        MESS_NOTIF, LU_NOTIF, SUP_NOTIF, DATE_NOTIF (default CURRENT_TIMESTAMP)
+ * Table devis            : ID, NOM, PRENOMS, EMAIL, TELEPHONE, TYPE_VISITEUR,
+ *                           BUGET_ESTIMATIF, DATE_SOUHAITE, DESCRIPTION, ID_PRESTATION
+ * Table devis_categories : ID (FK -> devis.ID), ID_CATEGORIES (FK -> categories.ID_CATEGORIE)
+ * Table pieces_jointes   : ID_PIECE, ID (FK -> devis.ID), PATH_PIECE
+ * Table notification     : ID_NOTIF, TYPE_NOTIF, ID_REF_NOTIF, TITRE_NOTIF,
+ *                           MESS_NOTIF, LU_NOTIF, SUP_NOTIF, DATE_NOTIF (default CURRENT_TIMESTAMP)
  *
  * En fin de traitement, redirige vers index.php?devis=success|error&message=...#devis
  * (pattern Post/Redirect/Get — évite la resoumission du formulaire au rafraîchissement).
@@ -53,7 +55,7 @@ $budget         = trim($_POST['budget'] ?? '');
 $dateSouhaitee  = trim($_POST['date_souhaitee'] ?? '');
 $description    = trim($_POST['description'] ?? '');
 $idPrestation   = trim($_POST['id_prestation'] ?? '');
-$idCategorie    = trim($_POST['id_categorie'] ?? '');
+$categoriesPost = $_POST['id_categorie'] ?? []; // tableau (checkboxes)
 
 $errors = [];
 
@@ -88,8 +90,17 @@ if ($idPrestation === '' || !ctype_digit($idPrestation)) {
 }
 $idPrestation = $idPrestation !== '' ? (int) $idPrestation : null;
 
-// La catégorie dépend de la prestation choisie côté front ; on la garde optionnelle côté back
-$idCategorie = ($idCategorie !== '' && ctype_digit($idCategorie)) ? (int) $idCategorie : null;
+// Catégories : optionnelles côté back, mais on filtre pour ne garder que des entiers valides
+$idCategories = [];
+if (is_array($categoriesPost)) {
+    foreach ($categoriesPost as $cat) {
+        $cat = trim((string) $cat);
+        if ($cat !== '' && ctype_digit($cat)) {
+            $idCategories[] = (int) $cat;
+        }
+    }
+    $idCategories = array_unique($idCategories);
+}
 
 // Date souhaitée : optionnelle, mais si fournie elle doit être une date valide
 if ($dateSouhaitee !== '') {
@@ -103,8 +114,6 @@ if ($dateSouhaitee !== '') {
 if (mb_strlen($budget) > 128) {
     $errors[] = "Le budget estimatif est trop long.";
 }
-
-// ID_PRESTATION et ID_CATEGORIE déjà convertis/validés plus haut
 
 /* ============================================================
    2. VALIDATION DU FICHIER JOINT (optionnel — "aucun" en base si absent)
@@ -157,9 +166,9 @@ try {
 
     // 4.1 Insertion du devis
     $sqlDevis = "INSERT INTO devis
-                    (NOM, PRENOMS, EMAIL, TELEPHONE, TYPE_VISITEUR, BUGET_ESTIMATIF, DATE_SOUHAITE, DESCRIPTION, ID_PRESTATION, ID_CATEGORIE)
+                    (NOM, PRENOMS, EMAIL, TELEPHONE, TYPE_VISITEUR, BUGET_ESTIMATIF, DATE_SOUHAITE, DESCRIPTION, ID_PRESTATION)
                  VALUES
-                    (:nom, :prenom, :email, :telephone, :type_visiteur, :budget, :date_souhaitee, :description, :id_prestation, :id_categorie)";
+                    (:nom, :prenom, :email, :telephone, :type_visiteur, :budget, :date_souhaitee, :description, :id_prestation)";
 
     $stmtDevis = $pdo->prepare($sqlDevis);
     $stmtDevis->execute([
@@ -172,12 +181,25 @@ try {
         ':date_souhaitee' => $dateSouhaitee !== '' ? $dateSouhaitee : null,
         ':description'    => $description,
         ':id_prestation'  => $idPrestation,
-        ':id_categorie'   => $idCategorie,
     ]);
 
     $idDevis = (int) $pdo->lastInsertId();
 
-    // 4.2 Upload physique (si un fichier a été fourni) + insertion de la pièce jointe
+    // 4.2 Insertion des catégories choisies (table de liaison devis_categories)
+    //     Un visiteur peut cocher une ou plusieurs catégories -> une ligne par catégorie.
+    if (!empty($idCategories)) {
+        $sqlCategorie  = "INSERT INTO devis_categories (ID_DEVIS, ID_CATEGORIES) VALUES (:id_devis, :id_categorie)";
+        $stmtCategorie = $pdo->prepare($sqlCategorie);
+
+        foreach ($idCategories as $idCategorie) {
+            $stmtCategorie->execute([
+                ':id_devis'     => $idDevis,
+                ':id_categorie' => $idCategorie,
+            ]);
+        }
+    }
+
+    // 4.3 Upload physique (si un fichier a été fourni) + insertion de la pièce jointe
     //     -> une ligne est TOUJOURS créée dans pieces_jointes, avec PATH_PIECE = "aucun"
     //        si le visiteur n'a rien joint.
     $cheminPublicFinal = 'aucun';
@@ -202,7 +224,7 @@ try {
         ':path_piece' => $cheminPublicFinal,
     ]);
 
-    // 4.3 Insertion de la notification (pour prévenir l'admin dans le dashboard)
+    // 4.4 Insertion de la notification (pour prévenir l'admin dans le dashboard)
     $sqlNotif = "INSERT INTO notification
                     (TYPE_NOTIF, ID_REF_NOTIF, TITRE_NOTIF, MESS_NOTIF, LU_NOTIF, SUP_NOTIF)
                  VALUES
@@ -226,7 +248,7 @@ try {
 } catch (Throwable $e) {
     $pdo->rollBack();
 
-    // Si le fichier a été déplacé avant l'échec de l'insertion pieces_jointes, on le supprime
+    // Si le fichier a été déplacé avant l'échec de l'insertion, on le supprime
     if ($fichierValide && $cheminFinal && file_exists($cheminFinal)) {
         unlink($cheminFinal);
     }
@@ -235,5 +257,6 @@ try {
     // En production, ne jamais exposer le détail de l'erreur SQL au client.
     error_log('[traitement_devis.php] ' . $e->getMessage());
 
-    redirectVersIndex(false, "Une erreur est survenue lors de l'enregistrement de votre demande. Merci de réessayer.");
+// TEMPORAIRE — À RETIRER après debug
+redirectVersIndex(false, "DEBUG: " . $e->getMessage());
 }

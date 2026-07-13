@@ -23,6 +23,7 @@ function getPDO(): PDO
 
         try {
             $pdo = new PDO($dsn, $user, $pass, $options);
+           
         } catch (PDOException $e) {
             error_log($e->getMessage());
             die('Erreur de connexion à la base de données.');

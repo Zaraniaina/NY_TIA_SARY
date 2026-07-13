@@ -420,25 +420,25 @@ $devisMessage = $_GET['message'] ?? null;
                     <input type="tel" id="devis-telephone" name="telephone" required placeholder="Ex: +261 34 12 345 67">
                 </div>
             </div>
-            <div class="devis-form-row">
-    <div class="devis-form-group">
-        <label for="devis-prestation">Prestation souhaitée <span class="required">*</span></label>
-        <select id="devis-prestation" name="id_prestation" required>
-            <option value="" disabled selected>Sélectionnez une prestation</option>
-            <?php foreach ($prestationsList as $prestation): ?>
-                <option value="<?= htmlspecialchars($prestation['ID_PRESTATION']) ?>">
-                    <?= htmlspecialchars($prestation['LIB_PRESTATION']) ?>
-                </option>
-            <?php endforeach; ?>
-        </select>
-    </div>
-    <div class="devis-form-group">
-        <label for="devis-categorie">Catégorie</label>
-        <select id="devis-categorie" name="id_categorie" disabled>
-            <option value="" selected>Choisissez d'abord une prestation</option>
-        </select>
-    </div>
+            <div class="devis-form-group devis-form-full">
+    <label for="devis-prestation">Prestation souhaitée <span class="required">*</span></label>
+    <select id="devis-prestation" name="id_prestation" required>
+        <option value="" disabled selected>Sélectionnez une prestation</option>
+        <?php foreach ($prestationsList as $prestation): ?>
+            <option value="<?= htmlspecialchars($prestation['ID_PRESTATION']) ?>">
+                <?= htmlspecialchars($prestation['LIB_PRESTATION']) ?>
+            </option>
+        <?php endforeach; ?>
+    </select>
 </div>
+
+<fieldset class="devis-categories-fieldset" id="devis-categories-fieldset">
+    <legend>Categories</legend>
+    <small class="devis-categories-hint">Cochez une ou plusieurs catégories</small>
+    <div class="devis-categories-list" id="devis-categories-list">
+        <!-- rempli dynamiquement en JS, vide au départ -->
+    </div>
+</fieldset>
 
             <div class="devis-form-row">
                 <div class="devis-form-group">

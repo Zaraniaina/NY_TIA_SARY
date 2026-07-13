@@ -15,25 +15,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $idDevis = (int) ($_POST['id'] ?? 0);
 
     if ($action === 'valider' && $idDevis) {
-        // Vérifier qu'une réservation existe (on crée un contrat symbolique)
-        $stmt = $pdo->prepare('SELECT * FROM DEVIS WHERE ID = ?');
-        $stmt->execute([$idDevis]);
-        $devis = $stmt->fetch();
-        $success = "Devis #$idDevis marqué comme validé. Un contrat devra être associé à une réservation.";
-    } elseif ($action === 'supprimer' && $idDevis) {
-        $stmt = $pdo->prepare('DELETE FROM PIECES_JOINTES WHERE ID = ?');
-        $stmt->execute([$idDevis]);
-        $stmt2 = $pdo->prepare('DELETE FROM DEVIS WHERE ID = ?');
-        $stmt2->execute([$idDevis]);
+    // Vérifier qu'une réservation existe (on crée un contrat symbolique)
+    $stmt = $pdo->prepare('SELECT * FROM DEVIS WHERE ID = ?');
+    $stmt->execute([$idDevis]);
+    $devis = $stmt->fetch();
+    $success = "Devis #$idDevis marqué comme validé. Un contrat devra être associé à une réservation.";
+} elseif ($action === 'supprimer' && $idDevis) {
+    try {
+        $pdo->beginTransaction();
+
+        $pdo->prepare('DELETE FROM DEVIS_CATEGORIES WHERE ID_DEVIS = ?')->execute([$idDevis]);
+        $pdo->prepare('DELETE FROM PIECES_JOINTES WHERE ID = ?')->execute([$idDevis]);
+        $pdo->prepare('DELETE FROM DEVIS WHERE ID = ?')->execute([$idDevis]);
+
+        $pdo->commit();
         $success = "Devis #$idDevis supprimé.";
+    } catch (PDOException $e) {
+        $pdo->rollBack();
+        $error = "Erreur lors de la suppression du devis.";
     }
+}
 }
 
 // ── Liste des devis ───────────────────────────────────────────
 $devis = $pdo->query(
-    'SELECT d.*, p.LIB_PRESTATION, c.LIB_CATEGORIE, (SELECT COUNT(*) FROM PIECES_JOINTES pj WHERE pj.ID = d.ID AND 
-    pj.PATH_PIECE <> "aucun") AS nb_pj FROM DEVIS d JOIN PRESTATIONS p ON d.ID_PRESTATION = p.ID_PRESTATION 
-    LEFT JOIN CATEGORIES c ON d.ID_CATEGORIE = c.ID_CATEGORIE ORDER BY d.DATE_SOUHAITE DESC'
+    'SELECT d.*,
+            p.LIB_PRESTATION,
+            GROUP_CONCAT(c.LIB_CATEGORIE ORDER BY c.LIB_CATEGORIE SEPARATOR "||") AS CATEGORIES_LIST,
+            (SELECT COUNT(*) FROM PIECES_JOINTES pj WHERE pj.ID = d.ID AND pj.PATH_PIECE <> "aucun") AS nb_pj
+     FROM DEVIS d
+     JOIN PRESTATIONS p ON d.ID_PRESTATION = p.ID_PRESTATION
+     LEFT JOIN DEVIS_CATEGORIES dc ON dc.ID_DEVIS = d.ID
+     LEFT JOIN CATEGORIES c ON c.ID_CATEGORIE = dc.ID_CATEGORIES
+     GROUP BY d.ID
+     ORDER BY d.DATE_SOUHAITE DESC'
 )->fetchAll();
 
 // ── Marquer la notification comme lue puis nettoyer l'URL ─────
@@ -111,42 +126,54 @@ $selectedDevisId = (int) ($_GET['id'] ?? 0);
                             </thead>
                             <tbody>
                             <?php foreach ($devis as $d): ?>
-                                <?php $isSelected = $selectedDevisId > 0 && (int)$d['ID'] === $selectedDevisId; ?>
-                                <?php
-                                $searchBlob = mb_strtolower($d['PRENOMS'] . ' ' . $d['NOM'] . ' ' . $d['TELEPHONE'] . ' ' . $d['LIB_PRESTATION'] . ' ' . $d['LIB_CATEGORIE']);
-                                ?>
-                                <tr<?= $isSelected ? ' class="row-highlighted" id="devis-selected"' : '' ?> data-search="<?= htmlspecialchars($searchBlob, ENT_QUOTES) ?>">
-                                                                    <td>#<?= (int)$d['ID'] ?></td>
-                                    <td>
-                                        <strong><?= htmlspecialchars($d['PRENOMS'] . ' ' . $d['NOM']) ?></strong>
-                                        <?php if ($d['TYPE_VISITEUR'] && $d['TYPE_VISITEUR'] !== '—'): ?>
-                                            <br><small style="color:#888;"><?= htmlspecialchars($d['TYPE_VISITEUR']) ?></small>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td><?= htmlspecialchars($d['TELEPHONE']) ?></td>
-                                    <td><?= htmlspecialchars($d['LIB_PRESTATION']) ?></td>
-                                    <td><?= htmlspecialchars($d['LIB_CATEGORIE']) ?></td>
-                                    <td><strong><?= htmlspecialchars($d['BUGET_ESTIMATIF']) . ' AR' ?></strong></td>
-                                    <td><?= date('d/m/Y', strtotime($d['DATE_SOUHAITE'])) ?></td>
-                                    <td>
-                                        <?php if ((int)$d['nb_pj'] > 0): ?>
-                                            <span class="badge badge-confirm"><i class="fas fa-paperclip"></i> <?= (int)$d['nb_pj'] ?></span>
-                                        <?php else: ?>
-                                            <span class="badge badge-confirm"><i class="fas fa-paperclip"></i>0</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td>
-                                        <button class="btn-dash btn-dash-sm btn-dash-outline" onclick="showDetail(<?= $d['ID'] ?>, '<?= addslashes(htmlspecialchars($d['DESCRIPTION'])) ?>')">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                        <form method="POST" style="display:inline;" onsubmit="return confirm('Supprimer ce devis ?');">
-                                            <input type="hidden" name="action" value="supprimer">
-                                            <input type="hidden" name="ID" value="<?= (int)$d['ID'] ?>">
-                                            <button type="submit" class="btn-dash btn-dash-sm btn-dash-danger"><i class="fas fa-trash"></i></button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
+    <?php
+    $isSelected     = $selectedDevisId > 0 && (int)$d['ID'] === $selectedDevisId;
+    $categoriesArr  = !empty($d['CATEGORIES_LIST']) ? explode('||', $d['CATEGORIES_LIST']) : [];
+    $categoriesTxt  = !empty($categoriesArr) ? implode(', ', $categoriesArr) : '';
+    $searchBlob     = mb_strtolower($d['PRENOMS'] . ' ' . $d['NOM'] . ' ' . $d['TELEPHONE'] . ' ' . $d['LIB_PRESTATION'] . ' ' . $categoriesTxt);
+    ?>
+    <tr<?= $isSelected ? ' class="row-highlighted" id="devis-selected"' : '' ?> data-search="<?= htmlspecialchars($searchBlob, ENT_QUOTES) ?>">
+        <td>#<?= (int)$d['ID'] ?></td>
+        <td>
+            <strong><?= htmlspecialchars($d['PRENOMS'] . ' ' . $d['NOM']) ?></strong>
+            <?php if ($d['TYPE_VISITEUR'] && $d['TYPE_VISITEUR'] !== '—'): ?>
+                <br><small style="color:#888;"><?= htmlspecialchars($d['TYPE_VISITEUR']) ?></small>
+            <?php endif; ?>
+        </td>
+        <td><?= htmlspecialchars($d['TELEPHONE']) ?></td>
+        <td><?= htmlspecialchars($d['LIB_PRESTATION']) ?></td>
+        <td>
+            <?php if (empty($categoriesArr)): ?>
+                <span style="color:#aaa;">—</span>
+            <?php else: ?>
+                <div style="display:flex;flex-wrap:wrap;gap:4px;">
+                    <?php foreach ($categoriesArr as $cat): ?>
+                        <span class="badge badge-waiting" style="font-weight:500;"><?= htmlspecialchars($cat) ?></span>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </td>
+        <td><strong><?= htmlspecialchars($d['BUGET_ESTIMATIF']) . ' AR' ?></strong></td>
+        <td><?= date('d/m/Y', strtotime($d['DATE_SOUHAITE'])) ?></td>
+        <td>
+            <?php if ((int)$d['nb_pj'] > 0): ?>
+                <span class="badge badge-confirm"><i class="fas fa-paperclip"></i> <?= (int)$d['nb_pj'] ?></span>
+            <?php else: ?>
+                <span class="badge badge-confirm"><i class="fas fa-paperclip"></i>0</span>
+            <?php endif; ?>
+        </td>
+        <td>
+            <button class="btn-dash btn-dash-sm btn-dash-outline" onclick="showDetail(<?= $d['ID'] ?>, '<?= addslashes(htmlspecialchars($d['DESCRIPTION'])) ?>')">
+                <i class="fas fa-eye"></i>
+            </button>
+            <form method="POST" style="display:inline;" onsubmit="return confirm('Supprimer ce devis ?');">
+                <input type="hidden" name="action" value="supprimer">
+                <input type="hidden" name="id" value="<?= (int)$d['ID'] ?>">
+                <button type="submit" class="btn-dash btn-dash-sm btn-dash-danger"><i class="fas fa-trash"></i></button>
+            </form>
+        </td>
+    </tr>
+<?php endforeach; ?>
                             <tr id="noSearchResultsDevis" style="display:none;">
                                 <td colspan="9" style="text-align:center;color:#999;padding:20px;">
                                     <i class="fas fa-search"></i> Aucune demande ne correspond à votre recherche.

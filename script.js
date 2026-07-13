@@ -361,40 +361,43 @@ if (devisModal && btnOpenDevis) {
     //         .then(data => { /* afficher message succès */ });
     // });
 
-    // Menus déroulants dépendants : Prestation -> Catégorie
-const prestationSelect = document.getElementById('devis-prestation');
-const categorieSelect = document.getElementById('devis-categorie');
+  const prestationSelect = document.getElementById('devis-prestation');
+const categoriesList = document.getElementById('devis-categories-list');
 
-if (prestationSelect && categorieSelect) {
+if (prestationSelect && categoriesList) {
     prestationSelect.addEventListener('change', () => {
         const idPrestation = prestationSelect.value;
 
-        categorieSelect.disabled = true;
+        categoriesList.innerHTML = '';
 
         if (!idPrestation) {
-            categorieSelect.innerHTML = '<option value="" selected>Choisissez d\'abord une prestation</option>';
-            return;
+            return; // rien tant qu'aucune prestation n'est choisie
         }
 
-        categorieSelect.innerHTML = '<option value="" selected>Chargement...</option>';
+        categoriesList.innerHTML = '<p class="devis-categories-loading">Chargement...</p>';
 
         fetch(`categorie.php?id_prestation=${encodeURIComponent(idPrestation)}`)
             .then(res => res.json())
             .then(categories => {
+                categoriesList.innerHTML = '';
+
                 if (!Array.isArray(categories) || categories.length === 0) {
-                    categorieSelect.innerHTML = '<option value="" selected>Aucune catégorie disponible</option>';
+                    categoriesList.innerHTML = '<p class="devis-categories-empty">Aucune catégorie disponible</p>';
                     return;
                 }
 
-                let optionsHtml = '<option value="" disabled selected>Sélectionnez une catégorie</option>';
                 categories.forEach(cat => {
-                    optionsHtml += `<option value="${cat.ID_CATEGORIE}">${cat.LIB_CATEGORIE}</option>`;
+                    const item = document.createElement('label');
+                    item.className = 'devis-category-checkbox';
+                    item.innerHTML = `
+                        <input type="checkbox" name="id_categorie[]" value="${cat.ID_CATEGORIE}">
+                        <span>${cat.LIB_CATEGORIE}</span>
+                    `;
+                    categoriesList.appendChild(item);
                 });
-                categorieSelect.innerHTML = optionsHtml;
-                categorieSelect.disabled = false;
             })
             .catch(() => {
-                categorieSelect.innerHTML = '<option value="" selected>Erreur de chargement</option>';
+                categoriesList.innerHTML = '<p class="devis-categories-error">Erreur de chargement</p>';
             });
     });
 }
