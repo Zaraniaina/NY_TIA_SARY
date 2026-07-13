@@ -5,7 +5,7 @@ requireClient();
 
 require_once __DIR__ . '/composante/tolbarDto.php';
 $titre = "Mes Photos";
-$typeMedia="PHOTO";
+$typeMedia = "IMAGE";
 // Récupérer tous les médias liés aux réservations du client
 $stmt = $pdo->prepare(
     'SELECT m.PATH_MEDIA, m.ID_MEDIA, p.LIB_PRESTATION, r.DATE_RESERVATION

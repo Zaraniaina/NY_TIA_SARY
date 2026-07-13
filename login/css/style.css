@@ -51,10 +51,10 @@ body {
     min-height: 100vh;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;   /* flex-start pour permettre le scroll sur mobile */
     position: relative;
     overflow-x: hidden;
-    padding: 20px;
+    padding: 32px 16px 48px;   /* espace haut/bas généreux */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
@@ -291,6 +291,46 @@ body {
 }
 
 /* --------------------------------------------------------------------------
+   Prefixe Téléphonique (Drapeau + Indicatif)
+   -------------------------------------------------------------------------- */
+.phone-group {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+}
+
+.phone-prefix {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-left: 18px;
+    padding-right: 12px;
+    border-right: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--color-text-white);
+    font-size: 14.5px;
+    user-select: none;
+    transition: var(--transition-smooth);
+}
+
+.phone-prefix .flag {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.phone-prefix .code {
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+.phone-group:focus-within .phone-prefix {
+    border-color: rgba(200, 169, 106, 0.5);
+}
+
+.phone-group input {
+    padding-left: 14px !important;
+}
+
+/* --------------------------------------------------------------------------
    Lien : Mot de passe oublié
    -------------------------------------------------------------------------- */
 .forgot-password {
@@ -431,60 +471,6 @@ body {
     }
 }
 
-/* --------------------------------------------------------------------------
-   Adaptabilité Mobile (Responsive)
-   -------------------------------------------------------------------------- */
-@media (max-width: 480px) {
-    body {
-        padding: 15px;
-        align-items: center;
-    }
-
-    .login-container {
-        max-width: 100%;
-    }
-
-    .login-card {
-        padding: 40px 24px 30px 24px;
-        border-radius: 20px;
-    }
-
-    .logo-main {
-        font-size: 22px;
-        letter-spacing: 5px;
-    }
-
-    .logo-sub {
-        font-size: 8px;
-        letter-spacing: 5px;
-    }
-
-    .card-header {
-        margin-bottom: 25px;
-    }
-
-    .card-header h2 {
-        font-size: 20px;
-    }
-
-    .card-header p {
-        font-size: 13px;
-    }
-
-    .input-group input {
-        padding: 15px 15px 15px 48px;
-        font-size: 14px;
-    }
-
-    .input-group .input-icon {
-        left: 15px;
-    }
-
-    .btn-submit {
-        padding: 15px;
-        font-size: 14.5px;
-    }
-}
 
 /* --------------------------------------------------------------------------
    Styles Spécifiques pour la Page d'Inscription (Register)
@@ -492,19 +478,111 @@ body {
 
 /* Conteneur élargi pour le formulaire d'inscription (deux colonnes) */
 .login-container.register-container {
-    max-width: 680px;
+    max-width: 720px;
 }
 
 /* Grille de formulaire à deux colonnes */
 .form-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    column-gap: 20px;
+    column-gap: 18px;
     row-gap: 0;
 }
 
 .grid-full {
     grid-column: span 2;
+}
+
+/* --------------------------------------------------------------------------
+   Champ Téléphone — Image drapeau + Indicatif +261
+   -------------------------------------------------------------------------- */
+
+/* Conteneur principal */
+.phone-group {
+    display: flex;
+    align-items: stretch;
+    overflow: hidden;
+    padding: 0;
+}
+
+/* Badge préfixe : image + +261 */
+.phone-prefix {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px 0 16px;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.04);
+    cursor: default;
+    user-select: none;
+    transition: background 0.3s ease;
+}
+
+.phone-group:focus-within .phone-prefix {
+    background: rgba(200, 169, 106, 0.06);
+}
+
+/* Image du drapeau — taille fixe 32×32 */
+.phone-flag-img {
+    width: 32px;
+    height: 32px;
+    object-fit: cover;
+    border-radius: 6px;
+    display: block;
+    box-shadow:
+        0 1px 4px rgba(0, 0, 0, 0.55),
+        0 0 0 1px rgba(255, 255, 255, 0.12);
+    flex-shrink: 0;
+}
+
+/* Indicatif +261 */
+.phone-dial-code {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-primary-gold);
+    letter-spacing: 0.4px;
+    font-family: var(--font-stack);
+    white-space: nowrap;
+}
+
+/* Ligne séparatrice verticale entre le badge et le champ */
+.phone-sep {
+    width: 1px;
+    align-self: stretch;
+    background: rgba(255, 255, 255, 0.10);
+    flex-shrink: 0;
+    transition: background 0.3s ease;
+}
+
+.phone-group:focus-within .phone-sep {
+    background: rgba(200, 169, 106, 0.40);
+}
+
+/* Input numéro */
+.phone-group input[type="tel"] {
+    flex: 1;
+    padding: 16px 16px 16px 12px !important;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--color-text-white);
+    font-size: 14.5px;
+    font-family: var(--font-stack);
+    font-weight: 500;
+    letter-spacing: 0.8px;
+    border-radius: 0;
+}
+
+.phone-group input[type="tel"]::placeholder {
+    color: rgba(255, 255, 255, 0.30);
+    font-weight: 400;
+    letter-spacing: 0.3px;
+}
+
+/* Responsive mobile — préfixe téléphone */
+@media (max-width: 480px) {
+    .phone-prefix { padding: 0 9px 0 13px; gap: 6px; }
+    .phone-dial-code { font-size: 13px; }
 }
 
 /* Style spécifique pour les menus déroulants (select) */
@@ -552,15 +630,145 @@ body {
     padding: 12px;
 }
 
-/* Adaptabilité Mobile pour la Grille */
-@media (max-width: 680px) {
-    .form-grid {
-        grid-template-columns: 1fr;
+/* ==========================================================================
+   RESPONSIVE — Tous les breakpoints
+   ========================================================================== */
+
+/* --- Tablette large (max 900px) --- */
+@media (max-width: 900px) {
+    .login-container {
+        max-width: 96vw;
+    }
+}
+
+/* --- Tablette (max 768px) : grille 2 colonnes réduite --- */
+@media (max-width: 768px) {
+    body {
+        padding: 24px 14px 40px;
     }
 
+    .login-container {
+        max-width: 100%;
+    }
+
+    .login-card {
+        padding: 40px 28px 32px;
+        border-radius: 20px;
+    }
+
+    .logo-main { font-size: 22px; letter-spacing: 5px; }
+    .logo-sub  { font-size: 8.5px; letter-spacing: 5px; }
+
+    .card-header h2 { font-size: 20px; }
+    .card-header p  { font-size: 13px; }
+}
+
+/* --- Mobile (max 600px) : passage à 1 colonne --- */
+@media (max-width: 600px) {
+    body {
+        padding: 20px 12px 40px;
+    }
+
+    .login-card {
+        padding: 32px 18px 28px;
+        border-radius: 18px;
+    }
+
+    .logo { margin-bottom: 24px; }
+    .logo-main { font-size: 20px; letter-spacing: 4px; }
+    .logo-sub  { font-size: 8px;  letter-spacing: 4px; }
+
+    .card-header {
+        margin-bottom: 22px;
+    }
+    .card-header h2 { font-size: 18px; }
+    .card-header p  { font-size: 12.5px; }
+
+    /* Grille : 1 colonne unique */
+    .form-grid {
+        grid-template-columns: 1fr;
+        column-gap: 0;
+    }
     .grid-full {
         grid-column: span 1;
     }
+
+    /* Champs */
+    .input-group {
+        margin-bottom: 14px;
+        border-radius: 10px;
+    }
+    .input-group input {
+        padding: 14px 14px 14px 44px;
+        font-size: 14px;
+        border-radius: 10px;
+    }
+    .input-group select {
+        padding: 14px 36px 14px 44px;
+        font-size: 14px;
+        border-radius: 10px;
+    }
+    .input-group .input-icon {
+        left: 14px;
+    }
+    .input-group .input-icon svg {
+        width: 17px;
+        height: 17px;
+    }
+
+    /* Téléphone */
+    .phone-prefix {
+        padding: 0 10px 0 14px;
+        gap: 7px;
+    }
+    .phone-group input[type="tel"] {
+        padding: 14px 14px 14px 10px !important;
+        font-size: 14px;
+    }
+
+    /* Bouton */
+    .btn-submit {
+        padding: 14px;
+        font-size: 14px;
+        border-radius: 10px;
+    }
+
+    /* Pied de page */
+    .card-footer { margin-top: 24px; padding-top: 18px; }
+    .signup-prompt { margin-top: 20px; font-size: 13px; }
+}
+
+/* --- Très petit mobile (max 400px) --- */
+@media (max-width: 400px) {
+    body {
+        padding: 14px 8px 32px;
+    }
+
+    .login-card {
+        padding: 26px 14px 22px;
+        border-radius: 16px;
+    }
+
+    .logo-main { font-size: 18px; letter-spacing: 3px; }
+    .logo-sub  { font-size: 7.5px; letter-spacing: 3px; }
+
+    .card-header h2 { font-size: 17px; }
+
+    .input-group input  { padding: 13px 12px 13px 40px; font-size: 13.5px; }
+    .input-group select { padding: 13px 30px 13px 40px; font-size: 13.5px; }
+    .input-group .input-icon { left: 12px; }
+    .input-group .input-icon svg { width: 15px; height: 15px; }
+
+    /* Téléphone très petit */
+    .phone-flag-img  { width: 26px; height: 26px; }
+    .phone-dial-code { font-size: 12.5px; }
+    .phone-prefix    { padding: 0 8px 0 10px; gap: 5px; }
+    .phone-group input[type="tel"] {
+        padding: 13px 10px 13px 8px !important;
+        font-size: 13.5px;
+    }
+
+    .btn-submit { padding: 13px; font-size: 13.5px; }
 }
 
 /* Alertes de statut (Erreur & Succès) */

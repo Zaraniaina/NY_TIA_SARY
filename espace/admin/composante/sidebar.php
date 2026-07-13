@@ -22,6 +22,14 @@ $root    = '../../';
            class="<?= $current === 'reservations.php' ? 'active' : '' ?>">
             <i class="fas fa-calendar-check"></i> Réservations
         </a>
+        <a href="<?= $root ?>espace/admin/contrats.php"
+           class="<?= $current === 'contrats.php' ? 'active' : '' ?>" style="padding-left:2.2rem;font-size:0.88rem;">
+            <i class="fas fa-file-signature"></i> Contrats
+        </a>
+        <a href="<?= $root ?>espace/admin/factures.php"
+           class="<?= $current === 'factures.php' ? 'active' : '' ?>" style="padding-left:2.2rem;font-size:0.88rem;">
+            <i class="fas fa-file-invoice"></i> Factures
+        </a>
         <a href="<?= $root ?>espace/admin/clients.php"
            class="<?= $current === 'clients.php' ? 'active' : '' ?>">
             <i class="fas fa-users"></i> Clients
@@ -40,9 +48,21 @@ $root    = '../../';
            class="<?= $current === 'blog.php' ? 'active' : '' ?>">
             <i class="fas fa-newspaper"></i> Blog
         </a>
+        <a href="<?= $root ?>espace/admin/temoignages.php"
+           class="<?= $current === 'temoignages.php' ? 'active' : '' ?>">
+            <i class="fas fa-star"></i> Témoignages
+        </a>
+        <a href="<?= $root ?>espace/admin/medias.php"
+           class="<?= $current === 'medias.php' ? 'active' : '' ?>">
+            <i class="fas fa-photo-video"></i> Médias livrés
+        </a>
         <a href="<?= $root ?>espace/admin/prestations.php"
            class="<?= $current === 'prestations.php' ? 'active' : '' ?>">
             <i class="fas fa-concierge-bell"></i> Prestations
+        </a>
+        <a href="<?= $root ?>espace/admin/categories.php"
+           class="<?= $current === 'categories.php' ? 'active' : '' ?>" style="padding-left:2.2rem;font-size:0.88rem;">
+            <i class="fas fa-tags"></i> Catégories &amp; tarifs
         </a>
 
         <div class="sidebar-divider"></div>
