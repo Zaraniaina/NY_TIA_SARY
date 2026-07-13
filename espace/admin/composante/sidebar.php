@@ -30,6 +30,10 @@ $root    = '../../';
            class="<?= $current === 'devis.php' ? 'active' : '' ?>">
             <i class="fas fa-file-alt"></i> Devis
         </a>
+        <a href="<?= $root ?>espace/admin/calendrier.php"
+           class="<?= $current === 'calendrier.php' ? 'active' : '' ?>">
+            <i class="fas fa-calendar"></i> Calendrier
+        </a>
 
         <div class="sidebar-section-label">Contenu</div>
         <a href="<?= $root ?>espace/admin/blog.php"

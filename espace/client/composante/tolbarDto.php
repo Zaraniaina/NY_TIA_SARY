@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../../config/database.php';
 // Récupère les informations du client depuis la session
 $clientEmail = $_SESSION['user_email'] ?? 'Client';
 $clientNom = $_SESSION['client_nom'] ?? 'Client';

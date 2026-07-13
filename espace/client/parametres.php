@@ -2,14 +2,10 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../../util/auth_guard.php';
 requireClient();
-require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../util/file_upload.php';
 
 require_once __DIR__ . '/composante/tolbarDto.php';
 $titre = "Paramètres";
-
-$clientId = (int) $_SESSION['client_id'];
-$pdo      = getPDO();
 
 // Fetch authId from DB directly instead of relying on session key
 $stmtAuth = $pdo->prepare("SELECT ID_AUTH FROM CLIENT WHERE ID_CLIENT = ?");

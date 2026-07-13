@@ -2,17 +2,9 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../../util/auth_guard.php';
 requireClient();
-require_once __DIR__ . '/../../config/database.php';
-
 require_once __DIR__ . '/composante/tolbarDto.php';
 $titre = "Mes Videos";
-
-$clientId     = (int) $_SESSION['client_id'];
 $typeMedia="VIDEOS";
-$clientNom    = $_SESSION['client_nom']    ?? 'Client';
-$clientPrenom = $_SESSION['client_prenom'] ?? '';
-$initiales    = getInitiales($clientNom, $clientPrenom);
-$pdo          = getPDO();
 
 // Récupérer tous les médias liés aux réservations du client
 $stmt = $pdo->prepare(

@@ -2,7 +2,6 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../../util/auth_guard.php';
 requireAdmin();
-require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__.'/composante/tolbarDto.php';
 //on changer le titre
 $titre="Gestion des Clients";
