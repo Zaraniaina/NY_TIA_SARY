@@ -12,19 +12,35 @@ $error        = '';
 // ── Traitement nouvelle réservation ──────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'new_resa') {
     $idPrestation    = (int) ($_POST['id_prestation'] ?? 0);
+    $idCategories    = $_POST['id_categories'] ?? [];
     $dateResa        = trim($_POST['date_reservation'] ?? '');
     $heureResa       = trim($_POST['heure_reservation'] ?? '');
     $lieuResa        = trim($_POST['lieu_reservation'] ?? '');
     $commentaire     = trim($_POST['commentaire'] ?? '');
 
-    if (!$idPrestation || !$dateResa || !$heureResa || !$lieuResa) {
-        $error = 'Veuillez remplir tous les champs obligatoires.';
+    if (!$idPrestation || empty($idCategories) || !$dateResa || !$heureResa || !$lieuResa) {
+        $error = 'Veuillez remplir tous les champs obligatoires et choisir au moins une formule.';
     } else {
         $stmt = $pdo->prepare(
             'INSERT INTO RESERVATION (ID_PRESTATION, ID_CLIENT, DATE_RESERVATION, HEURE_RESERVATION, LIEU_RESERVATION, COMME_RESERVATION, STATUS_RESERVATION)
              VALUES (?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([$idPrestation, $clientId, $dateResa, $heureResa, $lieuResa, $commentaire, 'EN ATTENTE']);
+        
+        $idResa = $pdo->lastInsertId();
+
+        $stmtCat = $pdo->prepare('SELECT TARIF_CATEGORIE FROM CATEGORIE WHERE ID_CATEGORIE = ?');
+        $stmtRc = $pdo->prepare('INSERT INTO RESERVATION_CATEGORIE (ID_RESERVATION, ID_CATEGORIE, PRIX) VALUES (?, ?, ?)');
+        
+        foreach ($idCategories as $idCat) {
+            $idCat = (int) $idCat;
+            if ($idCat > 0) {
+                $stmtCat->execute([$idCat]);
+                $prix = (int) $stmtCat->fetchColumn();
+                $stmtRc->execute([$idResa, $idCat, $prix]);
+            }
+        }
+
         $success = 'Votre réservation a été soumise avec succès ! Nous vous contacterons bientôt.';
     }
 }
@@ -73,16 +89,20 @@ $prestations = $pdo->query('SELECT ID_PRESTATION, LIB_PRESTATION FROM PRESTATION
 // ── Toutes mes réservations ───────────────────────────────────
 $filter = $_GET['statut'] ?? 'TOUS';
 $sql = 'SELECT r.*, p.LIB_PRESTATION,
+               SUM(rc.PRIX) AS TOTAL_PRIX, 
+               GROUP_CONCAT(cat.LIB_CATEGORIE SEPARATOR \'<br>\') AS LIBS_CATEGORIES,
                (SELECT COUNT(*) FROM TEMOIGNAGE t WHERE t.ID_RESERVATION=r.ID_RESERVATION) AS a_temoigne
         FROM RESERVATION r
         JOIN PRESTATIONS p ON r.ID_PRESTATION = p.ID_PRESTATION
+        LEFT JOIN RESERVATION_CATEGORIE rc ON rc.ID_RESERVATION = r.ID_RESERVATION
+        LEFT JOIN CATEGORIE cat ON cat.ID_CATEGORIE = rc.ID_CATEGORIE
         WHERE r.ID_CLIENT = ?';
 $params = [$clientId];
 if ($filter !== 'TOUS') {
     $sql    .= ' AND r.STATUS_RESERVATION = ?';
     $params[] = $filter;
 }
-$sql .= ' ORDER BY r.DATE_RESERVATION DESC';
+$sql .= ' GROUP BY r.ID_RESERVATION ORDER BY r.DATE_RESERVATION DESC';
 $stmtResas = $pdo->prepare($sql);
 $stmtResas->execute($params);
 $reservations = $stmtResas->fetchAll();
@@ -144,13 +164,13 @@ $reservations = $stmtResas->fetchAll();
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <div class="dash-form-group">
-                                <label for="id_categorie">Catégorie / Formule <span class="required">*</span></label>
-                                <select name="id_categorie" id="id_categorie" class="dash-select" required disabled>
-                                    <option value="">— Choisissez d'abord une prestation —</option>
-                                </select>
-                                <div id="tarif-info" style="margin-top:6px;font-size:0.85rem;color:var(--primary-green);display:none;">
-                                    <i class="fas fa-tag"></i> Tarif estimatif : <strong id="tarif-val"></strong>
+                            <div class="dash-form-group" style="grid-column: 1 / -1;">
+                                <label>Catégories / Formules <span class="required">*</span></label>
+                                <div id="categories-container" class="checkbox-grid">
+                                    <div style="color:#888;font-size:0.85rem;padding:10px 0;">— Choisissez d'abord une prestation —</div>
+                                </div>
+                                <div id="tarif-info" style="margin-top:12px;font-size:0.95rem;color:var(--primary-green);display:none;background:rgba(55, 125, 73, 0.05);padding:10px 15px;border-radius:6px;border:1px solid rgba(55, 125, 73, 0.1);">
+                                    <i class="fas fa-calculator"></i> Total estimatif : <strong id="tarif-val" style="font-size:1.1rem;">0 Ar</strong>
                                 </div>
                             </div>
                             <div class="dash-form-group">
@@ -204,7 +224,8 @@ $reservations = $stmtResas->fetchAll();
                             <thead>
                             <tr>
                                         <th>#</th>
-                                        <th>Prestation</th>
+                                        <th>Prestation & Formule</th>
+                                        <th>Tarif</th>
                                         <th>Date</th>
                                         <th>Heure</th>
                                         <th>Lieu</th>
@@ -224,7 +245,17 @@ $reservations = $stmtResas->fetchAll();
                                 ?>
                                 <tr>
                                     <td>#<?= (int) $r['ID_RESERVATION'] ?></td>
-                                    <td><strong><?= htmlspecialchars($r['LIB_PRESTATION']) ?></strong></td>
+                                    <td>
+                                        <strong><?= htmlspecialchars($r['LIB_PRESTATION']) ?></strong><br>
+                                        <span style="font-size:0.8rem;color:#aaa;"><?= $r['LIBS_CATEGORIES'] ? $r['LIBS_CATEGORIES'] : 'Formule non spécifiée' ?></span>
+                                    </td>
+                                    <td>
+                                        <?php if ($r['TOTAL_PRIX']): ?>
+                                            <span style="color:var(--primary-green);font-weight:600;"><?= number_format((int)$r['TOTAL_PRIX'], 0, ',', ' ') ?> Ar</span>
+                                        <?php else: ?>
+                                            <span style="color:#777;">À définir</span>
+                                        <?php endif; ?>
+                                    </td>
                                     <td><?= date('d/m/Y', strtotime($r['DATE_RESERVATION'])) ?></td>
                                     <td><?= substr($r['HEURE_RESERVATION'], 0, 5) ?></td>
                                     <td><?= htmlspecialchars($r['LIEU_RESERVATION']) ?></td>
@@ -310,45 +341,55 @@ btn?.addEventListener('click', () => {
 
 // Chargement dynamique des catégories
 const selPrest = document.getElementById('id_prestation');
-const selCat   = document.getElementById('id_categorie');
+const catContainer = document.getElementById('categories-container');
 const tarifDiv = document.getElementById('tarif-info');
 const tarifVal = document.getElementById('tarif-val');
 
+function calculateTotal() {
+    let total = 0;
+    const checkboxes = document.querySelectorAll('input[name="id_categories[]"]:checked');
+    checkboxes.forEach(cb => {
+        total += parseInt(cb.dataset.tarif || 0);
+    });
+    
+    if (checkboxes.length > 0) {
+        tarifVal.textContent = total.toLocaleString('fr-FR') + ' Ar';
+        tarifDiv.style.display = 'block';
+    } else {
+        tarifDiv.style.display = 'none';
+    }
+}
+
 selPrest?.addEventListener('change', async () => {
     const idPrest = selPrest.value;
-    selCat.innerHTML = '<option value="">— Chargement... —</option>';
-    selCat.disabled = true;
+    catContainer.innerHTML = '<div style="color:#888;font-size:0.85rem;padding:10px 0;">— Chargement... —</div>';
     tarifDiv.style.display = 'none';
 
     if (!idPrest) {
-        selCat.innerHTML = '<option value="">— Choisissez d\'abord une prestation —</option>';
+        catContainer.innerHTML = '<div style="color:#888;font-size:0.85rem;padding:10px 0;">— Choisissez d\'abord une prestation —</div>';
         return;
     }
 
     try {
         const res  = await fetch('../../api/categories.php?id_prestation=' + idPrest);
         const data = await res.json();
-        selCat.innerHTML = '<option value="">— Choisir une formule —</option>';
+        
         if (data.length === 0) {
-            selCat.innerHTML += '<option value="" disabled>Aucune formule disponible</option>';
+            catContainer.innerHTML = '<div style="color:#888;font-size:0.85rem;padding:10px 0;">Aucune formule disponible</div>';
         } else {
+            catContainer.innerHTML = '';
             data.forEach(cat => {
-                selCat.innerHTML += `<option value="${cat.id}" data-tarif="${cat.tarif}">${cat.lib} — ${cat.tarif_fmt} Ar</option>`;
+                const wrapper = document.createElement('label');
+                wrapper.style.cssText = 'display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:8px;';
+                wrapper.innerHTML = `
+                    <input type="checkbox" name="id_categories[]" value="${cat.id}" data-tarif="${cat.tarif}" onchange="calculateTotal()" style="width:16px; height:16px; accent-color:var(--primary-green);">
+                    <span style="font-size:0.9rem; color:var(--logo-black);">${cat.lib} — <strong style="color:var(--primary-green);">${cat.tarif_fmt} Ar</strong></span>
+                `;
+                catContainer.appendChild(wrapper);
             });
         }
-        selCat.disabled = false;
     } catch(e) {
-        selCat.innerHTML = '<option value="">— Erreur de chargement —</option>';
-    }
-});
-
-selCat?.addEventListener('change', () => {
-    const opt = selCat.options[selCat.selectedIndex];
-    if (opt && opt.dataset.tarif) {
-        tarifVal.textContent = parseInt(opt.dataset.tarif).toLocaleString('fr-FR') + ' Ar';
-        tarifDiv.style.display = 'block';
-    } else {
-        tarifDiv.style.display = 'none';
+        catContainer.innerHTML = '<div style="color:#e74c3c;font-size:0.85rem;padding:10px 0;">— Erreur de chargement —</div>';
     }
 });
 // Modal témoignage

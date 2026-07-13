@@ -1012,3 +1012,55 @@ body {
         font-size: 1.5rem;
     }
 }
+
+/* ── CATEGORY CHECKBOX GRID ── */
+.checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.cat-checkbox-wrapper {
+    position: relative;
+    display: block;
+    cursor: pointer;
+}
+
+.cat-checkbox-wrapper input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.cat-checkbox-card {
+    display: flex;
+    flex-direction: column;
+    padding: 15px;
+    background: var(--bg-body);
+    border: 2px solid var(--input-border);
+    border-radius: 8px;
+    transition: var(--transition-smooth);
+}
+
+.cat-checkbox-card .cat-title {
+    font-family: var(--font-headings);
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--logo-black);
+    margin-bottom: 5px;
+}
+
+.cat-checkbox-card .cat-price {
+    font-size: 0.85rem;
+    color: var(--primary-green);
+    font-weight: 600;
+}
+
+.cat-checkbox-wrapper input[type="checkbox"]:checked ~ .cat-checkbox-card {
+    background: rgba(55, 125, 73, 0.05);
+    border-color: var(--primary-green);
+    box-shadow: 0 4px 10px rgba(55, 125, 73, 0.15);
+}

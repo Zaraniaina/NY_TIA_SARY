@@ -28,11 +28,15 @@ $filterStatut = $_GET['statut'] ?? 'TOUS';
 $search       = trim($_GET['q'] ?? '');
 
 $sql = 'SELECT r.*, p.LIB_PRESTATION, c.NOM_CLIENT, c.PRENOM_CLIENT,
-               ct.ID_CONTRAT
+               ct.ID_CONTRAT, 
+               SUM(rc.PRIX) AS TOTAL_PRIX, 
+               GROUP_CONCAT(cat.LIB_CATEGORIE SEPARATOR \'<br>\') AS LIBS_CATEGORIES
         FROM RESERVATION r
         JOIN PRESTATIONS p ON r.ID_PRESTATION = p.ID_PRESTATION
         JOIN CLIENT c ON r.ID_CLIENT = c.ID_CLIENT
         LEFT JOIN CONTRAT ct ON ct.ID_RESERVATION = r.ID_RESERVATION
+        LEFT JOIN RESERVATION_CATEGORIE rc ON rc.ID_RESERVATION = r.ID_RESERVATION
+        LEFT JOIN CATEGORIE cat ON cat.ID_CATEGORIE = rc.ID_CATEGORIE
         WHERE 1=1';
 $params = [];
 if ($filterStatut !== 'TOUS') { 
@@ -44,7 +48,7 @@ if ($search) {
     $like = "%$search%"; 
     $params = array_merge($params, [$like, $like, $like]); 
 }
-$sql .= ' ORDER BY r.DATE_RESERVATION DESC, r.HEURE_RESERVATION DESC';
+$sql .= ' GROUP BY r.ID_RESERVATION ORDER BY r.DATE_RESERVATION DESC, r.HEURE_RESERVATION DESC';
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
@@ -103,7 +107,7 @@ $reservations = $stmt->fetchAll();
                     <div class="table-responsive">
                         <table class="dash-table">
                             <thead>
-                                <tr><th>#</th><th>Client</th><th>Prestation</th><th>Date</th><th>Heure</th><th>Lieu</th><th>Statut</th><th>Contrat</th><th>Modifier statut</th></tr>
+                                <tr><th>#</th><th>Client</th><th>Prestation & Formule</th><th>Tarif</th><th>Date</th><th>Heure</th><th>Lieu</th><th>Statut</th><th>Contrat</th><th>Modifier statut</th></tr>
                             </thead>
                             <tbody>
                             <?php foreach ($reservations as $r): ?>
@@ -118,7 +122,17 @@ $reservations = $stmt->fetchAll();
                                 <tr id="row-<?= (int)$r['ID_RESERVATION'] ?>">
                                     <td>#<?= (int)$r['ID_RESERVATION'] ?></td>
                                     <td><strong><?= htmlspecialchars($r['PRENOM_CLIENT'] . ' ' . $r['NOM_CLIENT']) ?></strong></td>
-                                    <td><?= htmlspecialchars($r['LIB_PRESTATION']) ?></td>
+                                    <td>
+                                        <strong><?= htmlspecialchars($r['LIB_PRESTATION']) ?></strong><br>
+                                        <span style="font-size:0.8rem;color:#aaa;"><?= $r['LIBS_CATEGORIES'] ? $r['LIBS_CATEGORIES'] : 'Formule non spécifiée' ?></span>
+                                    </td>
+                                    <td>
+                                        <?php if ($r['TOTAL_PRIX']): ?>
+                                            <span style="color:var(--primary-green);font-weight:600;"><?= number_format((int)$r['TOTAL_PRIX'], 0, ',', ' ') ?> Ar</span>
+                                        <?php else: ?>
+                                            <span style="color:#777;">—</span>
+                                        <?php endif; ?>
+                                    </td>
                                     <td><?= date('d/m/Y', strtotime($r['DATE_RESERVATION'])) ?></td>
                                     <td><?= substr($r['HEURE_RESERVATION'], 0, 5) ?></td>
                                     <td><?= htmlspecialchars($r['LIEU_RESERVATION']) ?></td>
