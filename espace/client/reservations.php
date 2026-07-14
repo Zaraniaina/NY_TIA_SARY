@@ -10,6 +10,7 @@ $success      = '';
 $error        = '';
 
 // ── Traitement nouvelle réservation ──────────────────────────
+// ── Traitement nouvelle réservation ──────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'new_resa') {
     $idPrestation    = (int) ($_POST['id_prestation'] ?? 0);
     $idCategories    = $_POST['id_categories'] ?? [];
@@ -21,27 +22,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     if (!$idPrestation || empty($idCategories) || !$dateResa || !$heureResa || !$lieuResa) {
         $error = 'Veuillez remplir tous les champs obligatoires et choisir au moins une formule.';
     } else {
-        $stmt = $pdo->prepare(
-            'INSERT INTO RESERVATION (ID_PRESTATION, ID_CLIENT, DATE_RESERVATION, HEURE_RESERVATION, LIEU_RESERVATION, COMME_RESERVATION, STATUS_RESERVATION)
-             VALUES (?, ?, ?, ?, ?, ?, ?)'
-        );
-        $stmt->execute([$idPrestation, $clientId, $dateResa, $heureResa, $lieuResa, $commentaire, 'EN ATTENTE']);
-        
-        $idResa = $pdo->lastInsertId();
+        try {
+            $pdo->beginTransaction();
 
-        $stmtCat = $pdo->prepare('SELECT TARIF_CATEGORIE FROM CATEGORIE WHERE ID_CATEGORIE = ?');
-        $stmtRc = $pdo->prepare('INSERT INTO RESERVATION_CATEGORIE (ID_RESERVATION, ID_CATEGORIE, PRIX) VALUES (?, ?, ?)');
-        
-        foreach ($idCategories as $idCat) {
-            $idCat = (int) $idCat;
-            if ($idCat > 0) {
-                $stmtCat->execute([$idCat]);
-                $prix = (int) $stmtCat->fetchColumn();
-                $stmtRc->execute([$idResa, $idCat, $prix]);
+            $stmt = $pdo->prepare(
+                'INSERT INTO RESERVATION (ID_PRESTATION, ID_CLIENT, DATE_RESERVATION, HEURE_RESERVATION, LIEU_RESERVATION, COMME_RESERVATION, STATUS_RESERVATION)
+                 VALUES (?, ?, ?, ?, ?, ?, ?)'
+            );
+            $stmt->execute([$idPrestation, $clientId, $dateResa, $heureResa, $lieuResa, $commentaire, 'EN ATTENTE']);
+
+            $idResa = $pdo->lastInsertId();
+
+            $stmtCat = $pdo->prepare('SELECT TARIF_CATEGORIE FROM CATEGORIE WHERE ID_CATEGORIE = ?');
+            $stmtRc  = $pdo->prepare('INSERT INTO RESERVATION_CATEGORIE (ID_RESERVATION, ID_CATEGORIE, PRIX) VALUES (?, ?, ?)');
+
+            foreach ($idCategories as $idCat) {
+                $idCat = (int) $idCat;
+                if ($idCat > 0) {
+                    $stmtCat->execute([$idCat]);
+                    $prix = (int) $stmtCat->fetchColumn();
+                    $stmtRc->execute([$idResa, $idCat, $prix]);
+                }
             }
-        }
 
-        $success = 'Votre réservation a été soumise avec succès ! Nous vous contacterons bientôt.';
+            // ── Notification pour l'admin ────────────────────────
+            $nomComplet = trim(($clientNom ?? 'Client') . ' ' . ($clientPrenom ?? ''));
+
+            $stmtNotif = $pdo->prepare(
+                'INSERT INTO notification (TYPE_NOTIF, ID_REF_NOTIF, TITRE_NOTIF, MESS_NOTIF, LU_NOTIF, SUP_NOTIF)
+                 VALUES (:type_notif, :id_ref_notif, :titre_notif, :mess_notif, :lu_notif, :sup_notif)'
+            );
+            $stmtNotif->execute([
+                ':type_notif'   => 'Reservation',
+                ':id_ref_notif' => $idResa,
+                ':titre_notif'  => 'Demande de reservation',
+                ':mess_notif'   => "Reservation de {$nomComplet}",
+                ':lu_notif'     => 0,
+                ':sup_notif'    => 0,
+            ]);
+
+            $pdo->commit();
+
+            $success = 'Votre réservation a été soumise avec succès ! Nous vous contacterons bientôt.';
+        } catch (Throwable $e) {
+            $pdo->rollBack();
+            error_log('[reservation.php] ' . $e->getMessage());
+            $error = 'Une erreur est survenue lors de la création de votre réservation.';
+        }
     }
 }
 

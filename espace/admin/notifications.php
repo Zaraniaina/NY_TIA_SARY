@@ -164,46 +164,55 @@ require_once __DIR__.'/composante/tolbarDto.php';
             </div>
 
             <div class="notifications-shell">
+                <?php
+    $notifications = [];
+    try {
+        $stmt = $pdo->prepare("
+            SELECT n.ID_NOTIF, n.TYPE_NOTIF, n.ID_REF_NOTIF, n.TITRE_NOTIF, n.MESS_NOTIF, n.LU_NOTIF, n.DATE_NOTIF,
+                   d.NOM AS NOM_DEVIS, d.PRENOMS AS PRENOM_DEVIS,
+                   c.NOM_CLIENT AS NOM_RESA, c.PRENOM_CLIENT AS PRENOM_RESA
+            FROM notification n
+            LEFT JOIN devis d ON n.TYPE_NOTIF = 'devis' AND n.ID_REF_NOTIF = d.ID
+            LEFT JOIN RESERVATION r ON n.TYPE_NOTIF = 'Reservation' AND n.ID_REF_NOTIF = r.ID_RESERVATION
+            LEFT JOIN CLIENT c ON c.ID_CLIENT = r.ID_CLIENT
+            WHERE n.SUP_NOTIF = 0
+            ORDER BY n.DATE_NOTIF DESC
+        ");
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($rows as $row) {
+            $isResa = $row['TYPE_NOTIF'] === 'Reservation';
+
+            $notifications[] = [
+                'id_notif' => (int) $row['ID_NOTIF'],
+                'id_ref'   => (int) $row['ID_REF_NOTIF'],
+                'type'     => $row['TYPE_NOTIF'],
+                'title'    => $row['TITRE_NOTIF'],
+                'nom'      => $isResa ? ($row['NOM_RESA'] ?? '')    : ($row['NOM_DEVIS'] ?? ''),
+                'prenom'   => $isResa ? ($row['PRENOM_RESA'] ?? '') : ($row['PRENOM_DEVIS'] ?? ''),
+                'time'     => date('d/m/Y', strtotime($row['DATE_NOTIF'])),
+                'message'  => $row['MESS_NOTIF'],
+                'unread'   => ((int) $row['LU_NOTIF']) === 0,
+            ];
+        }
+    } catch (PDOException $e) {
+        $notifications = [];
+    }
+    ?>
                 <div class="notifications-toolbar">
                     <div class="notifications-filters" role="tablist" aria-label="Filtres notifications">
                         <button class="notif-filter active" data-filter="all" type="button">Tous</button>
                         <button class="notif-filter" data-filter="unread" type="button">Nouvelle notification</button>
                     </div>
                     <div class="notifications-summary">
-                        <span class="summary-pill"><i class="fas fa-bell"></i> 3 notifications</span>
+                        <span class="summary-pill" id="notifCountPill"><i class="fas fa-bell"></i> <span id="notifCount"><?= count($notifications) ?></span> notification<?= count($notifications) > 1 ? 's' : '' ?></span>
                     </div>
                 </div>
 
                 <div class="notifications-list">
                     <?php
-                    $notifications = [];
-try {
-    $stmt = $pdo->prepare("
-        SELECT n.ID_NOTIF, n.TYPE_NOTIF, n.ID_REF_NOTIF, n.TITRE_NOTIF, n.MESS_NOTIF, n.LU_NOTIF, n.DATE_NOTIF,
-               d.NOM AS NOM_DEVIS, d.PRENOMS AS PRENOM_DEVIS
-        FROM notification n
-        LEFT JOIN devis d ON n.ID_REF_NOTIF = d.ID
-        WHERE n.SUP_NOTIF = 0
-        ORDER BY n.DATE_NOTIF DESC
-    ");
-    $stmt->execute();
-    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    foreach ($rows as $row) {
-        $notifications[] = [
-            'id_notif' => (int) $row['ID_NOTIF'],
-            'id_ref'   => (int) $row['ID_REF_NOTIF'],
-            'title'   => $row['TITRE_NOTIF'],
-            'nom'     => $row['NOM_DEVIS'] ?? '',
-            'prenom'  => $row['PRENOM_DEVIS'] ?? '',
-            'time'    => date('d/m/Y', strtotime($row['DATE_NOTIF'])),
-            'message' => $row['MESS_NOTIF'],
-            'unread'  => ((int) $row['LU_NOTIF']) === 0,
-        ];
-    }
-} catch (PDOException $e) {
-    $notifications = [];
-}
+      
                     foreach ($notifications as $notification):
                         $cardClass = $notification['unread'] ? 'notification-card unread' : 'notification-card';
                     ?>
@@ -220,7 +229,11 @@ try {
                                 </div>
                                 <p class="notification-message"><?= htmlspecialchars($notification['message']) ?></p>
                                 <div class="notification-footer">
-                                    <a href="devis.php?id=<?= $notification['id_ref'] ?>&mark_notif=<?= $notification['id_notif'] ?>" class="notification-view-btn" type="button"  style="display:inline-block;text-decoration:none;">Voir</a>
+                                   <?php
+                                    $targetPage = $notification['type'] === 'Reservation' ? 'reservations.php' : 'devis.php';
+                                    ?>
+                                    <a href="<?= $targetPage ?>?id=<?= $notification['id_ref'] ?>&mark_notif=<?= $notification['id_notif'] ?>"
+                                    class="notification-view-btn" style="display:inline-block;text-decoration:none;">Voir</a>
                                     <span class="notification-time-wrap">
                                         <?php if ($notification['unread']): ?>
                                             <span class="notification-dot" aria-hidden="true"></span>

@@ -53,6 +53,23 @@ $sql .= ' GROUP BY r.ID_RESERVATION ORDER BY r.DATE_RESERVATION DESC, r.HEURE_RE
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $reservations = $stmt->fetchAll();
+// ── Marquer la notification comme lue puis nettoyer l'URL ─────
+if (isset($_GET['mark_notif']) && (int) $_GET['mark_notif'] > 0) {
+    $idNotif      = (int) $_GET['mark_notif'];
+    $idResaSelect = (int) ($_GET['id'] ?? 0);
+
+    try {
+        $stmtMark = $pdo->prepare('UPDATE notification SET LU_NOTIF = 1 WHERE ID_NOTIF = ?');
+        $stmtMark->execute([$idNotif]);
+    } catch (PDOException $e) {
+        // on ignore silencieusement, la redirection se fait quand même
+    }
+
+    header('Location: reservations.php' . ($idResaSelect > 0 ? '?id=' . $idResaSelect : ''));
+    exit;
+}
+
+$selectedResaId = (int) ($_GET['id'] ?? 0);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -119,7 +136,8 @@ $reservations = $stmt->fetchAll();
                                     default     => 'badge-waiting',
                                 };
                                 ?>
-                                <tr id="row-<?= (int)$r['ID_RESERVATION'] ?>">
+                                <?php $isSelected = $selectedResaId > 0 && (int)$r['ID_RESERVATION'] === $selectedResaId; ?>
+<tr id="row-<?= (int)$r['ID_RESERVATION'] ?>"<?= $isSelected ? ' class="row-highlighted"' : '' ?>>
                                     <td>#<?= (int)$r['ID_RESERVATION'] ?></td>
                                     <td><strong><?= htmlspecialchars($r['PRENOM_CLIENT'] . ' ' . $r['NOM_CLIENT']) ?></strong></td>
                                     <td>
@@ -206,6 +224,10 @@ document.querySelectorAll('.statut-select').forEach(sel => {
         setTimeout(() => msg.innerHTML = '', 3000);
     });
 });
+const selectedRow = document.querySelector('.row-highlighted');
+if (selectedRow) {
+    selectedRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
 </script>
 </body>
 </html>

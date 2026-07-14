@@ -1,23 +1,4 @@
 <?php
-/**
- * traitement_devis.php
- * Traite la soumission du formulaire "Demande de devis" (modal du index.php).
- * Insère une ligne dans devis, une ligne par catégorie choisie dans
- * devis_categories, TOUJOURS une ligne dans pieces_jointes
- * (PATH_PIECE = "aucun" si aucun fichier n'a été envoyé), puis une ligne
- * dans notification pour prévenir l'admin.
- *
- * Table devis            : ID, NOM, PRENOMS, EMAIL, TELEPHONE, TYPE_VISITEUR,
- *                           BUGET_ESTIMATIF, DATE_SOUHAITE, DESCRIPTION, ID_PRESTATION
- * Table devis_categories : ID (FK -> devis.ID), ID_CATEGORIES (FK -> categories.ID_CATEGORIE)
- * Table pieces_jointes   : ID_PIECE, ID (FK -> devis.ID), PATH_PIECE
- * Table notification     : ID_NOTIF, TYPE_NOTIF, ID_REF_NOTIF, TITRE_NOTIF,
- *                           MESS_NOTIF, LU_NOTIF, SUP_NOTIF, DATE_NOTIF (default CURRENT_TIMESTAMP)
- *
- * En fin de traitement, redirige vers index.php?devis=success|error&message=...#devis
- * (pattern Post/Redirect/Get — évite la resoumission du formulaire au rafraîchissement).
- */
-
 // Adapter ce chemin si besoin (même dossier que celui utilisé dans prestations.php)
 require_once __DIR__ . '/config/database.php';
 $pdo = getPDO();
