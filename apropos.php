@@ -14,7 +14,9 @@
     <!-- SECTION A PROPOS (Human & Unique Asymmetric Layout) -->
     <section id="about" class="about">
         <div class="container">
+            <h2 class="section-title">&Agrave; <span>propos</span> de nous</h2>
             <div class="about-grid">
+                
                 <div class="about-image">
                     <img src="https://images.pexels.com/photos/3182812/pexels-photo-3182812.jpeg?auto=compress&cs=tinysrgb&h=720&w=1080" alt="L'équipe de NY TIA SARY en action">
                 </div>

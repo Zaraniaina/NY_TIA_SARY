@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../../config/database.php';
 //on recupere les information de l'admin
 $adminEmail = $_SESSION['admin_email'] ?? 'Admin';
 $adminNom = $_SESSION['admin_nom'] ?? 'Admin';

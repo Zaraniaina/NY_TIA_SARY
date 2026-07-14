@@ -1086,6 +1086,21 @@ body {
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
     }
+
+    /* Calendrier — toolbar sur tablette */
+    .fc .fc-toolbar {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .fc .fc-toolbar-title {
+        font-size: 1rem !important;
+    }
+
+    /* Modal calendrier sur tablette */
+    .cal-modal {
+        max-width: 90vw;
+    }
 }
 
 /* Mobile Screens (Max 768px) */
@@ -1152,6 +1167,66 @@ body {
         width: 100%;
         min-width: unset;
     }
+
+    /* Calendrier — mobile */
+    .fc .fc-toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .fc .fc-toolbar-chunk {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .fc .fc-toolbar-title {
+        font-size: 0.95rem !important;
+    }
+
+    .fc .fc-button {
+        font-size: 0.75rem !important;
+        padding: 5px 8px !important;
+    }
+
+    .fc .fc-daygrid-day-frame {
+        min-height: 60px;
+    }
+
+    /* Modal calendrier — mobile */
+    .cal-modal-overlay {
+        padding: 10px;
+        align-items: flex-end;
+    }
+
+    .cal-modal {
+        max-width: 100%;
+        border-radius: 14px 14px 0 0;
+        max-height: 85vh;
+    }
+
+    .cal-modal-header {
+        padding: 20px 18px 16px;
+    }
+
+    .cal-modal-body {
+        padding: 16px 18px;
+    }
+
+    .cal-modal-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .cal-modal-grid .cal-modal-item[style*="grid-column"] {
+        grid-column: auto;
+    }
+
+    .cal-modal-footer {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 14px 18px 20px;
+    }
 }
 
 /* Small Mobiles (Max 480px) */
@@ -1183,6 +1258,7 @@ body {
         font-size: 1.5rem;
     }
 }
+
 .row-highlighted {
     background: rgba(217, 61, 61, 0.08) !important;
     animation: rowFlash 1.6s ease-in-out;
@@ -1190,4 +1266,387 @@ body {
 @keyframes rowFlash {
     0%   { background: rgba(217, 61, 61, 0.25); }
     100% { background: rgba(217, 61, 61, 0.08); }
+}
+
+/* ── CATEGORY CHECKBOX GRID ── */
+.checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.cat-checkbox-wrapper {
+    position: relative;
+    display: block;
+    cursor: pointer;
+}
+
+.cat-checkbox-wrapper input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.cat-checkbox-card {
+    display: flex;
+    flex-direction: column;
+    padding: 15px;
+    background: var(--bg-body);
+    border: 2px solid var(--input-border);
+    border-radius: 8px;
+    transition: var(--transition-smooth);
+}
+
+.cat-checkbox-card .cat-title {
+    font-family: var(--font-headings);
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--logo-black);
+    margin-bottom: 5px;
+}
+
+.cat-checkbox-card .cat-price {
+    font-size: 0.85rem;
+    color: var(--primary-green);
+    font-weight: 600;
+}
+
+.cat-checkbox-wrapper input[type="checkbox"]:checked~.cat-checkbox-card {
+    background: rgba(55, 125, 73, 0.05);
+    border-color: var(--primary-green);
+    box-shadow: 0 4px 10px rgba(55, 125, 73, 0.15);
+}
+
+/* ── CALENDRIER — LÉGENDE ── */
+.cal-legend {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #fff;
+    font-size: 0.75rem;
+    font-family: var(--font-headings);
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+}
+
+/* ── FULLCALENDAR — HARMONISATION ── */
+.fc .fc-button-primary {
+    background-color: var(--primary-green) !important;
+    border-color: var(--primary-green) !important;
+    font-family: var(--font-headings) !important;
+    font-weight: 700 !important;
+    font-size: 0.82rem !important;
+    border-radius: 6px !important;
+}
+
+.fc .fc-button-primary:not(:disabled):active,
+.fc .fc-button-primary:not(:disabled).fc-button-active {
+    background-color: var(--logo-black) !important;
+    border-color: var(--logo-black) !important;
+}
+
+.fc .fc-toolbar-title {
+    font-family: var(--font-headings) !important;
+    font-weight: 800 !important;
+    font-size: 1.2rem !important;
+    color: var(--logo-black) !important;
+}
+
+.fc .fc-col-header-cell-cushion,
+.fc .fc-daygrid-day-number,
+.fc .fc-list-day-text,
+.fc .fc-list-day-side-text {
+    font-family: var(--font-headings) !important;
+    font-weight: 700 !important;
+    color: var(--logo-black) !important;
+    text-decoration: none !important;
+}
+
+.fc .fc-event {
+    cursor: pointer;
+    border-radius: 4px !important;
+    font-size: 0.78rem !important;
+    font-family: var(--font-headings) !important;
+    font-weight: 600 !important;
+    padding: 2px 5px !important;
+}
+
+.fc .fc-daygrid-more-link {
+    font-family: var(--font-headings);
+    font-weight: 700;
+    color: var(--primary-green);
+}
+
+/* ── CALENDRIER — MODAL DÉTAIL ── */
+.cal-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(22, 32, 26, 0.65);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 20px;
+}
+
+.cal-modal {
+    background: var(--white);
+    border-radius: 14px;
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2);
+    position: relative;
+    animation: calModalIn 0.25s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+@keyframes calModalIn {
+    from {
+        opacity: 0;
+        transform: scale(0.92) translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.cal-modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: var(--bg-body);
+    border: none;
+    border-radius: 50%;
+    width: 34px;
+    height: 34px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition-smooth);
+    z-index: 10;
+}
+
+.cal-modal-close:hover {
+    background: var(--primary-red);
+    color: #fff;
+}
+
+.cal-modal-header {
+    padding: 28px 28px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.cal-modal-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    background: rgba(55, 125, 73, 0.1);
+    color: var(--primary-green);
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.cal-modal-title {
+    font-family: var(--font-headings);
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: var(--logo-black);
+    margin-bottom: 6px;
+}
+
+.cal-modal-body {
+    padding: 24px 28px;
+}
+
+.cal-modal-section {
+    margin-bottom: 24px;
+}
+
+.cal-modal-section-title {
+    font-family: var(--font-headings);
+    font-weight: 700;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #999;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cal-modal-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.cal-modal-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cal-modal-label {
+    font-size: 0.75rem;
+    font-family: var(--font-headings);
+    font-weight: 700;
+    color: #aaa;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.cal-modal-value {
+    font-size: 0.9rem;
+    color: var(--logo-black);
+    font-weight: 600;
+}
+
+.cal-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 28px 24px;
+    border-top: 1px solid var(--border-color);
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.cal-modal-tarif {
+    font-family: var(--font-headings);
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--logo-black);
+}
+
+.cal-modal-tarif strong {
+    color: var(--primary-green);
+    font-size: 1.1rem;
+}
+
+/* ── CALENDRIER — AVATAR CLIENT (modal) ── */
+.cal-modal-avatar-wrapper {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    flex-shrink: 0;
+}
+
+.cal-modal-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--light-green);
+    box-shadow: 0 4px 12px rgba(55, 125, 73, 0.2);
+}
+
+.cal-modal-avatar-initials {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--primary-green);
+    color: #fff;
+    font-family: var(--font-headings);
+    font-weight: 800;
+    font-size: 1.2rem;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: 1px;
+    border: 3px solid var(--light-green);
+}
+
+/* ── FULLCALENDAR — ÉVÉNEMENT PERSONNALISÉ ── */
+.fc-event-custom {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 6px;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.15);
+    overflow: hidden;
+    width: 100%;
+    cursor: pointer;
+}
+
+.fc-event-avatar-wrap {
+    flex-shrink: 0;
+    position: relative;
+}
+
+.fc-event-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1.5px solid rgba(255, 255, 255, 0.6);
+    display: block;
+}
+
+.fc-event-initials {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    color: #fff;
+    font-family: var(--font-headings);
+    font-weight: 800;
+    font-size: 0.6rem;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: 0.5px;
+    border: 1.5px solid rgba(255, 255, 255, 0.6);
+}
+
+.fc-event-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+}
+
+.fc-event-name {
+    font-family: var(--font-headings);
+    font-weight: 700;
+    font-size: 0.75rem;
+    color: black;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+}
+
+.fc-event-time {
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.85);
+    font-family: var(--font-body);
+    font-weight: 600;
+    line-height: 1;
+}
+
+/* Masquer le titre par défaut de FullCalendar pour éviter le doublon */
+.fc .fc-event .fc-event-title-container {
+    display: none;
+}
+
+.fc .fc-event .fc-event-time {
+    display: none;
+
 }

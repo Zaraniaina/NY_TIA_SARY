@@ -81,17 +81,47 @@ unset($_SESSION['register_error']);
                         </span>
                     </div>
 
-                    <!-- Champ Téléphone -->
-                    <div class="input-group">
-                        <input type="tel" id="tel_client" name="tel_client" required placeholder="Votre téléphone"
-                            aria-label="Téléphone">
+                    <!-- Champ Type de client -->
+                    <div class="input-group select-group">
+                        <select id="type_client" name="type_client" required aria-label="Type de client">
+                            <option value="" disabled selected hidden>Type de client</option>
+                            <option value="Entreprises">Entreprises</option>
+                            <option value="ONG">ONG</option>
+                            <option value="Institutions">Institutions</option>
+                            <option value="Collectivités">Collectivités</option>
+                            <option value="École et Universités">École et Universités</option>
+                            <option value="Artistes">Artistes</option>
+                            <option value="Agences de communications">Agences de communications</option>
+                            <option value="Particuliers">Particuliers</option>
+                            <option value="Couples">Couples</option>
+                            <option value="Familles">Familles</option>
+                        </select>
                         <span class="input-icon">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path
-                                    d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                <circle cx="9" cy="7" r="4" />
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                             </svg>
                         </span>
+                    </div>
+
+                    <!-- Champ Téléphone avec indicatif +261 -->
+                    <div class="input-group phone-group">
+                        <div class="phone-prefix">
+                            <img src="../assets/images/drapaux.png"
+                                 alt="Madagascar"
+                                 class="phone-flag-img"
+                                 aria-hidden="true">
+                            <span class="phone-dial-code">+261</span>
+                        </div>
+                        <div class="phone-sep"></div>
+                        <input type="tel" id="tel_client" name="tel_client" required
+                            placeholder="34 00 000 00"
+                            aria-label="Numéro de téléphone"
+                            maxlength="13"
+                            inputmode="numeric">
                     </div>
 
                     <!-- Champ Email -->
@@ -108,7 +138,7 @@ unset($_SESSION['register_error']);
                     </div>
 
                     <!-- Champ Mot de passe -->
-                    <div class="input-group grid-full">
+                    <div class="input-group">
                         <input type="password" id="mdp_client" name="mdp_client" required placeholder="Votre mot de passe"
                             aria-label="Mot de passe">
                         <span class="input-icon">

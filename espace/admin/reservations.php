@@ -2,8 +2,6 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../../util/auth_guard.php';
 requireAdmin();
-require_once __DIR__ . '/../../config/database.php';
-
 require_once __DIR__.'/composante/tolbarDto.php';
 //on changer le titre
 $titre="Gestion des réservations";
@@ -14,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_statut'])) {
     header('Content-Type: application/json');
     $id     = (int) ($_POST['id'] ?? 0);
     $statut = trim($_POST['statut'] ?? '');
-    $allowed = ['EN ATTENTE', 'CONFIRMÉ', 'ANNULÉ', 'TERMINÉ'];
+    $allowed = ['EN ATTENTE', 'CONFIRMEE', 'ANNULEE', 'TERMINEE'];
     if ($id && in_array($statut, $allowed, true)) {
         $stmt = $pdo->prepare('UPDATE RESERVATION SET STATUS_RESERVATION = ? WHERE ID_RESERVATION = ?');
         $stmt->execute([$statut, $id]);
@@ -29,10 +27,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_statut'])) {
 $filterStatut = $_GET['statut'] ?? 'TOUS';
 $search       = trim($_GET['q'] ?? '');
 
-$sql = 'SELECT r.*, p.LIB_PRESTATION, c.NOM_CLIENT, c.PRENOM_CLIENT
+$sql = 'SELECT r.*, p.LIB_PRESTATION, c.NOM_CLIENT, c.PRENOM_CLIENT,
+               ct.ID_CONTRAT, 
+               SUM(rc.PRIX) AS TOTAL_PRIX, 
+               GROUP_CONCAT(cat.LIB_CATEGORIE SEPARATOR \'<br>\') AS LIBS_CATEGORIES
         FROM RESERVATION r
         JOIN PRESTATIONS p ON r.ID_PRESTATION = p.ID_PRESTATION
         JOIN CLIENT c ON r.ID_CLIENT = c.ID_CLIENT
+        LEFT JOIN CONTRAT ct ON ct.ID_RESERVATION = r.ID_RESERVATION
+        LEFT JOIN RESERVATION_CATEGORIE rc ON rc.ID_RESERVATION = r.ID_RESERVATION
+        LEFT JOIN CATEGORIE cat ON cat.ID_CATEGORIE = rc.ID_CATEGORIE
         WHERE 1=1';
 $params = [];
 if ($filterStatut !== 'TOUS') { 
@@ -44,7 +48,7 @@ if ($search) {
     $like = "%$search%"; 
     $params = array_merge($params, [$like, $like, $like]); 
 }
-$sql .= ' ORDER BY r.DATE_RESERVATION DESC, r.HEURE_RESERVATION DESC';
+$sql .= ' GROUP BY r.ID_RESERVATION ORDER BY r.DATE_RESERVATION DESC, r.HEURE_RESERVATION DESC';
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
@@ -86,7 +90,7 @@ $reservations = $stmt->fetchAll();
                         <input type="text" name="q" value="<?= htmlspecialchars($search) ?>" placeholder="Client, prestation...">
                     </div>
                     <select name="statut" class="dash-select" style="width:auto;min-width:160px;" onchange="this.form.submit()">
-                        <?php foreach (['TOUS', 'EN ATTENTE', 'CONFIRMÉ', 'ANNULÉ', 'TERMINÉ'] as $s): ?>
+                        <?php foreach (['TOUS', 'EN ATTENTE', 'CONFIRMEE', 'ANNULEE', 'TERMINEE'] as $s): ?>
                             <option value="<?= $s ?>" <?= $filterStatut === $s ? 'selected' : '' ?>><?= $s ?></option>
                         <?php endforeach; ?>
                     </select>
@@ -103,30 +107,53 @@ $reservations = $stmt->fetchAll();
                     <div class="table-responsive">
                         <table class="dash-table">
                             <thead>
-                                <tr><th>#</th><th>Client</th><th>Prestation</th><th>Date</th><th>Heure</th><th>Lieu</th><th>Statut</th><th>Modifier statut</th></tr>
+                                <tr><th>#</th><th>Client</th><th>Prestation & Formule</th><th>Tarif</th><th>Date</th><th>Heure</th><th>Lieu</th><th>Statut</th><th>Contrat</th><th>Modifier statut</th></tr>
                             </thead>
                             <tbody>
                             <?php foreach ($reservations as $r): ?>
                                 <?php
                                 $bc = match(strtoupper($r['STATUS_RESERVATION'])) {
-                                    'CONFIRMÉ','CONFIRME' => 'badge-confirm',
-                                    'ANNULÉ','ANNULE'     => 'badge-cancel',
-                                    'TERMINÉ','TERMINE'   => 'badge-done',
-                                    default               => 'badge-waiting',
+                                    'CONFIRMEE' => 'badge-confirm',
+                                    'ANNULEE'   => 'badge-cancel',
+                                    'TERMINEE'  => 'badge-done',
+                                    default     => 'badge-waiting',
                                 };
                                 ?>
                                 <tr id="row-<?= (int)$r['ID_RESERVATION'] ?>">
                                     <td>#<?= (int)$r['ID_RESERVATION'] ?></td>
                                     <td><strong><?= htmlspecialchars($r['PRENOM_CLIENT'] . ' ' . $r['NOM_CLIENT']) ?></strong></td>
-                                    <td><?= htmlspecialchars($r['LIB_PRESTATION']) ?></td>
+                                    <td>
+                                        <strong><?= htmlspecialchars($r['LIB_PRESTATION']) ?></strong><br>
+                                        <span style="font-size:0.8rem;color:#aaa;"><?= $r['LIBS_CATEGORIES'] ? $r['LIBS_CATEGORIES'] : 'Formule non spécifiée' ?></span>
+                                    </td>
+                                    <td>
+                                        <?php if ($r['TOTAL_PRIX']): ?>
+                                            <span style="color:var(--primary-green);font-weight:600;"><?= number_format((int)$r['TOTAL_PRIX'], 0, ',', ' ') ?> Ar</span>
+                                        <?php else: ?>
+                                            <span style="color:#777;">—</span>
+                                        <?php endif; ?>
+                                    </td>
                                     <td><?= date('d/m/Y', strtotime($r['DATE_RESERVATION'])) ?></td>
                                     <td><?= substr($r['HEURE_RESERVATION'], 0, 5) ?></td>
                                     <td><?= htmlspecialchars($r['LIEU_RESERVATION']) ?></td>
                                     <td><span class="badge <?= $bc ?>" id="badge-<?= (int)$r['ID_RESERVATION'] ?>"><?= htmlspecialchars($r['STATUS_RESERVATION']) ?></span></td>
                                     <td>
+                                        <?php if ($r['ID_CONTRAT']): ?>
+                                            <a href="contrats.php" title="Voir le contrat" style="color:var(--primary-green);">
+                                                <i class="fas fa-file-signature"></i>
+                                            </a>
+                                        <?php elseif ($r['STATUS_RESERVATION'] === 'CONFIRMEE'): ?>
+                                            <a href="contrats.php?id_resa=<?= (int)$r['ID_RESERVATION'] ?>" title="Créer un contrat" class="btn-dash btn-dash-outline btn-dash-sm" style="font-size:0.75rem;padding:3px 8px;">
+                                                <i class="fas fa-plus"></i> Contrat
+                                            </a>
+                                        <?php else: ?>
+                                            <span style="color:#555;font-size:0.8rem;">—</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
                                         <select class="dash-select statut-select" style="padding:6px 10px;font-size:0.8rem;width:auto;"
                                                 data-id="<?= (int)$r['ID_RESERVATION'] ?>">
-                                            <?php foreach (['EN ATTENTE', 'CONFIRMÉ', 'ANNULÉ', 'TERMINÉ'] as $s): ?>
+                                            <?php foreach (['EN ATTENTE', 'CONFIRMEE', 'ANNULEE', 'TERMINEE'] as $s): ?>
                                                 <option value="<?= $s ?>" <?= $r['STATUS_RESERVATION'] === $s ? 'selected' : '' ?>><?= $s ?></option>
                                             <?php endforeach; ?>
                                         </select>
@@ -153,9 +180,9 @@ overlay?.addEventListener('click', () => { sidebar.classList.remove('open'); ove
 // Changement de statut via AJAX
 const badgeMap = {
     'EN ATTENTE': 'badge-waiting',
-    'CONFIRMÉ':   'badge-confirm',
-    'ANNULÉ':     'badge-cancel',
-    'TERMINÉ':    'badge-done',
+    'CONFIRMEE':  'badge-confirm',
+    'ANNULEE':    'badge-cancel',
+    'TERMINEE':   'badge-done',
 };
 document.querySelectorAll('.statut-select').forEach(sel => {
     sel.addEventListener('change', async () => {

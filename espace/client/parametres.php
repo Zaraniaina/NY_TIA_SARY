@@ -2,14 +2,10 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../../util/auth_guard.php';
 requireClient();
-require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../util/file_upload.php';
 
 require_once __DIR__ . '/composante/tolbarDto.php';
 $titre = "Paramètres";
-
-$clientId = (int) $_SESSION['client_id'];
-$pdo      = getPDO();
 
 // Fetch authId from DB directly instead of relying on session key
 $stmtAuth = $pdo->prepare("SELECT ID_AUTH FROM CLIENT WHERE ID_CLIENT = ?");
@@ -31,8 +27,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $prenom = trim($_POST['prenom'] ?? '');
         $tel    = trim($_POST['telephone'] ?? '');
         $email  = trim($_POST['email'] ?? '');
+        $type_client = trim($_POST['type_client'] ?? '');
 
-        if ($nom && $prenom && $tel && $email) {
+        if ($nom && $prenom && $tel && $email && $type_client) {
             try {
                 $pdo->beginTransaction();
 
@@ -47,8 +44,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $stmtUpdateAuth->execute([$email, $authId]);
 
                 // 2. Update CLIENT info
-                $stmtUpdateClient = $pdo->prepare("UPDATE CLIENT SET NOM_CLIENT = ?, PRENOM_CLIENT = ?, TEL_CLIENT = ? WHERE ID_CLIENT = ?");
-                $stmtUpdateClient->execute([$nom, $prenom, $tel, $clientId]);
+                $stmtUpdateClient = $pdo->prepare("UPDATE CLIENT SET NOM_CLIENT = ?, PRENOM_CLIENT = ?, TEL_CLIENT = ?, TYPE_CLIENT = ? WHERE ID_CLIENT = ?");
+                $stmtUpdateClient->execute([$nom, $prenom, $tel, $type_client, $clientId]);
 
                 $pdo->commit();
                 
@@ -259,6 +256,7 @@ $isDefaultPhoto = ($photoClient === 'assets/images/avatar.png');
                                 <div>
                                     <p style="font-size:0.9rem; color:#666; margin-bottom:5px;"><strong>Nom :</strong> <?= htmlspecialchars($clientData['NOM_CLIENT'] ?? '') ?></p>
                                     <p style="font-size:0.9rem; color:#666; margin-bottom:5px;"><strong>Prénom :</strong> <?= htmlspecialchars($clientData['PRENOM_CLIENT'] ?? '') ?></p>
+                                    <p style="font-size:0.9rem; color:#666; margin-bottom:5px;"><strong>Type de client :</strong> <?= htmlspecialchars($clientData['TYPE_CLIENT'] ?? 'Non spécifié') ?></p>
                                     <p style="font-size:0.9rem; color:#666; margin-bottom:5px;"><strong>Téléphone :</strong> <?= htmlspecialchars($clientData['TEL_CLIENT'] ?? '') ?></p>
                                     <p style="font-size:0.9rem; color:#666;"><strong>E-mail :</strong> <?= htmlspecialchars($clientData['EMAIL_AUTH'] ?? '') ?></p>
                                 </div>
@@ -305,6 +303,24 @@ $isDefaultPhoto = ($photoClient === 'assets/images/avatar.png');
                                 <label>Prénom <span class="required">*</span></label>
                                 <input type="text" class="dash-input" name="prenom" value="<?= htmlspecialchars($clientData['PRENOM_CLIENT'] ?? '') ?>" required>
                             </div>
+                        </div>
+
+                        <div class="dash-form-group">
+                            <label>Type de client <span class="required">*</span></label>
+                            <?php $currentType = $clientData['TYPE_CLIENT'] ?? ''; ?>
+                            <select class="dash-select" name="type_client" required>
+                                <option value="" disabled <?= empty($currentType) ? 'selected' : '' ?> hidden>Sélectionnez un type</option>
+                                <option value="Entreprises" <?= $currentType === 'Entreprises' ? 'selected' : '' ?>>Entreprises</option>
+                                <option value="ONG" <?= $currentType === 'ONG' ? 'selected' : '' ?>>ONG</option>
+                                <option value="Institutions" <?= $currentType === 'Institutions' ? 'selected' : '' ?>>Institutions</option>
+                                <option value="Collectivités" <?= $currentType === 'Collectivités' ? 'selected' : '' ?>>Collectivités</option>
+                                <option value="École et Universités" <?= $currentType === 'École et Universités' ? 'selected' : '' ?>>École et Universités</option>
+                                <option value="Artistes" <?= $currentType === 'Artistes' ? 'selected' : '' ?>>Artistes</option>
+                                <option value="Agences de communications" <?= $currentType === 'Agences de communications' ? 'selected' : '' ?>>Agences de communications</option>
+                                <option value="Particuliers" <?= $currentType === 'Particuliers' ? 'selected' : '' ?>>Particuliers</option>
+                                <option value="Couples" <?= $currentType === 'Couples' ? 'selected' : '' ?>>Couples</option>
+                                <option value="Familles" <?= $currentType === 'Familles' ? 'selected' : '' ?>>Familles</option>
+                            </select>
                         </div>
 
                         <div class="dash-form-group">

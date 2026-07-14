@@ -2,16 +2,8 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../../util/auth_guard.php';
 requireClient();
-require_once __DIR__ . '/../../config/database.php';
-
 require_once __DIR__ . '/composante/tolbarDto.php';
 $titre = "Mon Espace Client";
-
-$clientId    = (int) $_SESSION['client_id'];
-$clientNom   = $_SESSION['client_nom']   ?? 'Client';
-$clientPrenom= $_SESSION['client_prenom']?? '';
-$initiales   = getInitiales($clientNom, $clientPrenom);
-$pdo         = getPDO();
 
 // KPIs
 $stmtNb  = $pdo->prepare('SELECT COUNT(*) FROM RESERVATION WHERE ID_CLIENT = ?');
@@ -57,20 +49,7 @@ $lastResas = $stmtLast->fetchAll();
 
     <div class="dashboard-main">
         <!-- TOPBAR -->
-        <div class="dashboard-topbar">
-            <div style="display:flex;align-items:center;gap:14px;">
-                <button class="sidebar-toggle" id="sidebarToggle" aria-label="Menu">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <span class="topbar-title">Mon Espace Client</span>
-            </div>
-            <div class="topbar-user">
-                <div class="topbar-user-info">
-                    <span class="topbar-user-name"><?= htmlspecialchars($clientPrenom . ' ' . $clientNom) ?></span>
-                    <span class="topbar-user-role">Client</span>
-                </div>
-                <img src="../../<?= htmlspecialchars($photoClient) ?>" alt="Avatar" class="topbar-avatar" style="object-fit: cover;">            </div>
-        </div>
+       <?php include __DIR__.'/composante/tolbar.php';?>
 
         <!-- CONTENU -->
         <div class="dashboard-content">

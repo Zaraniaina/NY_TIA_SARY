@@ -2,17 +2,9 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../../util/auth_guard.php';
 requireClient();
-require_once __DIR__ . '/../../config/database.php';
-
 require_once __DIR__ . '/composante/tolbarDto.php';
-$titre = "Mes Videos";
-
-$clientId     = (int) $_SESSION['client_id'];
-$typeMedia="VIDEOS";
-$clientNom    = $_SESSION['client_nom']    ?? 'Client';
-$clientPrenom = $_SESSION['client_prenom'] ?? '';
-$initiales    = getInitiales($clientNom, $clientPrenom);
-$pdo          = getPDO();
+$titre = "Mes Vidéos";
+$typeMedia = "VIDEO";
 
 // Récupérer tous les médias liés aux réservations du client
 $stmt = $pdo->prepare(
@@ -20,14 +12,13 @@ $stmt = $pdo->prepare(
      FROM MEDIA m
      JOIN RESERVATION r ON m.ID_RESERVATION = r.ID_RESERVATION
      JOIN PRESTATIONS p ON r.ID_PRESTATION = p.ID_PRESTATION
-     WHERE r.ID_CLIENT = ? and m.TYPE_MEDIA = ?
+     WHERE r.ID_CLIENT = ? AND m.TYPE_MEDIA = ?
      ORDER BY r.DATE_RESERVATION DESC'
 );
-$stmt->execute([$clientId,$typeMedia]);
+$stmt->execute([$clientId, $typeMedia]);
 $medias = $stmt->fetchAll();
 
-// Extensions image
-$imgExts = ['jpg','jpeg','png','webp','gif'];
+$videoExts = ['mp4', 'webm', 'ogg', 'mov'];
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -65,44 +56,32 @@ $imgExts = ['jpg','jpeg','png','webp','gif'];
                 <div class="dash-card">
                     <div class="empty-state">
                         <i class="fas fa-video"></i>
-                        <p>Aucune video livrée pour le moment.<br>
-                           Vos videos apparaîtront ici après la réalisation de vos séances.</p>
+                        <p>Aucune vidéo livrée pour le moment.<br>
+                           Vos vidéos apparaîtront ici après la réalisation de vos séances.</p>
                     </div>
                 </div>
             <?php else: ?>
-                <div class="photo-grid">
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;">
                 <?php foreach ($medias as $m): ?>
                     <?php
-                    $path = htmlspecialchars($m['PATH_MEDIA']);
+                    $path    = htmlspecialchars($m['PATH_MEDIA']);
                     $absPath = '../../' . $path;
-                    $ext = strtolower(pathinfo($m['PATH_MEDIA'], PATHINFO_EXTENSION));
-                    $isImage = in_array($ext, $imgExts, true);
+                    $ext     = strtolower(pathinfo($m['PATH_MEDIA'], PATHINFO_EXTENSION));
                     ?>
-                    <div class="photo-item" data-src="<?= $absPath ?>" data-type="<?= $isImage ? 'image' : 'file' ?>">
-                        <?php if ($isImage): ?>
-                            <img src="<?= $absPath ?>" alt="Photo <?= (int) $m['ID_MEDIA'] ?>" loading="lazy">
-                        <?php else: ?>
-                            <div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f0f0ec;">
-                                <i class="fas fa-file-pdf" style="font-size:3rem;color:var(--primary-red);"></i>
-                                <p style="font-size:0.8rem;margin-top:8px;color:#666;"><?= strtoupper($ext) ?></p>
-                            </div>
-                        <?php endif; ?>
-                        <div class="photo-overlay">
-                            <a href="<?= $absPath ?>" target="_blank" title="Voir en grand"><i class="fas fa-expand-alt"></i></a>
-                            <a href="<?= $absPath ?>" download title="Télécharger"><i class="fas fa-download"></i></a>
-                        </div>
-                        <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.7));padding:10px;pointer-events:none;">
-                            <p style="color:#fff;font-size:0.72rem;font-family:var(--font-headings);margin:0;"><?= htmlspecialchars($m['LIB_PRESTATION']) ?></p>
-                            <p style="color:rgba(255,255,255,0.7);font-size:0.68rem;margin:2px 0 0;"><?= date('d/m/Y', strtotime($m['DATE_RESERVATION'])) ?></p>
+                    <div class="dash-card" style="overflow:hidden;">
+                        <video controls style="width:100%;border-radius:10px 10px 0 0;background:#000;max-height:220px;" preload="metadata">
+                            <source src="<?= $absPath ?>" type="video/<?= $ext === 'mov' ? 'mp4' : $ext ?>">
+                            Votre navigateur ne supporte pas la lecture de vidéo.
+                        </video>
+                        <div style="padding:14px 16px;">
+                            <div style="font-weight:600;font-size:0.9rem;margin-bottom:4px;"><?= htmlspecialchars($m['LIB_PRESTATION']) ?></div>
+                            <div style="font-size:0.78rem;color:#aaa;margin-bottom:12px;"><?= date('d/m/Y', strtotime($m['DATE_RESERVATION'])) ?></div>
+                            <a href="<?= $absPath ?>" download class="btn-dash btn-dash-outline btn-dash-sm" style="width:100%;justify-content:center;">
+                                <i class="fas fa-download"></i> Télécharger
+                            </a>
                         </div>
                     </div>
                 <?php endforeach; ?>
-                </div>
-
-                <!-- LIGHTBOX -->
-                <div id="lightbox" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:3000;align-items:center;justify-content:center;padding:40px;">
-                    <button id="lbClose" style="position:absolute;top:20px;right:28px;background:none;border:none;color:#fff;font-size:2rem;cursor:pointer;">&times;</button>
-                    <img id="lbImg" src="" alt="" style="max-width:90%;max-height:85vh;border-radius:6px;border:4px solid rgba(255,255,255,0.15);">
                 </div>
             <?php endif; ?>
         </div>
