@@ -7,6 +7,12 @@ require_once __DIR__.'/tolbarDto.php';
                 <span class="topbar-title"><?php echo $titre; ?></span>
             </div>
             <div class="topbar-user">
+                <a href="notifications.php" class="topbar-notification" aria-label="Notifications">
+                    <i class="fas fa-bell"></i>
+                    <?php if ($notifCount > 0): ?>
+                        <span class="topbar-notification-count"><?= $notifCount ?></span>
+                    <?php endif; ?>
+                </a>
                 <div class="topbar-user-info">
                     <span class="topbar-user-name"><?= htmlspecialchars($adminNom." ".$adminPrenom) ?></span>
                     <span class="topbar-user-role" style="color:var(--primary-red);">Administrateur</span>

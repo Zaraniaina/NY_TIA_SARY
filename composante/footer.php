@@ -42,6 +42,17 @@
         </div>
 
     </footer>
+     <!-- LIGHTBOX COMPONENT (UX Feature) -->
+    <div class="lightbox" id="lightbox">
+        <div class="lightbox-content">
+            <span class="lightbox-close" id="lightbox-close">&times;</span>
+            <img id="lightbox-img" class="lightbox-img" src="" alt="Portfolio View">
+        </div>
+    </div>
     
+    <!-- ton script.js existant vient juste après -->
+    <script src="https://cdn.jsdelivr.net/npm/scrollreveal@4.0.9/dist/scrollreveal.min.js"></script>
     <!-- JavaScript logic for site-wide interactivity (menus, scrolls, controls) -->
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script src="script.js"></script>
+    
