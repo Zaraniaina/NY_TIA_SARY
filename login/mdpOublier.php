@@ -98,8 +98,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($action === 'verify') {
                 if (!empty($_SESSION['reset_use_phone'])) {
                     // Phone verification - check if entered phone matches stored one
-                    $enteredPhone = preg_replace('/\D/', '', ($_POST['tel_client'] ?? ''));
-                    $storedPhone = ($_SESSION['reset_phone_number'] ?? '');
+                    $enteredPhone = "+261".preg_replace('/\D/', '', ($_POST['tel_client'] ?? ''));
+                    $storedPhone = "+".($_SESSION['reset_phone_number'] ?? '');
 
                     if (!empty($enteredPhone) && $enteredPhone === $storedPhone) {
                         $_SESSION['reset_verified'] = true;
@@ -112,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $answer = $_POST['answer'] ?? '';
                     $hashedAnswer = $_SESSION['reset_security_answer_hash'] ?? null;
 
-                    if (!empty($answer) && $hashedAnswer && password_verify($answer, $hashedAnswer)) {
+                    if (!empty($answer) && $hashedAnswer && password_verify(strtolower($answer), $hashedAnswer)) {
                         $_SESSION['reset_verified'] = true;
                         $_SESSION['reset_step'] = 4;
                     } else {
@@ -297,7 +297,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                         <?php if (!empty($_SESSION['reset_phone_number'])): ?>
                             <div class="phone-hint" style="margin-bottom: 15px;margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 8px; font-size: 14px; color: var(--color-text-muted);">
                                 <span style="margin-right: 8px;">Indice :</span>
-                                <span style="font-family: monospace; font-weight: 500;">+261 3<?php echo htmlspecialchars(substr($_SESSION['reset_phone_number'], 1, 1)); ?> xxx xx<?php echo htmlspecialchars(substr($_SESSION['reset_phone_number'], -1)); ?></span>
+                                <span style="font-family: monospace; font-weight: 500;">+261 3x xxx x<?php echo htmlspecialchars(substr($_SESSION['reset_phone_number'], -1)); ?></span>
                             </div>
                         <?php endif; ?>
 
