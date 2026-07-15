@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Formatage du numéro de téléphone (ajout de l'indicatif +261 si non présent)
     if (!str_starts_with($tel_client, '+261')) {
-        $tel_client = '+261 ' . ltrim($tel_client, '0'); // On enlève le 0 initial s'il y en a un
+        $tel_client = '+261' . ltrim($tel_client, '0'); // On enlève le 0 initial s'il y en a un
     }
 
     // Validation du format de l'e-mail

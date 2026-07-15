@@ -1650,3 +1650,7 @@ body {
     display: none;
 
 }
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-green) var(--bg-body);
+}
