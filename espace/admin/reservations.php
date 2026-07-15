@@ -16,6 +16,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_statut'])) {
     if ($id && in_array($statut, $allowed, true)) {
         $stmt = $pdo->prepare('UPDATE RESERVATION SET STATUS_RESERVATION = ? WHERE ID_RESERVATION = ?');
         $stmt->execute([$statut, $id]);
+        
+        // Si la réservation est CONFIRMEE, on s'assure qu'un contrat est généré
+        if ($statut === 'CONFIRMEE') {
+            $chk = $pdo->prepare('SELECT COUNT(*) FROM CONTRAT WHERE ID_RESERVATION = ?');
+            $chk->execute([$id]);
+            if ((int)$chk->fetchColumn() === 0) {
+                $pdo->prepare("INSERT INTO CONTRAT (ID_RESERVATION, STATUS_CONTRAT, DATE_CONTRAT) VALUES (?, 'EN ATTENTE', CURDATE())")
+                    ->execute([$id]);
+            }
+        }
+        
         echo json_encode(['ok' => true]);
     } else {
         echo json_encode(['ok' => false]);
