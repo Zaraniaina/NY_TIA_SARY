@@ -62,6 +62,10 @@ $notesMoy = count($temoignages) > 0
         .star-full { color:#f5c518; }
         .star-empty { color:#444; }
     </style>
+
+    <!-- Toastify CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+
 </head>
 <body>
 <div class="dashboard-wrapper">
@@ -78,7 +82,7 @@ $notesMoy = count($temoignages) > 0
                 <span>Témoignages</span>
             </nav>
 
-            <?php if ($success): ?><div class="dash-alert dash-alert-success"><i class="fas fa-check-circle"></i><?= htmlspecialchars($success) ?></div><?php endif; ?>
+            
 
             <!-- Stats rapides -->
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:28px;">
@@ -146,5 +150,49 @@ const overlay = document.getElementById('sidebarOverlay');
 toggle?.addEventListener('click', () => { sidebar.classList.toggle('open'); overlay.classList.toggle('open'); });
 overlay?.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('open'); });
 </script>
+
+<!-- Toastify JS -->
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+    const errorMsg = <?php echo json_encode($error ?? '', JSON_UNESCAPED_UNICODE); ?>;
+    const successMsg = <?php echo json_encode($success ?? '', JSON_UNESCAPED_UNICODE); ?>;
+    
+    if (errorMsg) {
+        Toastify({
+            text: errorMsg,
+            duration: 6000,
+            gravity: "top",
+            position: "right",
+            close: true,
+            style: {
+                background: "linear-gradient(135deg, #d93d3d, #a82c2c)",
+                borderRadius: "6px",
+                fontFamily: "system-ui, -apple-system, sans-serif",
+                fontWeight: "600",
+                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.25)"
+            }
+        }).showToast();
+    }
+    
+    if (successMsg) {
+        Toastify({
+            text: successMsg,
+            duration: 6000,
+            gravity: "top",
+            position: "right",
+            close: true,
+            style: {
+                background: "linear-gradient(135deg, #377d49, #2a5c3a)",
+                borderRadius: "6px",
+                fontFamily: "system-ui, -apple-system, sans-serif",
+                fontWeight: "600",
+                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.25)"
+            }
+        }).showToast();
+    }
+});
+</script>
+
 </body>
 </html>

@@ -98,8 +98,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($action === 'verify') {
                 if (!empty($_SESSION['reset_use_phone'])) {
                     // Phone verification - check if entered phone matches stored one
-                    $enteredPhone = "+261".preg_replace('/\D/', '', ($_POST['tel_client'] ?? ''));
-                    $storedPhone = "+".($_SESSION['reset_phone_number'] ?? '');
+                    $enteredPhone = "+261" . preg_replace('/\D/', '', ($_POST['tel_client'] ?? ''));
+                    $storedPhone = "+" . ($_SESSION['reset_phone_number'] ?? '');
 
                     if (!empty($enteredPhone) && $enteredPhone === $storedPhone) {
                         $_SESSION['reset_verified'] = true;
@@ -144,10 +144,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         // Clear reset session variables
                         $_SESSION['reset_success'] = "Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter.";
                         $_SESSION['reset_step'] = 1; // Reset for next use
-                        unset($_SESSION['reset_auth_id'], $_SESSION['reset_email'], $_SESSION['reset_has_security_question'],
-                              $_SESSION['reset_security_question'], $_SESSION['reset_security_answer_hash'],
-                              $_SESSION['reset_has_phone'], $_SESSION['reset_phone_number'],
-                              $_SESSION['reset_use_phone'], $_SESSION['reset_verified']);
+                        unset(
+                            $_SESSION['reset_auth_id'],
+                            $_SESSION['reset_email'],
+                            $_SESSION['reset_has_security_question'],
+                            $_SESSION['reset_security_question'],
+                            $_SESSION['reset_security_answer_hash'],
+                            $_SESSION['reset_has_phone'],
+                            $_SESSION['reset_phone_number'],
+                            $_SESSION['reset_use_phone'],
+                            $_SESSION['reset_verified']
+                        );
                     } catch (PDOException $e) {
                         $_SESSION['reset_error'] = "Une erreur technique est survenue lors de la réinitialisation.";
                     }
@@ -185,12 +192,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 ?>
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mot de passe oublié | NY TIA SARY - Photography Studio</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
     <div class="bg-container"></div>
     <div class="bg-overlay"></div>
@@ -214,9 +223,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             <?php if ($error): ?>
                 <div class="alert alert-danger">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="alert-icon" aria-hidden="true">
-                        <circle cx="12" cy="12" r="10"/>
-                        <line x1="12" y1="8" x2="12" y2="12"/>
-                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
                     </svg>
                     <span><?php echo htmlspecialchars($error); ?></span>
                 </div>
@@ -225,8 +234,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             <?php if ($success): ?>
                 <div class="alert alert-success">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="alert-icon" aria-hidden="true">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                        <polyline points="22 4 12 14.01 9 11.01"/>
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                        <polyline points="22 4 12 14.01 9 11.01" />
                     </svg>
                     <span><?php echo htmlspecialchars($success); ?></span>
                 </div>
@@ -238,7 +247,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                     <!-- ÉTAPE 1: Recherche du compte -->
                     <div class="input-group">
                         <input type="email" id="email" name="email" required placeholder="Votre adresse e-mail"
-                               aria-label="Adresse e-mail" value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
+                            aria-label="Adresse e-mail" value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
                         <span class="input-icon">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -283,8 +292,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                     <div style="display: flex; gap: 12px;">
                         <button type="submit" class="btn-submit" name="action" value="choose_method" style="flex: 1;">Continuer</button>
                         <a href="login.php" style="flex: 1; text-align: center; display: block; padding: 16px; background: var(--color-card-bg); border: 1px solid var(--border-glass); border-radius: 12px; color: var(--color-text-white); text-decoration: none; font-weight: 500; transition: var(--transition-smooth);"
-                           onmouseover="this.style.background='rgba(255,255,255,0.06)'; this.style.borderColor='var(--color-primary-gold)'; this.style.color='var(--color-primary-gold)';"
-                           onmouseout="this.style.background='var(--color-card-bg)'; this.style.borderColor='var(--border-glass)'; this.style.color='var(--color-text-white);'">Annuler</a>
+                            onmouseover="this.style.background='rgba(255,255,255,0.06)'; this.style.borderColor='var(--color-primary-gold)'; this.style.color='var(--color-primary-gold)';"
+                            onmouseout="this.style.background='var(--color-card-bg)'; this.style.borderColor='var(--border-glass)'; this.style.color='var(--color-text-white);'">Annuler</a>
                     </div>
 
                 <?php elseif ($_SESSION['reset_step'] === 3): ?>
@@ -304,17 +313,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                         <div class="input-group phone-group">
                             <div class="phone-prefix">
                                 <img src="../assets/images/drapaux.png"
-                                     alt="Madagascar"
-                                     class="phone-flag-img"
-                                     aria-hidden="true">
+                                    alt="Madagascar"
+                                    class="phone-flag-img"
+                                    aria-hidden="true">
                                 <span class="phone-dial-code">+261</span>
                             </div>
                             <div class="phone-sep"></div>
                             <input type="tel" id="tel_client" name="tel_client" required
-                                   placeholder="34 00 000 00"
-                                   aria-label="Numéro de téléphone"
-                                   maxlength="13"
-                                   inputmode="numeric">
+                                placeholder="34 00 000 00"
+                                aria-label="Numéro de téléphone"
+                                maxlength="13"
+                                inputmode="numeric">
                         </div>
                     <?php else: ?>
                         <!-- Security question verification -->
@@ -328,12 +337,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
                         <div class="input-group">
                             <input type="text" id="answer" name="answer" required placeholder="Votre réponse"
-                                   aria-label="Réponse à la question de sécurité" autocomplete="off">
+                                aria-label="Réponse à la question de sécurité" autocomplete="off">
                             <span class="input-icon">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M9 12l2 2 4-4"/>
-                                    <circle cx="12" cy="12" r="10"/>
+                                    <path d="M9 12l2 2 4-4" />
+                                    <circle cx="12" cy="12" r="10" />
                                 </svg>
                             </span>
                         </div>
@@ -343,8 +352,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                     <div style="display: flex; gap: 12px; margin-top: 20px;">
                         <button type="submit" class="btn-submit" name="action" value="verify" style="flex: 1;">Vérifier</button>
                         <a href="login.php" style="flex: 1; text-align: center; display: block; padding: 16px; background: var(--color-card-bg); border: 1px solid var(--border-glass); border-radius: 12px; color: var(--color-text-white); text-decoration: none; font-weight: 500; transition: var(--transition-smooth);"
-                           onmouseover="this.style.background='rgba(255,255,255,0.06)'; this.style.borderColor='var(--color-primary-gold)'; this.style.color='var(--color-primary-gold)';"
-                           onmouseout="this.style.background='var(--color-card-bg)'; this.style.borderColor='var(--border-glass)'; this.style.color='var(--color-text-white);'">Annuler</a>
+                            onmouseover="this.style.background='rgba(255,255,255,0.06)'; this.style.borderColor='var(--color-primary-gold)'; this.style.color='var(--color-primary-gold)';"
+                            onmouseout="this.style.background='var(--color-card-bg)'; this.style.borderColor='var(--border-glass)'; this.style.color='var(--color-text-white);'">Annuler</a>
                     </div>
 
                 <?php elseif ($_SESSION['reset_step'] === 4): ?>
@@ -353,7 +362,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
                     <div class="input-group">
                         <input type="password" id="password" name="password" required placeholder="Nouveau mot de passe"
-                               aria-label="Nouveau mot de passe" autocomplete="new-password">
+                            aria-label="Nouveau mot de passe" autocomplete="new-password">
                         <span class="input-icon">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -365,7 +374,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
                     <div class="input-group" style="margin-top: 12px;">
                         <input type="password" id="confirm_password" name="confirm_password" required placeholder="Confirmer le nouveau mot de passe"
-                               aria-label="Confirmer le nouveau mot de passe" autocomplete="new-password">
+                            aria-label="Confirmer le nouveau mot de passe" autocomplete="new-password">
                         <span class="input-icon">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -379,8 +388,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                     <div style="display: flex; gap: 12px; margin-top: 20px;">
                         <button type="submit" class="btn-submit" name="action" value="reset_password" style="flex: 1;">Réinitialiser le mot de passe</button>
                         <a href="login.php" style="flex: 1; text-align: center; display: block; padding: 16px; background: var(--color-card-bg); border: 1px solid var(--border-glass); border-radius: 12px; color: var(--color-text-white); text-decoration: none; font-weight: 500; transition: var(--transition-smooth);"
-                           onmouseover="this.style.background='rgba(255,255,255,0.06)'; this.style.borderColor='var(--color-primary-gold)'; this.style.color='var(--color-primary-gold)';"
-                           onmouseout="this.style.background='var(--color-card-bg)'; this.style.borderColor='var(--border-glass)'; this.style.color='var(--color-text-white);'">Annuler</a>
+                            onmouseover="this.style.background='rgba(255,255,255,0.06)'; this.style.borderColor='var(--color-primary-gold)'; this.style.color='var(--color-primary-gold)';"
+                            onmouseout="this.style.background='var(--color-card-bg)'; this.style.borderColor='var(--border-glass)'; this.style.color='var(--color-text-white);'">Annuler</a>
                     </div>
                 <?php endif; ?>
 
@@ -401,4 +410,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     <!-- The Javascript is essential for all interactivity, loaded via footer.php -->
 </body>
+
 </html>

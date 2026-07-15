@@ -14,6 +14,10 @@ unset($_SESSION['register_error']);
     <title>Inscription | NY TIA SARY - Photography Studio</title>
     <!-- Chargement de la feuille de style locale partagée -->
     <link rel="stylesheet" href="css/style.css">
+
+    <!-- Toastify CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+
 </head>
 
 <body>
@@ -38,16 +42,7 @@ unset($_SESSION['register_error']);
             </div>
 
             <!-- Affichage des messages d'erreur -->
-            <?php if ($error): ?>
-                <div class="alert alert-danger">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="alert-icon" aria-hidden="true">
-                        <circle cx="12" cy="12" r="10"/>
-                        <line x1="12" y1="8" x2="12" y2="12"/>
-                        <line x1="12" y1="16" x2="12.01" y2="16"/>
-                    </svg>
-                    <span><?php echo htmlspecialchars($error); ?></span>
-                </div>
-            <?php endif; ?>
+            
 
             <!-- Formulaire d'inscription -->
             <form class="login-form" action="../authentification/registre.php" method="POST" autocomplete="off">
@@ -111,9 +106,9 @@ unset($_SESSION['register_error']);
                     <div class="input-group phone-group">
                         <div class="phone-prefix">
                             <img src="../assets/images/drapaux.png"
-                                 alt="Madagascar"
-                                 class="phone-flag-img"
-                                 aria-hidden="true">
+                                alt="Madagascar"
+                                class="phone-flag-img"
+                                aria-hidden="true">
                             <span class="phone-dial-code">+261</span>
                         </div>
                         <div class="phone-sep"></div>
@@ -202,6 +197,50 @@ unset($_SESSION['register_error']);
 
         </div>
     </main>
+
+
+<!-- Toastify JS -->
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+    const errorMsg = <?php echo json_encode($error ?? '', JSON_UNESCAPED_UNICODE); ?>;
+    const successMsg = <?php echo json_encode($success ?? '', JSON_UNESCAPED_UNICODE); ?>;
+    
+    if (errorMsg) {
+        Toastify({
+            text: errorMsg,
+            duration: 6000,
+            gravity: "top",
+            position: "right",
+            close: true,
+            style: {
+                background: "linear-gradient(135deg, #d93d3d, #a82c2c)",
+                borderRadius: "6px",
+                fontFamily: "system-ui, -apple-system, sans-serif",
+                fontWeight: "600",
+                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.25)"
+            }
+        }).showToast();
+    }
+    
+    if (successMsg) {
+        Toastify({
+            text: successMsg,
+            duration: 6000,
+            gravity: "top",
+            position: "right",
+            close: true,
+            style: {
+                background: "linear-gradient(135deg, #377d49, #2a5c3a)",
+                borderRadius: "6px",
+                fontFamily: "system-ui, -apple-system, sans-serif",
+                fontWeight: "600",
+                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.25)"
+            }
+        }).showToast();
+    }
+});
+</script>
 
 </body>
 
