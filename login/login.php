@@ -1,5 +1,6 @@
 <?php
-
+require_once __DIR__.'/../util/auth_guard.php'; // fonction clearSessionAndCache()
+clearSessionAndCache();
 session_start();
 $error = $_SESSION['login_error'] ?? null;
 $success = $_SESSION['register_success'] ?? null;
@@ -106,7 +107,7 @@ unset($_SESSION['login_error'], $_SESSION['register_success']);
 
                 <!-- Lien Mot de passe oublié -->
                 <div class="forgot-password">
-                    <a href="#">Mot de passe oublié ?</a>
+                    <a href="mdpOublier.php">Mot de passe oublié ?</a>
                 </div>
 
                 <!-- Bouton de soumission -->

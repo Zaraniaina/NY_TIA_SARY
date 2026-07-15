@@ -1,3 +1,43 @@
+<?php
+require_once __DIR__ . '/config/database.php';
+$pdo = getPDO();
+
+$temoignages_db = [];
+try {
+    $temoignages_db = $pdo->query(
+        'SELECT t.*, c.NOM_CLIENT, c.PRENOM_CLIENT, c.PHOTO_CLIENT, p.LIB_PRESTATION
+         FROM TEMOIGNAGE t
+         JOIN RESERVATION r ON t.ID_RESERVATION = r.ID_RESERVATION
+         JOIN CLIENT c ON r.ID_CLIENT = c.ID_CLIENT
+         JOIN PRESTATIONS p ON r.ID_PRESTATION = p.ID_PRESTATION
+         ORDER BY t.ID_TEMOIGNAGE DESC LIMIT 10'
+    )->fetchAll();
+} catch (Exception $e) {
+    // Si la table n'existe pas ou erreur, on garde un tableau vide
+}
+
+// Fallback to static if empty
+$temoignages = count($temoignages_db) > 0 ? $temoignages_db : [
+    [
+        'NOM_CLIENT' => 'Rakotondrabe', 'PRENOM_CLIENT' => 'Ranja',
+        'PHOTO_CLIENT' => '',
+        'NOTE' => 5, 'MESS_RESERVATION' => 'Un travail absolument remarquable ! Les photos de notre conférence annuelle ont dépassé toutes nos attentes. L\'équipe NY TIA SARY sait capter l\'émotion et le professionnalisme dans chaque cliché.',
+        'LIB_PRESTATION' => 'Événementiel Corporate'
+    ],
+    [
+        'NOM_CLIENT' => 'Sandra & Hery', 'PRENOM_CLIENT' => '',
+        'PHOTO_CLIENT' => '',
+        'NOTE' => 5, 'MESS_RESERVATION' => 'Notre mariage était le plus beau jour de notre vie, et NY TIA SARY l\'a immortalisé avec une sensibilité rare. Le clip cinématique nous fait revivre chaque instant.',
+        'LIB_PRESTATION' => 'Reportage Mariage'
+    ],
+    [
+        'NOM_CLIENT' => 'Andriamahefa', 'PRENOM_CLIENT' => 'Marie-Luce',
+        'PHOTO_CLIENT' => '',
+        'NOTE' => 4, 'MESS_RESERVATION' => 'Les packshots réalisés pour notre catalogue ont transformé l\'image de notre marque. Résultat ultra-professionnel, délais respectés et équipe très à l\'écoute.',
+        'LIB_PRESTATION' => 'Photographie Produit'
+    ]
+];
+?>
 <!DOCTYPE html>
 <html lang="fr">
 
@@ -205,170 +245,70 @@
     </section>
 
     <!-- ============================================================
-         SECTION TÉMOIGNAGES CLIENTS
+         SECTION TÉMOIGNAGES CLIENTS (Nouveau Slider Simple)
          ============================================================ -->
     <section id="temoignages" class="temoignages">
-        <div class="temoignages-bg-deco" aria-hidden="true"></div>
         <div class="container">
-            <span class="section-pretitle temoignages-pretitle">ILS NOUS FONT CONFIANCE</span>
-            <h2 class="section-title temoignages-title">Ce que disent <span>nos clients</span></h2>
+            <div class="temoignages-header">
+                <span class="section-pretitle temoignages-pretitle">ILS NOUS FONT CONFIANCE</span>
+                <h2 class="section-title temoignages-title">Ce que disent <span>nos clients</span></h2>
+            </div>
 
-            <!-- Carrousel wrapper -->
-            <div class="temoignages-track-wrap" id="temoignages-track-wrap">
-                <div class="temoignages-track" id="temoignages-track">
-
-                    <!-- Témoignage 1 -->
-                    <div class="temoignage-card">
-                        <div class="temoignage-quote-icon"><i class="fas fa-quote-left"></i></div>
-                        <div class="temoignage-stars">
-                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i><i class="fas fa-star"></i>
-                        </div>
-                        <p class="temoignage-text">
-                            "Un travail absolument remarquable ! Les photos de notre conférence annuelle ont dépassé toutes nos attentes.<br/> L'équipe NY TIA SARY sait capter l'émotion et le professionnalisme dans chaque cliché.<br/>  Nous les recommandons vivement."
-                        </p>
-                        <div class="temoignage-author">
-                            <div class="temoignage-avatar" style="background-color: #377d49;">
-                                <span>RR</span>
-                            </div>
-                            <div class="temoignage-info">
-                                <strong>Ranja Rakotondrabe</strong>
-                                <span>Directeur Général — Groupe Tana Business</span>
-                            </div>
-                        </div>
-                        <div class="temoignage-service-badge"><i class="fas fa-calendar-alt"></i> Événementiel Corporate</div>
-                    </div>
-
-                    <!-- Témoignage 2 -->
-                    <div class="temoignage-card">
-                        <div class="temoignage-quote-icon"><i class="fas fa-quote-left"></i></div>
-                        <div class="temoignage-stars">
-                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i><i class="fas fa-star"></i>
-                        </div>
-                        <p class="temoignage-text">
-                            "Notre mariage était le plus beau jour de notre vie,<br/>  et NY TIA SARY l'a immortalisé avec une sensibilité rare.<br/>Le clip cinématique nous fait revivre chaque instant. <br/> Merci du fond du cœur pour ce cadeau inestimable."
-                        </p>
-                        <div class="temoignage-author">
-                            <div class="temoignage-avatar" style="background-color: #d93d3d;">
-                                <span>SH</span>
-                            </div>
-                            <div class="temoignage-info">
-                                <strong>Sandra & Hery</strong>
-                                <span>Jeunes mariés — Antananarivo</span>
-                            </div>
-                        </div>
-                        <div class="temoignage-service-badge"><i class="fas fa-heart"></i> Reportage Mariage</div>
-                    </div>
-
-                    <!-- Témoignage 3 -->
-                    <div class="temoignage-card">
-                        <div class="temoignage-quote-icon"><i class="fas fa-quote-left"></i></div>
-                        <div class="temoignage-stars">
-                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
-                        </div>
-                        <p class="temoignage-text">
-                            "Les packshots réalisés pour notre catalogue ont transformé l'image de notre marque.<br/> 
-                             Résultat ultra-professionnel, délais respectés et équipe très à l'écoute.<br/>  Nos ventes en ligne ont augmenté de 30% après la publication des nouvelles photos !"
-                        </p>
-                        <div class="temoignage-author">
-                            <div class="temoignage-avatar" style="background-color: #2a5c8a;">
-                                <span>ML</span>
-                            </div>
-                            <div class="temoignage-info">
-                                <strong>Marie-Luce Andriamahefa</strong>
-                                <span>Fondatrice — Bijouterie Lova</span>
-                            </div>
-                        </div>
-                        <div class="temoignage-service-badge"><i class="fas fa-box"></i> Photographie Produit</div>
-                    </div>
-
-                    <!-- Témoignage 4 -->
-                    <div class="temoignage-card" >
-                        <div class="temoignage-quote-icon"><i class="fas fa-quote-left"></i></div>
-                        <div class="temoignage-stars">
-                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i><i class="fas fa-star"></i>
-                        </div>
-                        <p class="temoignage-text">
-                            "Le film institutionnel réalisé pour notre ONG est d'une qualité cinématographique impressionnante.<br/> 
-                            NY TIA SARY a su comprendre notre mission et la traduire en images puissantes. Un vrai partenaire créatif."
-                        </p>
-                        <div class="temoignage-author">
-                            <div class="temoignage-avatar" style="background-color: #7d5a2a;">
-                                <span>TF</span>
-                            </div>
-                            <div class="temoignage-info">
-                                <strong>Toky Fandresena</strong>
-                                <span>Coordinateur — ONG Avotra Mada</span>
-                            </div>
-                        </div>
-                        <div class="temoignage-service-badge"><i class="fas fa-video"></i> Production Vidéo</div>
-                    </div>
-
-                    <!-- Témoignage 5 -->
-                    <div class="temoignage-card">
-                        <div class="temoignage-quote-icon"><i class="fas fa-quote-left"></i></div>
-                        <div class="temoignage-stars">
-                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i><i class="fas fa-star"></i>
-                        </div>
-                        <p class="temoignage-text">
-                            "Les prises de vue drone de notre résidence hôtelière sont spectaculaires.<br/>
-                            La qualité aérienne a séduit nos partenaires investisseurs dès la première présentation. <br/>
-                            Professionnalisme et créativité au rendez-vous !"
-                        </p>
-                        <div class="temoignage-author">
-                            <div class="temoignage-avatar" style="background-color: #5a3a7d;">
-                                <span>JR</span>
-                            </div>
-                            <div class="temoignage-info">
-                                <strong>Jean-Paul Razafy</strong>
-                                <span>PDG — Résidence Belle Vue Nosy Be</span>
-                            </div>
-                        </div>
-                        <div class="temoignage-service-badge"><i class="fas fa-paper-plane"></i> Drone Immobilier</div>
-                    </div>
-
-                </div><!-- /.temoignages-track -->
-            </div><!-- /.temoignages-track-wrap -->
-
-            <!-- Contrôles de navigation -->
-            <div class="temoignages-controls">
-                <button class="temoignage-btn" id="temoignage-prev" aria-label="Témoignage précédent">
+            <div class="temoignages-slider-container">
+                <button class="slider-nav-btn prev-btn" id="temo-prev" aria-label="Précédent">
                     <i class="fas fa-chevron-left"></i>
                 </button>
-                <div class="temoignage-dots" id="temoignage-dots">
-                    <span class="temoignage-dot active" data-index="0"></span>
-                    <span class="temoignage-dot" data-index="1"></span>
-                    <span class="temoignage-dot" data-index="2"></span>
-                    <span class="temoignage-dot" data-index="3"></span>
-                    <span class="temoignage-dot" data-index="4"></span>
+
+                <div class="temoignages-slider-track" id="temo-track">
+                    <?php foreach ($temoignages as $index => $temo): 
+                        // Initiales
+                        $nom = htmlspecialchars($temo['NOM_CLIENT'] ?? '');
+                        $prenom = htmlspecialchars($temo['PRENOM_CLIENT'] ?? '');
+                        $initials = strtoupper(substr($prenom, 0, 1) . substr($nom, 0, 1));
+                        if(empty($initials)) $initials = 'CL';
+                        
+                        // Note
+                        $note = (int)($temo['NOTE'] ?? 5);
+                        $photo = $temo['PHOTO_CLIENT'] ?? '';
+                    ?>
+                    <div class="temoignage-slide <?= $index === 0 ? 'active' : '' ?>" data-index="<?= $index ?>">
+                        <div class="slide-content">
+                            <i class="fas fa-quote-left quote-icon"></i>
+                            <div class="temoignage-stars">
+                                <?php for($i=1; $i<=5; $i++): ?>
+                                    <i class="fas fa-star <?= $i <= $note ? 'filled' : 'empty' ?>"></i>
+                                <?php endfor; ?>
+                            </div>
+                            <p class="temoignage-text">"<?= nl2br(htmlspecialchars($temo['MESS_RESERVATION'] ?? '')) ?>"</p>
+                            
+                            <div class="temoignage-author">
+                                <?php if (!empty($photo) && file_exists(__DIR__ . '/' . $photo)): ?>
+                                    <img src="<?= htmlspecialchars($photo) ?>" alt="Avatar" class="temoignage-avatar">
+                                <?php else: ?>
+                                    <div class="temoignage-avatar-placeholder" style="background-color: var(--primary-green);">
+                                        <span><?= $initials ?></span>
+                                    </div>
+                                <?php endif; ?>
+                                <div class="temoignage-info">
+                                    <strong><?= $prenom . ' ' . $nom ?></strong>
+                                    <span><?= htmlspecialchars($temo['LIB_PRESTATION'] ?? 'Client satisfait') ?></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
                 </div>
-                <button class="temoignage-btn" id="temoignage-next" aria-label="Témoignage suivant">
+
+                <button class="slider-nav-btn next-btn" id="temo-next" aria-label="Suivant">
                     <i class="fas fa-chevron-right"></i>
                 </button>
             </div>
-
-            <!-- Stats globales -->
-            <div class="temoignages-stats">
-                <div class="temoignages-stat">
-                    <strong>4.9<i class="fas fa-star"></i></strong>
-                    <span>Note moyenne</span>
-                </div>
-                <div class="temoignages-stat-sep"></div>
-                <div class="temoignages-stat">
-                    <strong>120+</strong>
-                    <span>Clients satisfaits</span>
-                </div>
-                <div class="temoignages-stat-sep"></div>
-                <div class="temoignages-stat">
-                    <strong>100%</strong>
-                    <span>Recommandés</span>
-                </div>
+            
+            <div class="temoignages-dots" id="temo-dots">
+                <?php foreach ($temoignages as $index => $temo): ?>
+                    <span class="temo-dot <?= $index === 0 ? 'active' : '' ?>" data-index="<?= $index ?>"></span>
+                <?php endforeach; ?>
             </div>
-
         </div>
     </section>
 

@@ -43,7 +43,7 @@ $notesMoy = count($temoignages) > 0
     <link rel="stylesheet" href="../../css/dashboard.css">
     <style>
         .temo-card {
-            background: rgba(255,255,255,0.04);
+            background: rgba(255, 255, 255, 1);
             border: 1px solid rgba(255,255,255,0.08);
             border-radius: 14px;
             padding: 20px 22px;
@@ -56,7 +56,7 @@ $notesMoy = count($temoignages) > 0
         .temo-header { display:flex; align-items:center; gap:14px; }
         .temo-avatar { width:46px; height:46px; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,.15); flex-shrink:0; }
         .temo-stars { color:#f5c518; letter-spacing:2px; font-size:1rem; }
-        .temo-msg { font-size:0.92rem; color:#ccc; line-height:1.6; font-style:italic; }
+        .temo-msg { font-size:0.92rem; color:black; line-height:1.6; font-style:italic; }
         .temo-meta { font-size:0.78rem; color:#888; }
         .star-bar { display:flex; gap:4px; align-items:center; }
         .star-full { color:#f5c518; }
