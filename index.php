@@ -1,5 +1,4 @@
 <?php
-<<<<<<< HEAD
 require_once __DIR__ . '/config/database.php';
 $pdo = getPDO();
 
@@ -38,9 +37,8 @@ $temoignages = count($temoignages_db) > 0 ? $temoignages_db : [
         'LIB_PRESTATION' => 'Photographie Produit'
     ]
 ];
-=======
-require_once 'config/database.php';
-$pdo        = getPDO();
+
+
  // fournit $pdo — adapte le chemin si besoin
 $prestationsList = $pdo->query(
     "SELECT ID_PRESTATION, LIB_PRESTATION FROM prestations ORDER BY LIB_PRESTATION ASC"
@@ -48,7 +46,6 @@ $prestationsList = $pdo->query(
 
 $devisStatus  = $_GET['devis'] ?? null;
 $devisMessage = $_GET['message'] ?? null;
->>>>>>> origin/cedric
 ?>
 <!DOCTYPE html>
 <html lang="fr">
