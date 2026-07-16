@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         if ((int)$chk->fetchColumn() > 0) {
             $error = 'Un contrat existe déjà pour cette réservation.';
         } else {
-            $pdo->prepare('INSERT INTO CONTRAT (ID_RESERVATION, DATE_CONTRAT) VALUES (?, ?)')
+            $pdo->prepare("INSERT INTO CONTRAT (ID_RESERVATION, STATUS_CONTRAT, DATE_CONTRAT) VALUES (?, 'EN ATTENTE', ?)")
                 ->execute([$idResa, $dateContrat]);
             // Mettre la réservation en CONFIRMEE si pas déjà
             $pdo->prepare("UPDATE RESERVATION SET STATUS_RESERVATION='CONFIRMEE' WHERE ID_RESERVATION=? AND STATUS_RESERVATION='EN ATTENTE'")

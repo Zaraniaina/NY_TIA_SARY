@@ -1,6 +1,4 @@
 <?php
-require_once __DIR__ . '/../util/auth_guard.php'; // fonction clearSessionAndCache()
-clearSessionAndCache();
 session_start();
 $error = $_SESSION['login_error'] ?? null;
 $success = $_SESSION['register_success'] ?? null;

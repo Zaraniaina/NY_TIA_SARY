@@ -91,9 +91,6 @@ $devisMessage = $_GET['message'] ?? null;
                     entreprise, de vos événements et de vos projets les plus chers.</p>
                 <div class="hero-btns">
                     <a href="#services" class="btn btn-green">DÉCOUVRIR NOS OFFRES</a>
-                    <!--<a href="#devis" class="btn btn-outline">DEMANDER UN DEVIS</a> -->
-                    
-                   <button  class="btn btn-outline" id="btn-open-devis">DEMANDER UN DEVIS</button>
                 </div>
             </div>
             <div class="hero-brackets">
@@ -454,6 +451,17 @@ $devisMessage = $_GET['message'] ?? null;
     });
 </script>
 <?php endif; ?>  
+
+<!-- Boutons Flottants -->
+<div class="floating-buttons">
+    <button class="btn-float btn-devis" id="btn-open-devis-float" title="Demander un Devis">
+        <i class="fas fa-file-invoice-dollar"></i> Demander devis
+    </button>
+    <a href="login/login.php" class="btn-float btn-reserver" title="Réserver">
+        <i class="far fa-calendar-check"></i> Réserver
+    </a>
+</div>
+
 </body>
 
 </html>

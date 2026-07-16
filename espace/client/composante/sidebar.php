@@ -24,6 +24,15 @@ $root    = '../../';
            class="<?= $current === 'devis.php' ? 'active' : '' ?>">
             <i class="fas fa-file-invoice"></i> Demande de Devis
         </a>
+        <div class="sidebar-section-label">Documents</div>
+        <a href="<?= $root ?>espace/client/contrats.php"
+           class="<?= $current === 'contrats.php' ? 'active' : '' ?>">
+            <i class="fas fa-file-signature"></i> Mes Contrats
+        </a>
+        <a href="<?= $root ?>espace/client/factures.php"
+           class="<?= $current === 'factures.php' ? 'active' : '' ?>">
+            <i class="fas fa-file-invoice-dollar"></i> Mes Factures
+        </a>
         <div class="sidebar-section-label">Media</div>
         <a href="<?= $root ?>espace/client/mes_photos.php"
            class="<?= $current === 'mes_photos.php' ? 'active' : '' ?>">
