@@ -20,7 +20,7 @@ if ($idPrestation === '' || !ctype_digit((string) $idPrestation)) {
 try {
     $stmt = $pdo->prepare(
         "SELECT ID_CATEGORIE, LIB_CATEGORIE
-         FROM categories
+         FROM categorie
          WHERE ID_PRESTATION = :id_prestation
          ORDER BY LIB_CATEGORIE ASC"
     );
