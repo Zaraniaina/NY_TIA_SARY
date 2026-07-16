@@ -24,7 +24,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <li class="nav-item"><a href="portfolio.php" class="nav-link <?php echo ($current_page == 'portfolio.php') ? 'active' : ''; ?>"><i class="fas fa-images"></i> Portfolio</a></li>
                 <li class="nav-item"><a href="#contact" class="nav-link"><i class="fas fa-envelope"></i> Contact</a></li>
                 <li class="nav-item"><a href="login/login.php" class="btn btn-outline btn-sm"><i
-                            class="far fa-calendar-check"></i>&nbsp; Réserver</a></li>
+                            class="fas fa-sign-in-alt"></i>&nbsp; Se connecter</a></li>
             </ul>
         </div>
     </header>
