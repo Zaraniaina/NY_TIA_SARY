@@ -105,7 +105,7 @@ $factures = $stmtFactures->fetchAll();
                                         ?>
                                     </td>
                                     <td>
-                                        <a href="generer_facture_pdf.php?id_facture=<?= (int)$f['ID_FACTURE'] ?>" target="_blank" class="btn-dash btn-dash-outline btn-dash-sm" style="display:inline-flex;align-items:center;gap:6px;">
+                                        <a href="generer_facture_pdf.php?id_facture=<?= (int)$f['ID_FACTURE'] ?>" class="btn-dash btn-dash-outline btn-dash-sm" style="display:inline-flex;align-items:center;gap:6px;">
                                             <i class="fas fa-file-pdf"></i> PDF
                                         </a>
                                     </td>
@@ -130,3 +130,10 @@ overlay?.addEventListener('click', () => { sidebar.classList.remove('open'); ove
 </script>
 </body>
 </html>
+
+<?php
+
+//on inclue le generateur de pdf
+include_once __DIR__ .'/../../util/generer_facture_pdf.php';
+
+?>

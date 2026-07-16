@@ -230,7 +230,7 @@ $factures = $stmt->fetchAll();
                                         </td>
                                         <td>
                                             <div style="display:inline-flex;gap:6px;">
-                                                <a href="../client/generer_facture_pdf.php?id_facture=<?= (int)$f['ID_FACTURE'] ?>" target="_blank" class="btn-dash btn-dash-outline btn-dash-sm" title="Télécharger le PDF">
+                                                <a href="../client/generer_facture_pdf.php?id_facture=<?= (int)$f['ID_FACTURE'] ?>" class="btn-dash btn-dash-outline btn-dash-sm" title="Télécharger le PDF">
                                                     <i class="fas fa-file-pdf"></i>
                                                 </a>
                                                 <form method="POST" style="display:inline;margin:0;" onsubmit="return confirm('Supprimer cette facture ?');">
