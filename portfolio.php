@@ -86,6 +86,15 @@
             </div>
         </div>
     </section>
+    <!-- Boutons Flottants -->
+<div class="floating-buttons">
+    <button class="btn-float btn-devis" id="btn-open-devis-float" title="Demander un Devis">
+        <i class="fas fa-file-invoice-dollar"></i> Demander devis
+    </button>
+    <a href="login/login.php" class="btn-float btn-reserver" title="Réserver">
+        <i class="far fa-calendar-check"></i> Réserver
+    </a>
+</div>
     <!-- Footer page -->
     <?php include "composante/footer.php" ?>
 </body>
