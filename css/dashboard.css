@@ -386,7 +386,7 @@ body {
     border: 1px solid var(--border-color);
     border-radius: 14px;
     padding: 18px 20px;
-    background: linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(248,248,246,1) 100%);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(248, 248, 246, 1) 100%);
     transition: var(--transition-smooth);
 }
 
@@ -1263,9 +1263,15 @@ body {
     background: rgba(217, 61, 61, 0.08) !important;
     animation: rowFlash 1.6s ease-in-out;
 }
+
 @keyframes rowFlash {
-    0%   { background: rgba(217, 61, 61, 0.25); }
-    100% { background: rgba(217, 61, 61, 0.08); }
+    0% {
+        background: rgba(217, 61, 61, 0.25);
+    }
+
+    100% {
+        background: rgba(217, 61, 61, 0.08);
+    }
 }
 
 /* ── CATEGORY CHECKBOX GRID ── */
@@ -1650,6 +1656,7 @@ body {
     display: none;
 
 }
+
 * {
     scrollbar-width: thin;
     scrollbar-color: var(--primary-green) var(--bg-body);

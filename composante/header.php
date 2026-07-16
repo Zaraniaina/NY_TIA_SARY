@@ -22,7 +22,8 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <li class="nav-item"><a href="apropos.php" class="nav-link <?php echo ($current_page == 'apropos.php') ? 'active' : ''; ?>"><i class="fas fa-info-circle"></i> À Propos</a></li>
                 <li class="nav-item"><a href="service.php" class="nav-link <?php echo ($current_page == 'service.php') ? 'active' : ''; ?>"><i class="fas fa-camera-retro"></i> Services</a></li>
                 <li class="nav-item"><a href="portfolio.php" class="nav-link <?php echo ($current_page == 'portfolio.php') ? 'active' : ''; ?>"><i class="fas fa-images"></i> Portfolio</a></li>
-                <li class="nav-item"><a href="#contact" class="nav-link"><i class="fas fa-envelope"></i> Contact</a></li>
+                <li class="nav-item"><a href="blog.php" class="nav-link <?php echo ($current_page == 'blog.php') ? 'active' : ''; ?>"><i class="fas fa-newspaper"></i> Blog</a></li>
+                <li class="nav-item"><a href="#contact" class="nav-link"><i class="fas fa-phone"></i> Contact</a></li>
                 <li class="nav-item"><a href="login/login.php" class="btn btn-outline btn-sm"><i
                             class="fas fa-sign-in-alt"></i>&nbsp; Se connecter</a></li>
             </ul>

@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (!$error) {
                 if ($action === 'create') {
-                    $stmt = $pdo->prepare('INSERT INTO BLOG (ID_TYPE_BLOG, TITRE_BLOG, CONTENU, IMAGE_COURVERTURE,STATUS_BLOG) VALUES (?,?,?,?)');
+                    $stmt = $pdo->prepare('INSERT INTO BLOG (ID_TYPE_BLOG, TITRE_BLOG, CONTENU, IMAGE_COURVERTURE,STATUS_BLOG) VALUES (?,?,?,?,?)');
                     $stmt->execute([$idCat, $titre, $contenu, $imgPath,"PUBLIER"]);
                     $success = "Article « $titre » publié avec succès.";
                 } else {
@@ -89,8 +89,6 @@ if (isset($_GET['edit'])) {
                 <span>Blog</span>
             </nav>
 
-            
-            
 
             <div style="display:grid;grid-template-columns:1fr 1.8fr;gap:28px;align-items:start;">
 
@@ -122,9 +120,9 @@ if (isset($_GET['edit'])) {
                                 <select name="id_categorie" id="id_categorie" class="dash-select" required>
                                     <option value="">— Choisir —</option>
                                     <?php foreach ($categories as $cat): ?>
-                                        <option value="<?= (int)$cat['ID_CATEGORIE'] ?>"
-                                            <?= isset($editArticle) && (int)$editArticle['ID_CATEGORIE'] === (int)$cat['ID_CATEGORIE'] ? 'selected' : '' ?>>
-                                            <?= htmlspecialchars($cat['LIB_CATEGORIE']) ?>
+                                        <option value="<?= (int)$cat['ID_TYPE_BLOG'] ?>"
+                                            <?= isset($editArticle) && (int)$editArticle['ID_BLOG'] === (int)$cat['ID_TYPE_BLOG'] ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($cat['LIB_TYPE_BLOG']) ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
@@ -178,7 +176,7 @@ if (isset($_GET['edit'])) {
                                                 <strong style="font-size:0.88rem;"><?= htmlspecialchars($art['TITRE_BLOG']) ?></strong>
                                             </div>
                                         </td>
-                                        <td><?= htmlspecialchars($art['LIB_CATEGORIE'] ?? '—') ?></td>
+                                        <td><?= htmlspecialchars($art['LIB_TYPE_BLOG'] ?? '—') ?></td>
                                         <td><?= date('d/m/Y', strtotime($art['DATE_PUBLICATION'])) ?></td>
                                         <td style="white-space:nowrap;">
                                             <a href="?edit=<?= (int)$art['ID_BLOG'] ?>" class="btn-dash btn-dash-outline btn-dash-sm"><i class="fas fa-edit"></i></a>
