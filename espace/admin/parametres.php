@@ -21,8 +21,42 @@ $authId = (int) $stmtAuthId->fetchColumn();
 // --- GESTION DES REQUÊTES POST ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     
+    // ACTION : Gestion des types de blog (CRUD)
+    if ($_POST['action'] === 'crud_type_blog') {
+        $subAction = $_POST['sub_action'] ?? '';
+        $idType = (int) ($_POST['id_type_blog'] ?? 0);
+        $libType = trim($_POST['lib_type_blog'] ?? '');
+
+        if ($subAction === 'create') {
+            if (!$libType) {
+                $error = 'Le nom du type de blog est requis.';
+            } else {
+                $pdo->prepare('INSERT INTO TYPE_BLOG (LIB_TYPE_BLOG) VALUES (?)')->execute([$libType]);
+                $success = "Type de blog « $libType » ajouté.";
+            }
+        } elseif ($subAction === 'edit' && $idType) {
+            if (!$libType) {
+                $error = 'Le nom du type de blog est requis.';
+            } else {
+                $pdo->prepare('UPDATE TYPE_BLOG SET LIB_TYPE_BLOG = ? WHERE ID_TYPE_BLOG = ?')->execute([$libType, $idType]);
+                $success = "Type de blog mis à jour.";
+            }
+        } elseif ($subAction === 'delete' && $idType) {
+            // Vérifier si des articles utilisent ce type
+            $stmt = $pdo->prepare('SELECT COUNT(*) FROM BLOG WHERE ID_TYPE_BLOG = ?');
+            $stmt->execute([$idType]);
+            $count = (int) $stmt->fetchColumn();
+            if ($count > 0) {
+                $error = "Impossible de supprimer : $count article(s) utilisent ce type de blog.";
+            } else {
+                $pdo->prepare('DELETE FROM TYPE_BLOG WHERE ID_TYPE_BLOG = ?')->execute([$idType]);
+                $success = "Type de blog supprimé.";
+            }
+        }
+    }
+
     // ACTION : Mettre à jour les informations personnelles
-    if ($_POST['action'] === 'update_info') {
+    elseif ($_POST['action'] === 'update_info') {
         $nom    = trim($_POST['nom'] ?? '');
         $prenom = trim($_POST['prenom'] ?? '');
         $tel    = trim($_POST['telephone'] ?? '');
@@ -154,7 +188,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 }
 
-// --- RECUPERATION DES DONNEES ADMIN POUR L'AFFICHAGE ---
+// --- RECUPERATION DES DONNEES ---
+
+// Récupérer les données pour l'édition d'un type de blog
+$editTypeBlog = null;
+if (isset($_GET['edit_type'])) {
+    $stmt = $pdo->prepare('SELECT * FROM TYPE_BLOG WHERE ID_TYPE_BLOG = ?');
+    $stmt->execute([(int)$_GET['edit_type']]);
+    $editTypeBlog = $stmt->fetch();
+}
+
+// Récupérer les types de blog
+$typesBlog = $pdo->query('SELECT * FROM TYPE_BLOG ORDER BY LIB_TYPE_BLOG')->fetchAll();
+
+// Récupérer les données admin pour l'affichage
 $stmtAdmin = $pdo->prepare("
     SELECT c.*, a.EMAIL_AUTH 
     FROM CLIENT c 
@@ -205,10 +252,6 @@ $adminEmail = $_SESSION['admin_email'] ?? $adminData['EMAIL_AUTH'] ?? 'Admin';
                 <h2>Paramètres</h2>
                 <p>Gérez votre compte administrateur et vos préférences</p>
             </div>
-
-            
-
-            
 
             <!-- ONGLETS / CARDS -->
             <div class="form-grid-2">
@@ -283,16 +326,99 @@ $adminEmail = $_SESSION['admin_email'] ?? $adminData['EMAIL_AUTH'] ?? 'Admin';
                 </div>
             </div>
 
-            <!-- CARTE : BLOG (vide) -->
+            <!-- CARTE : GESTION DES TYPES DE BLOG -->
             <div class="dash-card" style="margin-top: 30px;">
                 <div class="dash-card-header">
-                    <h3><i class="fas fa-newspaper"></i> Gestion du Blog</h3>
+                    <h3><i class="fas fa-newspaper"></i> Types de Blog</h3>
                 </div>
                 <div class="dash-card-body padded">
-                    <div class="empty-state">
-                        <i class="fas fa-newspaper" style="font-size: 2.8rem; margin-bottom: 15px; opacity: 0.6;"></i>
-                        <p style="font-size: 0.95rem; font-weight: 600; color: #666;">Fonctionnalité en développement</p>
-                        <p style="font-size: 0.85rem; color: #999; margin-top: 8px;">Gérez ici les articles de votre blog.</p>
+                    <div style="display:grid;grid-template-columns:1fr 2fr;gap:28px;align-items:start;">
+                        
+                        <!-- FORMULAIRE -->
+                        <div class="dash-card">
+                            <div class="dash-card-header">
+                                <h3><i class="fas fa-<?= $editTypeBlog ? 'edit' : 'plus' ?>" style="color:var(--primary-green);margin-right:8px;"></i>
+                                    <?= $editTypeBlog ? 'Modifier' : 'Ajouter' ?> un type
+                                </h3>
+                                <?php if ($editTypeBlog): ?>
+                                    <a href="parametres.php" class="btn-dash btn-dash-outline btn-dash-sm"><i class="fas fa-times"></i> Annuler</a>
+                                <?php endif; ?>
+                            </div>
+                            <div class="dash-card-body padded">
+                                <form method="POST" action="">
+                                    <input type="hidden" name="action" value="crud_type_blog">
+                                    <input type="hidden" name="sub_action" value="<?= $editTypeBlog ? 'edit' : 'create' ?>">
+                                    <?php if ($editTypeBlog): ?>
+                                        <input type="hidden" name="id_type_blog" value="<?= (int)$editTypeBlog['ID_TYPE_BLOG'] ?>">
+                                    <?php endif; ?>
+                                    
+                                    <div class="dash-form-group">
+                                        <label for="lib_type_blog">Nom du type de blog <span class="required">*</span></label>
+                                        <input type="text" name="lib_type_blog" id="lib_type_blog" class="dash-input"
+                                               placeholder="Ex: Technologie, Mode, Événements..."
+                                               value="<?= htmlspecialchars($editTypeBlog['LIB_TYPE_BLOG'] ?? '') ?>" required>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn-dash btn-dash-primary" style="width:100%;justify-content:center;">
+                                        <i class="fas fa-save"></i> <?= $editTypeBlog ? 'Mettre à jour' : 'Ajouter le type' ?>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- LISTE DES TYPES -->
+                        <div class="dash-card">
+                            <div class="dash-card-header">
+                                <h3><i class="fas fa-tags" style="color:var(--primary-green);margin-right:8px;"></i> Types de blog</h3>
+                                <span class="badge badge-confirm"><?= count($typesBlog) ?></span>
+                            </div>
+                            <div class="dash-card-body">
+                                <?php if (empty($typesBlog)): ?>
+                                    <div class="empty-state">
+                                        <i class="fas fa-tags"></i>
+                                        <p>Aucun type de blog. Commencez par en ajouter un.</p>
+                                    </div>
+                                <?php else: ?>
+                                <div class="table-responsive">
+                                    <table class="dash-table">
+                                        <thead><tr><th>#</th><th>Type de blog</th><th>Articles</th><th>Actions</th></tr></thead>
+                                        <tbody>
+                                        <?php foreach ($typesBlog as $type): 
+                                            $stmtArticles = $pdo->prepare('SELECT COUNT(*) FROM BLOG WHERE ID_TYPE_BLOG = ?');
+                                            $stmtArticles->execute([(int)$type['ID_TYPE_BLOG']]);
+                                            $nbArticles = (int) $stmtArticles->fetchColumn();
+                                        ?>
+                                            <tr>
+                                                <td>#<?= (int)$type['ID_TYPE_BLOG'] ?></td>
+                                                <td><strong><?= htmlspecialchars($type['LIB_TYPE_BLOG']) ?></strong></td>
+                                                <td>
+                                                    <span class="badge <?= $nbArticles > 0 ? 'badge-confirm' : 'badge-waiting' ?>">
+                                                        <?= $nbArticles ?> article(s)
+                                                    </span>
+                                                </td>
+                                                <td style="display:flex;gap:6px;">
+                                                    <a href="?edit_type=<?= (int)$type['ID_TYPE_BLOG'] ?>" class="btn-dash btn-dash-outline btn-dash-sm">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <?php if ($nbArticles === 0): ?>
+                                                    <form method="POST" style="display:inline;" onsubmit="return confirm('Supprimer ce type de blog ?');">
+                                                        <input type="hidden" name="action" value="crud_type_blog">
+                                                        <input type="hidden" name="sub_action" value="delete">
+                                                        <input type="hidden" name="id_type_blog" value="<?= (int)$type['ID_TYPE_BLOG'] ?>">
+                                                        <button class="btn-dash btn-dash-danger btn-dash-sm"><i class="fas fa-trash"></i></button>
+                                                    </form>
+                                                    <?php else: ?>
+                                                        <span title="Utilisé par des articles" style="color:#ccc;font-size:1rem;margin-left:6px;"><i class="fas fa-lock"></i></span>
+                                                    <?php endif; ?>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

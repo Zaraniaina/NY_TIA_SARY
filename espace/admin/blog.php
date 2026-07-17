@@ -14,10 +14,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $idBlog  = (int) ($_POST['id_blog'] ?? 0);
 
     if ($action === 'create' || $action === 'edit') {
-        $idCat   = (int) ($_POST['id_categorie'] ?? 0);
+        $idCat   = (int) ($_POST['id_type_blog'] ?? 0);
         $titre   = trim($_POST['titre'] ?? '');
         $contenu = trim($_POST['contenu'] ?? '');
         $imgPath = trim($_POST['img_actuelle'] ?? '');
+        $status  = $_POST['status'] ?? 'PUBLIER';
 
         if (!$idCat || !$titre || !$contenu) {
             $error = 'Veuillez remplir tous les champs obligatoires.';
@@ -31,16 +32,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (!$error) {
                 if ($action === 'create') {
-                    $stmt = $pdo->prepare('INSERT INTO BLOG (ID_TYPE_BLOG, TITRE_BLOG, CONTENU, IMAGE_COURVERTURE,STATUS_BLOG) VALUES (?,?,?,?,?)');
-                    $stmt->execute([$idCat, $titre, $contenu, $imgPath,"PUBLIER"]);
-                    $success = "Article « $titre » publié avec succès.";
+                    $stmt = $pdo->prepare('INSERT INTO BLOG (ID_TYPE_BLOG, TITRE_BLOG, CONTENU, IMAGE_COURVERTURE, STATUS_BLOG) VALUES (?,?,?,?,?)');
+                    $stmt->execute([$idCat, $titre, $contenu, $imgPath, $status]);
+                    $success = "Article « $titre » créé avec succès.";
                 } else {
-                    $stmt = $pdo->prepare('UPDATE BLOG SET ID_TYPE_BLOG=?, TITRE_BLOG=?, CONTENU=?, IMAGE_COURVERTURE=?, DATE_MODIFICATION=CURDATE(),STATUS_BLOG=? WHERE ID_BLOG=?');
-                    $stmt->execute([$idCat, $titre, $contenu, $imgPath,"PUBLIER", $idBlog]);
+                    $stmt = $pdo->prepare('UPDATE BLOG SET ID_TYPE_BLOG=?, TITRE_BLOG=?, CONTENU=?, IMAGE_COURVERTURE=?, DATE_MODIFICATION=CURDATE(), STATUS_BLOG=? WHERE ID_BLOG=?');
+                    $stmt->execute([$idCat, $titre, $contenu, $imgPath, $status, $idBlog]);
                     $success = "Article modifié avec succès.";
                 }
             }
         }
+    } elseif ($action === 'publish' && $idBlog) {
+        $pdo->prepare('UPDATE BLOG SET STATUS_BLOG = "PUBLIER" WHERE ID_BLOG = ?')->execute([$idBlog]);
+        $success = "Article publié avec succès.";
+    } elseif ($action === 'draft' && $idBlog) {
+        $pdo->prepare('UPDATE BLOG SET STATUS_BLOG = "BROUILLON" WHERE ID_BLOG = ?')->execute([$idBlog]);
+        $success = "Article mis en brouillon avec succès.";
     } elseif ($action === 'delete' && $idBlog) {
         $pdo->prepare('DELETE FROM BLOG WHERE ID_BLOG = ?')->execute([$idBlog]);
         $success = "Article supprimé.";
@@ -116,15 +123,22 @@ if (isset($_GET['edit'])) {
                                        value="<?= htmlspecialchars($editArticle['TITRE_BLOG'] ?? '') ?>">
                             </div>
                             <div class="dash-form-group">
-                                <label for="id_categorie">Catégorie <span class="required">*</span></label>
-                                <select name="id_categorie" id="id_categorie" class="dash-select" required>
+                                <label for="id_type_blog">Type de blog <span class="required">*</span></label>
+                                <select name="id_type_blog" id="id_type_blog" class="dash-select" required>
                                     <option value="">— Choisir —</option>
                                     <?php foreach ($categories as $cat): ?>
                                         <option value="<?= (int)$cat['ID_TYPE_BLOG'] ?>"
-                                            <?= isset($editArticle) && (int)$editArticle['ID_BLOG'] === (int)$cat['ID_TYPE_BLOG'] ? 'selected' : '' ?>>
+                                            <?= ($editArticle && (int)$editArticle['ID_TYPE_BLOG'] === (int)$cat['ID_TYPE_BLOG'] ? 'selected' : '' )?>>
                                             <?= htmlspecialchars($cat['LIB_TYPE_BLOG']) ?>
                                         </option>
                                     <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="dash-form-group">
+                                <label for="status">Statut</label>
+                                <select name="status" id="status" class="dash-select" <?= !$editArticle ? 'required' : '' ?>>
+                                    <option value="BROUILLON" <?= (!$editArticle || $editArticle['STATUS_BLOG'] === 'BROUILLON') ? 'selected' : '' ?>>Brouillon</option>
+                                    <option value="PUBLIER" <?= ($editArticle && $editArticle['STATUS_BLOG'] === 'PUBLIER') ? 'selected' : '' ?>>Publié</option>
                                 </select>
                             </div>
                             <div class="dash-form-group">
@@ -144,7 +158,7 @@ if (isset($_GET['edit'])) {
                                 <textarea name="contenu" id="contenu" class="dash-textarea" style="min-height:160px;" required><?= htmlspecialchars($editArticle['CONTENU'] ?? '') ?></textarea>
                             </div>
                             <button type="submit" class="btn-dash btn-dash-primary" style="width:100%;justify-content:center;">
-                                <i class="fas fa-save"></i> <?= $editArticle ? 'Mettre à jour' : 'Publier l\'article' ?>
+                                <i class="fas fa-save"></i> <?= $editArticle ? 'Mettre à jour' : 'Créer l\'article' ?>
                             </button>
                         </form>
                     </div>
@@ -153,16 +167,16 @@ if (isset($_GET['edit'])) {
                 <!-- LISTE ARTICLES -->
                 <div class="dash-card">
                     <div class="dash-card-header">
-                        <h3><i class="fas fa-newspaper" style="color:var(--primary-green);margin-right:8px;"></i> Articles publiés</h3>
+                        <h3><i class="fas fa-newspaper" style="color:var(--primary-green);margin-right:8px;"></i> Articles</h3>
                         <span class="badge badge-confirm"><?= count($articles) ?></span>
                     </div>
                     <div class="dash-card-body">
                         <?php if (empty($articles)): ?>
-                            <div class="empty-state"><i class="fas fa-newspaper"></i><p>Aucun article publié.</p></div>
+                            <div class="empty-state"><i class="fas fa-newspaper"></i><p>Aucun article.</p></div>
                         <?php else: ?>
                         <div class="table-responsive">
                             <table class="dash-table">
-                                <thead><tr><th>Titre</th><th>Catégorie</th><th>Publié le</th><th>Actions</th></tr></thead>
+                                <thead><tr><th>Titre</th><th>Type</th><th>Statut</th><th>Date</th><th>Actions</th></tr></thead>
                                 <tbody>
                                 <?php foreach ($articles as $art): ?>
                                     <tr>
@@ -177,9 +191,29 @@ if (isset($_GET['edit'])) {
                                             </div>
                                         </td>
                                         <td><?= htmlspecialchars($art['LIB_TYPE_BLOG'] ?? '—') ?></td>
+                                        <td>
+                                            <?php if ($art['STATUS_BLOG'] === 'PUBLIER'): ?>
+                                                <span class="badge badge-confirm">Publié</span>
+                                            <?php else: ?>
+                                                <span class="badge badge-waiting">Brouillon</span>
+                                            <?php endif; ?>
+                                        </td>
                                         <td><?= date('d/m/Y', strtotime($art['DATE_PUBLICATION'])) ?></td>
                                         <td style="white-space:nowrap;">
                                             <a href="?edit=<?= (int)$art['ID_BLOG'] ?>" class="btn-dash btn-dash-outline btn-dash-sm"><i class="fas fa-edit"></i></a>
+                                            <?php if ($art['STATUS_BLOG'] === 'PUBLIER'): ?>
+                                            <form method="POST" style="display:inline;" onsubmit="return confirm('Mettre cet article en brouillon ?');">
+                                                <input type="hidden" name="action" value="draft">
+                                                <input type="hidden" name="id_blog" value="<?= (int)$art['ID_BLOG'] ?>">
+                                                <button class="btn-dash btn-dash-warning btn-dash-sm" title="Mettre en brouillon"><i class="fas fa-file-alt"></i></button>
+                                            </form>
+                                            <?php else: ?>
+                                            <form method="POST" style="display:inline;" onsubmit="return confirm('Publier cet article ?');">
+                                                <input type="hidden" name="action" value="publish">
+                                                <input type="hidden" name="id_blog" value="<?= (int)$art['ID_BLOG'] ?>">
+                                                <button class="btn-dash btn-dash-primary btn-dash-sm" title="Publier"><i class="fas fa-check"></i></button>
+                                            </form>
+                                            <?php endif; ?>
                                             <form method="POST" style="display:inline;" onsubmit="return confirm('Supprimer cet article ?');">
                                                 <input type="hidden" name="action" value="delete">
                                                 <input type="hidden" name="id_blog" value="<?= (int)$art['ID_BLOG'] ?>">
