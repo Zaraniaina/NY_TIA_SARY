@@ -41,7 +41,8 @@ $devis = $pdo->query(
     'SELECT d.*,
             p.LIB_PRESTATION,
             GROUP_CONCAT(c.LIB_CATEGORIE ORDER BY c.LIB_CATEGORIE SEPARATOR "||") AS CATEGORIES_LIST,
-            (SELECT COUNT(*) FROM PIECES_JOINTES pj WHERE pj.ID = d.ID AND pj.PATH_PIECE <> "aucun") AS nb_pj
+            (SELECT COUNT(*) FROM PIECES_JOINTES pj WHERE pj.ID = d.ID AND pj.PATH_PIECE <> "aucun") AS nb_pj,
+            (SELECT GROUP_CONCAT(pj.PATH_PIECE SEPARATOR ",") FROM PIECES_JOINTES pj WHERE pj.ID = d.ID AND pj.PATH_PIECE <> "aucun") AS PJ_PATHS
      FROM DEVIS d
      JOIN PRESTATIONS p ON d.ID_PRESTATION = p.ID_PRESTATION
      LEFT JOIN DEVIS_CATEGORIES dc ON dc.ID_DEVIS = d.ID
@@ -125,59 +126,133 @@ $selectedDevisId = (int) ($_GET['id'] ?? 0);
                             </thead>
                             <tbody>
                             <?php foreach ($devis as $d): ?>
-    <?php
-    $isSelected     = $selectedDevisId > 0 && (int)$d['ID'] === $selectedDevisId;
-    $categoriesArr  = !empty($d['CATEGORIES_LIST']) ? explode('||', $d['CATEGORIES_LIST']) : [];
-    $categoriesTxt  = !empty($categoriesArr) ? implode(', ', $categoriesArr) : '';
-    $searchBlob     = mb_strtolower($d['PRENOMS'] . ' ' . $d['NOM'] . ' ' . $d['TELEPHONE'] . ' ' . $d['LIB_PRESTATION'] . ' ' . $categoriesTxt);
-    ?>
-    <tr<?= $isSelected ? ' class="row-highlighted" id="devis-selected"' : '' ?> data-search="<?= htmlspecialchars($searchBlob, ENT_QUOTES) ?>">
-        <td>#<?= (int)$d['ID'] ?></td>
-        <td>
-            <strong><?= htmlspecialchars($d['PRENOMS'] . ' ' . $d['NOM']) ?></strong>
-            <?php if ($d['TYPE_VISITEUR'] && $d['TYPE_VISITEUR'] !== '—'): ?>
-                <br><small style="color:#888;"><?= htmlspecialchars($d['TYPE_VISITEUR']) ?></small>
-            <?php endif; ?>
-        </td>
-        <td><?= htmlspecialchars($d['TELEPHONE']) ?></td>
-        <td><?= htmlspecialchars($d['LIB_PRESTATION']) ?></td>
-        <td>
-            <?php if (empty($categoriesArr)): ?>
-                <span style="color:#aaa;">—</span>
-            <?php else: ?>
-                <div style="display:flex;flex-wrap:wrap;gap:4px;">
-                    <?php foreach ($categoriesArr as $cat): ?>
-                        <span class="badge badge-waiting" style="font-weight:500;"><?= htmlspecialchars($cat) ?></span>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
-        </td>
-        <td><strong><?= htmlspecialchars($d['BUGET_ESTIMATIF']) . ' AR' ?></strong></td>
-        <td><?= date('d/m/Y', strtotime($d['DATE_SOUHAITE'])) ?></td>
-        <td>
-            <?php if ((int)$d['nb_pj'] > 0): ?>
-                <span class="badge badge-confirm"><i class="fas fa-paperclip"></i> <?= (int)$d['nb_pj'] ?></span>
-            <?php else: ?>
-                <span class="badge badge-confirm"><i class="fas fa-paperclip"></i>0</span>
-            <?php endif; ?>
-        </td>
-        <td>
-            <button class="btn-dash btn-dash-sm btn-dash-outline" onclick="showDetail(<?= $d['ID'] ?>, '<?= addslashes(htmlspecialchars($d['DESCRIPTION'])) ?>')">
-                <i class="fas fa-eye"></i>
-            </button>
-            <form method="POST" style="display:inline;" onsubmit="return confirm('Supprimer ce devis ?');">
-                <input type="hidden" name="action" value="supprimer">
-                <input type="hidden" name="id" value="<?= (int)$d['ID'] ?>">
-                <button type="submit" class="btn-dash btn-dash-sm btn-dash-danger"><i class="fas fa-trash"></i></button>
-            </form>
-        </td>
-    </tr>
-<?php endforeach; ?>
-                            <tr id="noSearchResultsDevis" style="display:none;">
-                                <td colspan="9" style="text-align:center;color:#999;padding:20px;">
-                                    <i class="fas fa-search"></i> Aucune demande ne correspond à votre recherche.
-                                </td>
-                            </tr>
+                        <?php
+                        $isSelected     = $selectedDevisId > 0 && (int)$d['ID'] === $selectedDevisId;
+                        $categoriesArr  = !empty($d['CATEGORIES_LIST']) ? explode('||', $d['CATEGORIES_LIST']) : [];
+                        $categoriesTxt  = !empty($categoriesArr) ? implode(', ', $categoriesArr) : '';
+                        $searchBlob     = mb_strtolower($d['PRENOMS'] . ' ' . $d['NOM'] . ' ' . $d['TELEPHONE'] . ' ' . $d['LIB_PRESTATION'] . ' ' . $categoriesTxt);
+                        $pjPaths        = !empty($d['PJ_PATHS']) ? explode(',', $d['PJ_PATHS']) : [];
+                        ?>
+                        <tr<?= $isSelected ? ' class="row-highlighted" id="devis-selected"' : '' ?> data-search="<?= htmlspecialchars($searchBlob, ENT_QUOTES) ?>">
+                            <td>#<?= (int)$d['ID'] ?></td>
+                            <td>
+                                <strong><?= htmlspecialchars($d['PRENOMS'] . ' ' . $d['NOM']) ?></strong>
+                                <?php if ($d['TYPE_VISITEUR'] && $d['TYPE_VISITEUR'] !== '—'): ?>
+                                    <br><small style="color:#888;"><?= htmlspecialchars($d['TYPE_VISITEUR']) ?></small>
+                                <?php endif; ?>
+                            </td>
+                            <td><?= htmlspecialchars($d['TELEPHONE']) ?></td>
+                            <td><?= htmlspecialchars($d['LIB_PRESTATION']) ?></td>
+                            <td>
+                                <?php if (empty($categoriesArr)): ?>
+                                    <span style="color:#aaa;">—</span>
+                                <?php else: ?>
+                                    <div style="display:flex;flex-wrap:wrap;gap:4px;">
+                                        <?php foreach ($categoriesArr as $cat): ?>
+                                            <span class="badge badge-waiting" style="font-weight:500;"><?= htmlspecialchars($cat) ?></span>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php endif; ?>
+                            </td>
+                            <td><strong><?= htmlspecialchars($d['BUGET_ESTIMATIF']) . ' AR' ?></strong></td>
+                            <td><?= date('d/m/Y', strtotime($d['DATE_SOUHAITE'])) ?></td>
+                            <td>
+                                <?php if ((int)$d['nb_pj'] > 0): ?>
+                                    <span class="badge badge-confirm"><i class="fas fa-paperclip"></i> <?= (int)$d['nb_pj'] ?></span>
+                                <?php else: ?>
+                                    <span class="badge badge-confirm"><i class="fas fa-paperclip"></i>0</span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <button class="btn-dash btn-dash-sm btn-dash-outline" onclick="toggleDevisDetail(<?= $d['ID'] ?>)">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <form method="POST" style="display:inline;" onsubmit="return confirm('Supprimer ce devis ?');">
+                                    <input type="hidden" name="action" value="supprimer">
+                                    <input type="hidden" name="id" value="<?= (int)$d['ID'] ?>">
+                                    <button type="submit" class="btn-dash btn-dash-sm btn-dash-danger"><i class="fas fa-trash"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        <!-- Ligne de détail du devis (initialement cachée) -->
+                        <tr class="devis-detail-row" id="devis-detail-<?= (int)$d['ID'] ?>" style="display:none;">
+                            <td colspan="9" class="devis-detail-cell">
+                                <div class="devis-detail-content" style="background:#f8f8f6;border:1px solid var(--border-color);border-radius:12px;padding:20px;margin-top:10px;">
+                                    <h4 style="font-family:var(--font-headings);font-weight:700;margin-bottom:16px;color:var(--logo-black);display:flex;align-items:center;gap:10px;">
+                                        <i class="fas fa-info-circle" style="color:var(--primary-green);"></i>
+                                        Détails du devis #<?= (int)$d['ID'] ?>
+                                    </h4>
+                                    
+                                    <!-- Infos Client -->
+                                    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:16px;margin-bottom:20px;">
+                                        <div>
+                                            <strong style="color:var(--logo-black);font-size:0.9rem;">Nom :</strong><br>
+                                            <span><?= htmlspecialchars($d['PRENOMS'] . ' ' . $d['NOM']) ?></span>
+                                        </div>
+                                        <div>
+                                            <strong style="color:var(--logo-black);font-size:0.9rem;">Email :</strong><br>
+                                            <span><?= htmlspecialchars($d['EMAIL']) ?></span>
+                                        </div>
+                                        <div>
+                                            <strong style="color:var(--logo-black);font-size:0.9rem;">Téléphone :</strong><br>
+                                            <span><?= htmlspecialchars($d['TELEPHONE']) ?></span>
+                                        </div>
+                                        <div>
+                                            <strong style="color:var(--logo-black);font-size:0.9rem;">Type de visiteur :</strong><br>
+                                            <span><?= htmlspecialchars($d['TYPE_VISITEUR']) ?></span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Détails du devis -->
+                                    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:16px;margin-bottom:20px;">
+                                        <div>
+                                            <strong style="color:var(--logo-black);font-size:0.9rem;">Prestation :</strong><br>
+                                            <span><?= htmlspecialchars($d['LIB_PRESTATION']) ?></span>
+                                        </div>
+                                        <div>
+                                            <strong style="color:var(--logo-black);font-size:0.9rem;">Catégorie(s) :</strong><br>
+                                            <span><?= !empty($categoriesTxt) ? htmlspecialchars($categoriesTxt) : '—' ?></span>
+                                        </div>
+                                        <div>
+                                            <strong style="color:var(--logo-black);font-size:0.9rem;">Budget estimatif :</strong><br>
+                                            <span><?= htmlspecialchars($d['BUGET_ESTIMATIF']) ?> AR</span>
+                                        </div>
+                                        <div>
+                                            <strong style="color:var(--logo-black);font-size:0.9rem;">Date souhaitée :</strong><br>
+                                            <span><?= date('d/m/Y', strtotime($d['DATE_SOUHAITE'])) ?></span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Description -->
+                                    <div style="margin-bottom:20px;">
+                                        <strong style="color:var(--logo-black);font-size:0.9rem;display:block;margin-bottom:8px;">Description :</strong>
+                                        <p style="margin:0;color:var(--text-body);line-height:1.6;"><?= nl2br(htmlspecialchars($d['DESCRIPTION'])) ?></p>
+                                    </div>
+                                    
+                                    <!-- Pièces jointes -->
+                                    <?php if (!empty($pjPaths) && $pjPaths[0] !== 'aucun'): ?>
+                                        <div>
+                                            <strong style="color:var(--logo-black);font-size:0.9rem;display:block;margin-bottom:8px;"><i class="fas fa-paperclip" style="color:var(--primary-green);"></i> Pièces jointes :</strong>
+                                            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                                                <?php foreach ($pjPaths as $path): ?>
+                                                    <?php if ($path !== 'aucun'): ?>
+                                                        <a href="<?= htmlspecialchars('../../' . $path) ?>" target="_blank" class="btn-dash btn-dash-sm btn-dash-outline" style="padding:6px 12px;font-size:0.8rem;">
+                                                            <i class="fas fa-file-pdf"></i> Télécharger
+                                                        </a>
+                                                    <?php endif; ?>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                                <tr id="noSearchResultsDevis" style="display:none;">
+                                    <td colspan="9" style="text-align:center;color:#999;padding:20px;">
+                                        <i class="fas fa-search"></i> Aucune demande ne correspond à votre recherche.
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -188,15 +263,6 @@ $selectedDevisId = (int) ($_GET['id'] ?? 0);
     </div>
 </div>
 
-<!-- Modal description devis -->
-<div id="devisModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;align-items:center;justify-content:center;padding:20px;">
-    <div style="background:#fff;border-radius:14px;max-width:560px;width:100%;padding:32px;position:relative;">
-        <button onclick="document.getElementById('devisModal').style.display='none'" style="position:absolute;top:16px;right:20px;background:none;border:none;font-size:1.5rem;cursor:pointer;color:#aaa;">&times;</button>
-        <h3 style="font-family:var(--font-headings);margin-bottom:16px;font-size:1.1rem;">Description du projet</h3>
-        <p id="devisDescription" style="font-size:0.9rem;line-height:1.8;color:var(--text-body);"></p>
-    </div>
-</div>
-
 <script>
 const toggle  = document.getElementById('sidebarToggle');
 const sidebar = document.getElementById('sidebar');
@@ -204,13 +270,28 @@ const overlay = document.getElementById('sidebarOverlay');
 toggle?.addEventListener('click', () => { sidebar.classList.toggle('open'); overlay.classList.toggle('open'); });
 overlay?.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('open'); });
 
-function showDetail(id, desc) {
-    document.getElementById('devisDescription').textContent = desc;
-    document.getElementById('devisModal').style.display = 'flex';
+// Fonction pour afficher/masquer les détails du devis
+function toggleDevisDetail(id) {
+    const detailRow = document.getElementById('devis-detail-' + id);
+    const currentlyVisible = document.querySelector('.devis-detail-row:not([style*="display: none"])');
+    
+    // Fermer si on clique sur la même ligne
+    if (detailRow && detailRow.style.display !== 'none') {
+        detailRow.style.display = 'none';
+        return;
+    }
+    
+    // Fermer la ligne visible actuelle
+    if (currentlyVisible) {
+        currentlyVisible.style.display = 'none';
+    }
+    
+    // Afficher la nouvelle ligne
+    if (detailRow) {
+        detailRow.style.display = '';
+        detailRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
 }
-document.getElementById('devisModal')?.addEventListener('click', e => {
-    if (e.target === document.getElementById('devisModal')) e.target.style.display = 'none';
-});
 
 const selectedRow = document.getElementById('devis-selected');
 if (selectedRow) {
