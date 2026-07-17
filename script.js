@@ -27,11 +27,19 @@ document.addEventListener('DOMContentLoaded', () => {
         sr.reveal('.portfolio-filters', { origin: 'top', distance: '30px', duration: 700, delay: 150 });
         sr.reveal('.portfolio-item', { origin: 'bottom', distance: '50px', duration: 700, interval: 120 });
 
-        // ---------- TEMOIGNAGES (index.php) ----------
+        // ---------- TEMPOIGNAGES (index.php) ----------
         sr.reveal('.temoignages-pretitle', { origin: 'top', distance: '30px', duration: 700 });
         sr.reveal('.temoignages-title', { origin: 'top', distance: '40px', duration: 800, delay: 100 });
         sr.reveal('.temoignage-card', { origin: 'bottom', distance: '40px', duration: 700, scale: 0.94, interval: 130 });
         sr.reveal('.temoignages-stats', { origin: 'bottom', distance: '40px', duration: 800, delay: 200 });
+
+        // ---------- BLOG (blog.php) ----------
+        sr.reveal('.blog-hero-content', { origin: 'bottom', distance: '60px', duration: 1000, delay: 100 });
+        sr.reveal('.blog-filters', { origin: 'top', distance: '30px', duration: 700, delay: 150 });
+        sr.reveal('.blog-card', { origin: 'bottom', distance: '50px', duration: 700, interval: 150 });
+        sr.reveal('.blog-cta-content h2', { origin: 'bottom', distance: '40px', duration: 800, delay: 100 });
+        sr.reveal('.blog-cta-content p', { origin: 'bottom', distance: '40px', duration: 800, delay: 200 });
+        sr.reveal('.blog-cta-content .btn', { origin: 'bottom', distance: '40px', duration: 800, delay: 300 });
 
         // ---------- FOOTER (toutes les pages) ----------
         sr.reveal('.footer-logo-box', { origin: 'bottom', distance: '40px', duration: 700 });

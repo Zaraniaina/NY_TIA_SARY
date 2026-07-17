@@ -3,7 +3,7 @@
 require_once __DIR__ . '/config/database.php';
 $pdo = getPDO();
 
-// Pas de réponse JSON : on redirige vers index.php avec un message
+// Redirige vers la bonne page selon l'origine de la soumission (public ou espace client)
 function redirectVersIndex(bool $success, string $message, ?int $idDevis = null): void
 {
     $params = [
@@ -14,7 +14,13 @@ function redirectVersIndex(bool $success, string $message, ?int $idDevis = null)
         $params['id_devis'] = $idDevis;
     }
 
-    header('Location: index.php?' . http_build_query($params) . '#devis');
+    // Si la demande vient de l'espace client, on redirige vers la page devis du dashboard
+    $source = trim($_POST['source'] ?? '');
+    if ($source === 'client') {
+        header('Location: espace/client/devis.php?' . http_build_query($params));
+    } else {
+        header('Location: index.php?' . http_build_query($params) . '#devis');
+    }
     exit;
 }
 
@@ -58,7 +64,9 @@ $typesAutorises = [
     'Familles', "Organisateurs d'événement", 'Artistes',
     'Agences de communication', 'Particuliers',
 ];
-if (!in_array($typeVisiteur, $typesAutorises, true)) {
+$source = trim($_POST['source'] ?? '');
+// Si ça vient de l'espace client, on accepte la valeur car elle vient de la DB
+if ($source !== 'client' && !in_array($typeVisiteur, $typesAutorises, true)) {
     $errors[] = "Le type de visiteur sélectionné n'est pas valide.";
 }
 
@@ -169,7 +177,7 @@ try {
     // 4.2 Insertion des catégories choisies (table de liaison devis_categories)
     //     Un visiteur peut cocher une ou plusieurs catégories -> une ligne par catégorie.
     if (!empty($idCategories)) {
-        $sqlCategorie  = "INSERT INTO devis_categories (ID_DEVIS, ID_CATEGORIES) VALUES (:id_devis, :id_categorie)";
+        $sqlCategorie  = "INSERT INTO devis_categories (ID_DEVIS, ID_CATEGORIE) VALUES (:id_devis, :id_categorie)";
         $stmtCategorie = $pdo->prepare($sqlCategorie);
 
         foreach ($idCategories as $idCategorie) {

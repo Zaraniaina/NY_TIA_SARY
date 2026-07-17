@@ -182,6 +182,10 @@ $adminEmail = $_SESSION['admin_email'] ?? $adminData['EMAIL_AUTH'] ?? 'Admin';
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="../../css/dashboard.css">
+
+    <!-- Toastify CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+
 </head>
 <body>
 <div class="dashboard-wrapper">
@@ -202,19 +206,9 @@ $adminEmail = $_SESSION['admin_email'] ?? $adminData['EMAIL_AUTH'] ?? 'Admin';
                 <p>Gérez votre compte administrateur et vos préférences</p>
             </div>
 
-            <?php if (!empty($success)): ?>
-                <div class="dash-alert dash-alert-success">
-                    <i class="fas fa-check-circle"></i>
-                    <div><?= htmlspecialchars($success) ?></div>
-                </div>
-            <?php endif; ?>
+            
 
-            <?php if (!empty($error)): ?>
-                <div class="dash-alert dash-alert-error">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <div><?= htmlspecialchars($error) ?></div>
-                </div>
-            <?php endif; ?>
+            
 
             <!-- ONGLETS / CARDS -->
             <div class="form-grid-2">
@@ -537,5 +531,49 @@ document.addEventListener('DOMContentLoaded', function() {
 document.getElementById('closeSuccessModal')?.addEventListener('click', () => closeModal('successModal'));
 document.getElementById('closeSuccessModalBtn')?.addEventListener('click', () => closeModal('successModal'));
 </script>
+
+<!-- Toastify JS -->
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+    const errorMsg = <?php echo json_encode($error ?? '', JSON_UNESCAPED_UNICODE); ?>;
+    const successMsg = <?php echo json_encode($success ?? '', JSON_UNESCAPED_UNICODE); ?>;
+    
+    if (errorMsg) {
+        Toastify({
+            text: errorMsg,
+            duration: 6000,
+            gravity: "top",
+            position: "right",
+            close: true,
+            style: {
+                background: "linear-gradient(135deg, #d93d3d, #a82c2c)",
+                borderRadius: "6px",
+                fontFamily: "system-ui, -apple-system, sans-serif",
+                fontWeight: "600",
+                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.25)"
+            }
+        }).showToast();
+    }
+    
+    if (successMsg) {
+        Toastify({
+            text: successMsg,
+            duration: 6000,
+            gravity: "top",
+            position: "right",
+            close: true,
+            style: {
+                background: "linear-gradient(135deg, #377d49, #2a5c3a)",
+                borderRadius: "6px",
+                fontFamily: "system-ui, -apple-system, sans-serif",
+                fontWeight: "600",
+                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.25)"
+            }
+        }).showToast();
+    }
+});
+</script>
+
 </body>
 </html>
