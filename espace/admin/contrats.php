@@ -104,45 +104,7 @@ $contrats = $pdo->query(
             
             
 
-            <div style="display:grid;grid-template-columns:1fr 2fr;gap:28px;align-items:start;">
-
-                <!-- FORMULAIRE NOUVEAU CONTRAT -->
-                <div class="dash-card">
-                    <div class="dash-card-header">
-                        <h3><i class="fas fa-file-signature" style="color:var(--primary-green);margin-right:8px;"></i> Nouveau contrat</h3>
-                    </div>
-                    <div class="dash-card-body padded">
-                        <?php if (empty($resasSansContrat)): ?>
-                            <div class="empty-state" style="padding:20px 0;">
-                                <i class="fas fa-check-double" style="color:var(--primary-green);"></i>
-                                <p style="font-size:0.9rem;">Toutes les réservations confirmées ont un contrat.</p>
-                            </div>
-                        <?php else: ?>
-                        <form method="POST" action="">
-                            <input type="hidden" name="action" value="create">
-                            <div class="dash-form-group">
-                                <label for="id_reservation">Réservation confirmée <span class="required">*</span></label>
-                                <select name="id_reservation" id="id_reservation" class="dash-select" required>
-                                    <option value="">— Choisir —</option>
-                                    <?php foreach ($resasSansContrat as $r): ?>
-                                        <option value="<?= (int)$r['ID_RESERVATION'] ?>">
-                                            #<?= (int)$r['ID_RESERVATION'] ?> — <?= htmlspecialchars($r['PRENOM_CLIENT'].' '.$r['NOM_CLIENT']) ?> — <?= htmlspecialchars($r['LIB_PRESTATION']) ?> (<?= date('d/m/Y', strtotime($r['DATE_RESERVATION'])) ?>)
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <div class="dash-form-group">
-                                <label for="date_contrat">Date du contrat <span class="required">*</span></label>
-                                <input type="date" name="date_contrat" id="date_contrat" class="dash-input"
-                                       value="<?= date('Y-m-d') ?>" required>
-                            </div>
-                            <button type="submit" class="btn-dash btn-dash-primary" style="width:100%;justify-content:center;">
-                                <i class="fas fa-file-signature"></i> Créer le contrat
-                            </button>
-                        </form>
-                        <?php endif; ?>
-                    </div>
-                </div>
+            <div style="width: 100%;">
 
                 <!-- LISTE DES CONTRATS -->
                 <div class="dash-card">
@@ -163,6 +125,7 @@ $contrats = $pdo->query(
                                         <th>Prestation</th>
                                         <th>Date contrat</th>
                                         <th>Facture</th>
+                                        <th>Status</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -179,10 +142,13 @@ $contrats = $pdo->query(
                                                     <i class="fas fa-file-invoice"></i> <?= htmlspecialchars($ct['NUM_FACTURE']) ?>
                                                 </a>
                                             <?php else: ?>
-                                                <a href="factures.php?id_contrat=<?= (int)$ct['ID_CONTRAT'] ?>" class="btn-dash btn-dash-outline btn-dash-sm">
-                                                    <i class="fas fa-plus"></i> Créer facture
-                                                </a>
+                                                
+                                                    <span class="badge badge-danger" style="color: red;">Aucune facture</span> 
+                                                
                                             <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <span><?= htmlspecialchars($ct['STATUS_CONTRAT']) ?></span>
                                         </td>
                                         <td>
                                             <?php if (!$ct['ID_FACTURE']): ?>

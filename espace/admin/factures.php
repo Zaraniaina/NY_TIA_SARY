@@ -132,50 +132,9 @@ $factures = $stmt->fetchAll();
                 <a href="contrats.php">Contrats</a>
                 <i class="fas fa-chevron-right" style="font-size:.65rem;"></i>
                 <span>Factures</span>
-            </nav>
+            </nav>  
 
-            
-            
-
-            <div style="display:grid;grid-template-columns:1fr 2fr;gap:28px;align-items:start;">
-
-                <!-- FORMULAIRE NOUVELLE FACTURE -->
-                <div class="dash-card">
-                    <div class="dash-card-header">
-                        <h3><i class="fas fa-file-invoice" style="color:var(--primary-green);margin-right:8px;"></i> Nouvelle facture</h3>
-                    </div>
-                    <div class="dash-card-body padded">
-                        <?php if (empty($contratsSansFac)): ?>
-                            <div class="empty-state" style="padding:20px 0;">
-                                <i class="fas fa-check-double" style="color:var(--primary-green);"></i>
-                                <p style="font-size:0.9rem;">Tous les contrats ont une facture.</p>
-                            </div>
-                        <?php else: ?>
-                        <form method="POST" action="">
-                            <input type="hidden" name="action" value="create">
-                            <div class="dash-form-group">
-                                <label for="id_contrat">Contrat <span class="required">*</span></label>
-                                <select name="id_contrat" id="id_contrat" class="dash-select" required>
-                                    <option value="">— Choisir un contrat —</option>
-                                    <?php foreach ($contratsSansFac as $ct): ?>
-                                        <option value="<?= (int)$ct['ID_CONTRAT'] ?>"
-                                            <?= $preselContrat === (int)$ct['ID_CONTRAT'] ? 'selected' : '' ?>>
-                                            Contrat #<?= (int)$ct['ID_CONTRAT'] ?> — <?= htmlspecialchars($ct['PRENOM_CLIENT'].' '.$ct['NOM_CLIENT']) ?> — <?= htmlspecialchars($ct['LIB_PRESTATION']) ?> (<?= date('d/m/Y', strtotime($ct['DATE_CONTRAT'])) ?>)
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:14px;margin-bottom:16px;font-size:0.85rem;color:#aaa;">
-                                <i class="fas fa-info-circle" style="color:var(--primary-green);margin-right:6px;"></i>
-                                Le numéro de facture sera généré automatiquement au format <strong style="color:#fff;">FAC-<?= date('Y') ?>-XXXX</strong>.
-                            </div>
-                            <button type="submit" class="btn-dash btn-dash-primary" style="width:100%;justify-content:center;">
-                                <i class="fas fa-file-invoice"></i> Générer la facture
-                            </button>
-                        </form>
-                        <?php endif; ?>
-                    </div>
-                </div>
+            <div style="width:100%;">
 
                 <!-- LISTE DES FACTURES -->
                 <div class="dash-card">
