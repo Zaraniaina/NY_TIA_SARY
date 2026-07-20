@@ -4,13 +4,13 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../util/auth_guard.php';
 requireClient();
 
+require_once __DIR__ . '/../../util/mailService.php';
 require_once __DIR__ . '/composante/tolbarDto.php';
 $titre = "Mes Réservations";
 
 $success      = '';
 $error        = '';
 
-// ── Traitement nouvelle réservation ──────────────────────────
 // ── Traitement nouvelle réservation ──────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'new_resa') {
     $idPrestation    = (int) ($_POST['id_prestation'] ?? 0);
@@ -37,12 +37,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $stmtCat = $pdo->prepare('SELECT TARIF_CATEGORIE FROM CATEGORIE WHERE ID_CATEGORIE = ?');
             $stmtRc  = $pdo->prepare('INSERT INTO RESERVATION_CATEGORIE (ID_RESERVATION, ID_CATEGORIE, PRIX) VALUES (?, ?, ?)');
 
+            // Récupérer les catégories et leurs prix pour le total
+            $categoriesLib = [];
+            $totalPrix = 0;
             foreach ($idCategories as $idCat) {
                 $idCat = (int) $idCat;
                 if ($idCat > 0) {
                     $stmtCat->execute([$idCat]);
                     $prix = (int) $stmtCat->fetchColumn();
                     $stmtRc->execute([$idResa, $idCat, $prix]);
+                    $totalPrix += $prix;
+                    // Récupérer le nom de la catégorie
+                    $stmtCatLib = $pdo->prepare('SELECT LIB_CATEGORIE FROM CATEGORIE WHERE ID_CATEGORIE = ?');
+                    $stmtCatLib->execute([$idCat]);
+                    $libCat = $stmtCatLib->fetchColumn();
+                    if ($libCat) {
+                        $categoriesLib[] = $libCat;
+                    }
                 }
             }
 
@@ -63,6 +74,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             ]);
 
             $pdo->commit();
+
+            // ── Envoi email de notification à l'admin ──────────────
+            $stmtPrestation = $pdo->prepare('SELECT LIB_PRESTATION FROM PRESTATIONS WHERE ID_PRESTATION = ?');
+            $stmtPrestation->execute([$idPrestation]);
+            $prestationLib = $stmtPrestation->fetchColumn() ?: 'Non spécifiée';
+
+            $mailService = new MailService();
+            $reservationData = [
+                'client_nom' => $clientNom ?? 'Inconnu',
+                'client_prenom' => $clientPrenom ?? '',
+                'prestation' => $prestationLib,
+                'date_reservation' => $dateResa,
+                'heure_reservation' => $heureResa,
+                'lieu_reservation' => $lieuResa,
+                'categories' => $categoriesLib,
+                'total_prix' => $totalPrix,
+                'id_reservation' => $idResa
+            ];
+            $mailService->sendReservationNew('admin@gmail.com', $reservationData);
 
             $success = 'Votre réservation a été soumise avec succès ! Nous vous contacterons bientôt.';
         } catch (Throwable $e) {

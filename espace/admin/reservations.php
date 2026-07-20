@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../../util/auth_guard.php';
 requireAdmin();
+require_once __DIR__ . '/../../util/mailService.php';
 require_once __DIR__.'/composante/tolbarDto.php';
 //on changer le titre
 $titre="Gestion des réservations";
@@ -17,13 +18,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_statut'])) {
         $stmt = $pdo->prepare('UPDATE RESERVATION SET STATUS_RESERVATION = ? WHERE ID_RESERVATION = ?');
         $stmt->execute([$statut, $id]);
         
-        // Si la réservation est CONFIRMEE, on s'assure qu'un contrat est généré
-        if ($statut === 'CONFIRMEE') {
+        // Récupérer les informations de la réservation pour l'email
+        $stmtResa = $pdo->prepare('SELECT r.*, c.PRENOM_CLIENT, c.NOM_CLIENT, a.EMAIL_AUTH, p.LIB_PRESTATION, r.LIEU_RESERVATION
+                                    FROM RESERVATION r
+                                    JOIN CLIENT c ON r.ID_CLIENT = c.ID_CLIENT
+                                    JOIN AUTHENTIFICATION a ON c.ID_AUTH = a.ID_AUTH
+                                    JOIN PRESTATIONS p ON r.ID_PRESTATION = p.ID_PRESTATION
+                                    WHERE r.ID_RESERVATION = ?');
+        $stmtResa->execute([$id]);
+        $resaInfo = $stmtResa->fetch(PDO::FETCH_ASSOC);
+
+        // Si la réservation est CONFIRMEE, envoyer un email au client
+        if ($statut === 'CONFIRMEE' && $resaInfo) {
+            // S'assurer qu'un contrat est généré
             $chk = $pdo->prepare('SELECT COUNT(*) FROM CONTRAT WHERE ID_RESERVATION = ?');
             $chk->execute([$id]);
             if ((int)$chk->fetchColumn() === 0) {
                 $pdo->prepare("INSERT INTO CONTRAT (ID_RESERVATION, STATUS_CONTRAT, DATE_CONTRAT) VALUES (?, 'EN ATTENTE', CURDATE())")
                     ->execute([$id]);
+            }
+
+            // Récupérer les catégories de la réservation
+            $stmtCats = $pdo->prepare('SELECT c.LIB_CATEGORIE FROM CATEGORIE c JOIN RESERVATION_CATEGORIE rc ON c.ID_CATEGORIE = rc.ID_CATEGORIE WHERE rc.ID_RESERVATION = ?');
+            $stmtCats->execute([$id]);
+            $categoriesLib = $stmtCats->fetchAll(PDO::FETCH_COLUMN);
+
+            // Calculer le total
+            $stmtTotal = $pdo->prepare('SELECT SUM(PRIX) FROM RESERVATION_CATEGORIE WHERE ID_RESERVATION = ?');
+            $stmtTotal->execute([$id]);
+            $totalPrix = (int) $stmtTotal->fetchColumn();
+
+            $clientNom = $resaInfo['NOM_CLIENT'] ?? 'Inconnu';
+            $clientPrenom = $resaInfo['PRENOM_CLIENT'] ?? '';
+            $clientEmail = $resaInfo['EMAIL_AUTH'] ?? '';
+            $prestationLib = $resaInfo['LIB_PRESTATION'] ?? 'Non spécifiée';
+            $lieuResa = $resaInfo['LIEU_RESERVATION'] ?? 'Non défini';
+            $dateResa = $resaInfo['DATE_RESERVATION'];
+            $heureResa = $resaInfo['HEURE_RESERVATION'];
+
+            // Formater la date et l'heure
+            $dateFormatee = date('d/m/Y', strtotime($dateResa));
+            $heureFormatee = substr($heureResa, 0, 5);
+
+            // Récupérer le ID du contrat
+            $stmtContrat = $pdo->prepare('SELECT ID_CONTRAT FROM CONTRAT WHERE ID_RESERVATION = ?');
+            $stmtContrat->execute([$id]);
+            $idContrat = $stmtContrat->fetchColumn();
+
+            if ($clientEmail) {
+                $mailService = new MailService();
+                $reservationData = [
+                    'client_nom' => $clientNom,
+                    'client_prenom' => $clientPrenom,
+                    'prestation' => $prestationLib,
+                    'date_reservation' => $dateFormatee,
+                    'heure_reservation' => $heureFormatee,
+                    'lieu_reservation' => $lieuResa,
+                    'categories' => $categoriesLib,
+                    'total_prix' => $totalPrix,
+                    'id_reservation' => $id,
+                    'id_contrat' => $idContrat
+                ];
+                $mailService->sendReservationConfirmed($clientEmail, $reservationData);
             }
         }
         
@@ -153,7 +209,7 @@ $selectedResaId = (int) ($_GET['id'] ?? 0);
                                 ?>
                                 <?php $isSelected = $selectedResaId > 0 && (int)$r['ID_RESERVATION'] === $selectedResaId; ?>
 <tr id="row-<?= (int)$r['ID_RESERVATION'] ?>"<?= $isSelected ? ' class="row-highlighted"' : '' ?>>
-                                    <td>#<?= (int)$r['ID_RESERVATION'] ?></td>
+                                    <td>#<?= (int) $r['ID_RESERVATION'] ?></td>
                                     <td><strong><?= htmlspecialchars($r['PRENOM_CLIENT'] . ' ' . $r['NOM_CLIENT']) ?></strong></td>
                                     <td>
                                         <strong><?= htmlspecialchars($r['LIB_PRESTATION']) ?></strong><br>

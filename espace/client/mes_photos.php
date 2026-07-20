@@ -6,19 +6,32 @@ requireClient();
 require_once __DIR__ . '/composante/tolbarDto.php';
 $titre = "Mes Photos";
 $typeMedia = "IMAGE";
-// Récupérer tous les médias liés aux réservations du client
+
+// Récupérer les réservations avec leurs photos, groupées par réservation
 $stmt = $pdo->prepare(
-    'SELECT m.PATH_MEDIA, m.ID_MEDIA, p.LIB_PRESTATION, r.DATE_RESERVATION
-     FROM MEDIA m
-     JOIN RESERVATION r ON m.ID_RESERVATION = r.ID_RESERVATION
+    'SELECT r.ID_RESERVATION, r.DATE_RESERVATION, r.LIEU_RESERVATION, r.HEURE_RESERVATION, r.STATUS_RESERVATION,
+            p.LIB_PRESTATION, p.ID_PRESTATION,
+            COUNT(m.ID_MEDIA) as NB_PHOTOS
+     FROM RESERVATION r
      JOIN PRESTATIONS p ON r.ID_PRESTATION = p.ID_PRESTATION
-     WHERE r.ID_CLIENT = ? and m.TYPE_MEDIA = ?
+     JOIN MEDIA m ON r.ID_RESERVATION = m.ID_RESERVATION
+     WHERE r.ID_CLIENT = ? AND m.TYPE_MEDIA = ?
+     GROUP BY r.ID_RESERVATION, r.DATE_RESERVATION, r.LIEU_RESERVATION, r.HEURE_RESERVATION, r.STATUS_RESERVATION,
+              p.LIB_PRESTATION, p.ID_PRESTATION
      ORDER BY r.DATE_RESERVATION DESC'
 );
-$stmt->execute([$clientId,$typeMedia]);
-$medias = $stmt->fetchAll();
+$stmt->execute([$clientId, $typeMedia]);
+$reservations = $stmt->fetchAll();
 
-// Extensions image
+// Récupérer le nombre total de photos
+$stmtTotal = $pdo->prepare(
+    'SELECT COUNT(*) FROM MEDIA WHERE TYPE_MEDIA = ? AND ID_RESERVATION IN (
+        SELECT ID_RESERVATION FROM RESERVATION WHERE ID_CLIENT = ?
+    )'
+);
+$stmtTotal->execute([$typeMedia, $clientId]);
+$totalPhotos = $stmtTotal->fetchColumn();
+
 $imgExts = ['jpg','jpeg','png','webp','gif'];
 ?>
 <!DOCTYPE html>
@@ -31,6 +44,59 @@ $imgExts = ['jpg','jpeg','png','webp','gif'];
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="../../css/dashboard.css">
+    <style>
+        .reservation-group {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid var(--border-color);
+            transition: var(--transition-smooth);
+        }
+        .reservation-group:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+        .reservation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .reservation-title {
+            font-family: var(--font-headings);
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--logo-black);
+            margin: 0;
+        }
+        .reservation-meta {
+            display: flex;
+            gap: 20px;
+            font-size: 0.85rem;
+            color: #777;
+        }
+        .view-photos-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--primary-green);
+            color: var(--white);
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: var(--transition-smooth);
+        }
+        .view-photos-btn:hover {
+            background: var(--logo-black);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(55, 125, 73, 0.25);
+        }
+    </style>
 </head>
 <body>
 <div class="dashboard-wrapper">
@@ -49,11 +115,11 @@ $imgExts = ['jpg','jpeg','png','webp','gif'];
             </nav>
 
             <div class="dash-page-header">
-                <h2>Ma Galerie</h2>
-                <p><?= count($medias) ?> fichier(s) livré(s) par le studio</p>
+                <h2>Ma Galerie de Photos</h2>
+                <p><?= $totalPhotos ?> photo(s) livrée(s) par le studio, réparties sur <?= count($reservations) ?> réservation(s)</p>
             </div>
 
-            <?php if (empty($medias)): ?>
+            <?php if (empty($reservations)): ?>
                 <div class="dash-card">
                     <div class="empty-state">
                         <i class="fas fa-images"></i>
@@ -62,39 +128,28 @@ $imgExts = ['jpg','jpeg','png','webp','gif'];
                     </div>
                 </div>
             <?php else: ?>
-                <div class="photo-grid">
-                <?php foreach ($medias as $m): ?>
-                    <?php
-                    $path = htmlspecialchars($m['PATH_MEDIA']);
-                    $absPath = '../../' . $path;
-                    $ext = strtolower(pathinfo($m['PATH_MEDIA'], PATHINFO_EXTENSION));
-                    $isImage = in_array($ext, $imgExts, true);
-                    ?>
-                    <div class="photo-item" data-src="<?= $absPath ?>" data-type="<?= $isImage ? 'image' : 'file' ?>">
-                        <?php if ($isImage): ?>
-                            <img src="<?= $absPath ?>" alt="Photo <?= (int) $m['ID_MEDIA'] ?>" loading="lazy">
-                        <?php else: ?>
-                            <div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f0f0ec;">
-                                <i class="fas fa-file-pdf" style="font-size:3rem;color:var(--primary-red);"></i>
-                                <p style="font-size:0.8rem;margin-top:8px;color:#666;"><?= strtoupper($ext) ?></p>
+                <div style="display:flex;flex-direction:column;gap:25px;">
+                <?php foreach ($reservations as $r): ?>
+                    <div class="reservation-group">
+                        <div class="reservation-header">
+                            <div>
+                                <h3 class="reservation-title"><?= htmlspecialchars($r['LIB_PRESTATION']) ?></h3>
+                                <div class="reservation-meta">
+                                    <span><i class="fas fa-calendar-alt"></i> <?= date('d/m/Y', strtotime($r['DATE_RESERVATION'])) ?></span>
+                                    <?php if (!empty($r['HEURE_RESERVATION'])): ?>
+                                        <span><i class="fas fa-clock"></i> <?= date('H:i', strtotime($r['HEURE_RESERVATION'])) ?></span>
+                                    <?php endif; ?>
+                                    <?php if (!empty($r['LIEU_RESERVATION'])): ?>
+                                        <span><i class="fas fa-map-marker-alt"></i> <?= htmlspecialchars($r['LIEU_RESERVATION']) ?></span>
+                                    <?php endif; ?>
+                                </div>
                             </div>
-                        <?php endif; ?>
-                        <div class="photo-overlay">
-                            <a href="<?= $absPath ?>" target="_blank" title="Voir en grand"><i class="fas fa-expand-alt"></i></a>
-                            <a href="<?= $absPath ?>" download title="Télécharger"><i class="fas fa-download"></i></a>
-                        </div>
-                        <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.7));padding:10px;pointer-events:none;">
-                            <p style="color:#fff;font-size:0.72rem;font-family:var(--font-headings);margin:0;"><?= htmlspecialchars($m['LIB_PRESTATION']) ?></p>
-                            <p style="color:rgba(255,255,255,0.7);font-size:0.68rem;margin:2px 0 0;"><?= date('d/m/Y', strtotime($m['DATE_RESERVATION'])) ?></p>
+                            <a href="galerie_reservation.php?id_reservation=<?= $r['ID_RESERVATION'] ?>&type=IMAGE" class="view-photos-btn">
+                                <i class="fas fa-images"></i> Voir les photos (<?= $r['NB_PHOTOS'] ?>)
+                            </a>
                         </div>
                     </div>
                 <?php endforeach; ?>
-                </div>
-
-                <!-- LIGHTBOX -->
-                <div id="lightbox" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:3000;align-items:center;justify-content:center;padding:40px;">
-                    <button id="lbClose" style="position:absolute;top:20px;right:28px;background:none;border:none;color:#fff;font-size:2rem;cursor:pointer;">&times;</button>
-                    <img id="lbImg" src="" alt="" style="max-width:90%;max-height:85vh;border-radius:6px;border:4px solid rgba(255,255,255,0.15);">
                 </div>
             <?php endif; ?>
         </div>
@@ -107,22 +162,6 @@ const sidebar = document.getElementById('sidebar');
 const overlay = document.getElementById('sidebarOverlay');
 toggle?.addEventListener('click', () => { sidebar.classList.toggle('open'); overlay.classList.toggle('open'); });
 overlay?.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('open'); });
-
-// Lightbox
-const lb    = document.getElementById('lightbox');
-const lbImg = document.getElementById('lbImg');
-document.querySelectorAll('.photo-item').forEach(item => {
-    item.addEventListener('click', e => {
-        if (e.target.closest('a')) return;
-        if (item.dataset.type === 'image') {
-            lbImg.src = item.dataset.src;
-            lb.style.display = 'flex';
-        }
-    });
-});
-document.getElementById('lbClose')?.addEventListener('click', () => { lb.style.display = 'none'; lbImg.src = ''; });
-lb?.addEventListener('click', e => { if (e.target === lb) { lb.style.display = 'none'; lbImg.src = ''; } });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { lb.style.display = 'none'; } });
 </script>
 </body>
 </html>
