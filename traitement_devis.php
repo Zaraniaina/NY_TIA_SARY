@@ -1,7 +1,14 @@
 <?php
 // Adapter ce chemin si besoin (même dossier que celui utilisé dans prestations.php)
 require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/util/mailService.php';
+
 $pdo = getPDO();
+
+//recuperer l'email de l'admin
+    $stmt = $pdo->prepare('SELECT EMAIL_AUTH FROM AUTHENTIFICATION WHERE ROLE_AUTH = ?');
+    $stmt->execute(["ADMIN"]);
+    $email_admin = $stmt->fetchColumn();
 
 // Redirige vers la bonne page selon l'origine de la soumission (public ou espace client)
 function redirectVersIndex(bool $success, string $message, ?int $idDevis = null): void
@@ -153,7 +160,25 @@ if (!empty($errors)) {
 try {
     $pdo->beginTransaction();
 
-    // 4.1 Insertion du devis
+    // 4.1 Récupérer le nom de la prestation
+    $stmtPrestation = $pdo->prepare('SELECT LIB_PRESTATION FROM prestations WHERE ID_PRESTATION = ?');
+    $stmtPrestation->execute([$idPrestation]);
+    $prestationLib = $stmtPrestation->fetchColumn() ?: 'Non spécifiée';
+
+    // 4.2 Récupérer les noms des catégories
+    $categoriesLib = [];
+    if (!empty($idCategories)) {
+        $stmtCats = $pdo->prepare('SELECT LIB_CATEGORIE FROM categorie WHERE ID_CATEGORIE = ?');
+        foreach ($idCategories as $idCat) {
+            $stmtCats->execute([$idCat]);
+            $libCat = $stmtCats->fetchColumn();
+            if ($libCat) {
+                $categoriesLib[] = $libCat;
+            }
+        }
+    }
+
+    // 4.3 Insertion du devis
     $sqlDevis = "INSERT INTO devis
                     (NOM, PRENOMS, EMAIL, TELEPHONE, TYPE_VISITEUR, BUGET_ESTIMATIF, DATE_SOUHAITE, DESCRIPTION, ID_PRESTATION)
                  VALUES
@@ -174,7 +199,7 @@ try {
 
     $idDevis = (int) $pdo->lastInsertId();
 
-    // 4.2 Insertion des catégories choisies (table de liaison devis_categories)
+    // 4.4 Insertion des catégories choisies (table de liaison devis_categories)
     //     Un visiteur peut cocher une ou plusieurs catégories -> une ligne par catégorie.
     if (!empty($idCategories)) {
         $sqlCategorie  = "INSERT INTO devis_categories (ID_DEVIS, ID_CATEGORIE) VALUES (:id_devis, :id_categorie)";
@@ -188,7 +213,7 @@ try {
         }
     }
 
-    // 4.3 Upload physique (si un fichier a été fourni) + insertion de la pièce jointe
+    // 4.5 Upload physique (si un fichier a été fourni) + insertion de la pièce jointe
     //     -> une ligne est TOUJOURS créée dans pieces_jointes, avec PATH_PIECE = "aucun"
     //        si le visiteur n'a rien joint.
     $cheminPublicFinal = 'aucun';
@@ -213,7 +238,7 @@ try {
         ':path_piece' => $cheminPublicFinal,
     ]);
 
-    // 4.4 Insertion de la notification (pour prévenir l'admin dans le dashboard)
+    // 4.6 Insertion de la notification (pour prévenir l'admin dans le dashboard)
     $sqlNotif = "INSERT INTO notification
                     (TYPE_NOTIF, ID_REF_NOTIF, TITRE_NOTIF, MESS_NOTIF, LU_NOTIF, SUP_NOTIF)
                  VALUES
@@ -232,6 +257,27 @@ try {
 
     $pdo->commit();
 
+    // 4.7 Envoi d'un email de notification à l'administrateur
+    $adminEmail = $email_admin;
+
+    $devisData = [
+        'client_nom' => $nom,
+        'client_prenom' => $prenom,
+        'email' => $email,
+        'telephone' => $telephone,
+        'type_visiteur' => $typeVisiteur,
+        'prestation' => $prestationLib,
+        'date_souhaitee' => $dateSouhaitee ?: 'Non définie',
+        'budget' => $budget ?: 'Non défini',
+        'description' => $description,
+        'categories' => $categoriesLib,
+        'id_devis' => $idDevis,
+        'piece_jointe' => $cheminPublicFinal !== 'aucun' ? $cheminPublicFinal : null,
+    ];
+
+    $mailService = new MailService();
+    $mailService->sendDevisNew($adminEmail, $devisData);
+
     redirectVersIndex(true, "Votre demande de devis a bien été envoyée. Nous vous recontacterons rapidement.", $idDevis);
 
 } catch (Throwable $e) {
@@ -246,6 +292,6 @@ try {
     // En production, ne jamais exposer le détail de l'erreur SQL au client.
     error_log('[traitement_devis.php] ' . $e->getMessage());
 
-// TEMPORAIRE — À RETIRER après debug
-redirectVersIndex(false, "DEBUG: " . $e->getMessage());
+    // TEMPORAIRE — À RETIRER après debug
+    redirectVersIndex(false, "DEBUG: " . $e->getMessage());
 }

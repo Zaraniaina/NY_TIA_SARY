@@ -41,7 +41,7 @@ class MailService
         if (!empty($this->config['encryption'])) {
             $this->mailer->SMTPSecure = $this->config['encryption'];
         } else {
-            // Pas de chiffrement (ex: Mailpit en local) : évite tout STARTTLS opportuniste
+            // Pas de chiffrement (ex: Mailpit en local) : évite tout STARTTLS opportistique
             $this->mailer->SMTPSecure = '';
             $this->mailer->SMTPAutoTLS = false;
         }
@@ -384,5 +384,118 @@ class MailService
         $subject = 'Confirmation de réservation';
 
         return $this->send($clientEmail, $subject, $body, true);
+    }
+
+    /**
+     * Envoyer une notification de nouvelle demande de devis à l'administrateur
+     *
+     * @param string $adminEmail Email de l'administrateur
+     * @param array $devisData Données du devis
+     *   - client_nom: Nom du client
+     *   - client_prenom: Prénom du client
+     *   - email: Email du client
+     *   - telephone: Téléphone du client
+     *   - type_visiteur: Type de visiteur
+     *   - prestation: Type de prestation
+     *   - date_souhaitee: Date souhaitée
+     *   - budget: Budget estimatif
+     *   - description: Description du projet
+     *   - categories: Tableau des catégories/formules
+     *   - id_devis: ID du devis
+     *   - piece_jointe: Chemin de la pièce jointe (optionnel)
+     * @return bool
+     */
+    public function sendDevisNew(string $adminEmail, array $devisData): bool
+    {
+        $clientNom = $devisData['client_nom'] ?? 'Inconnu';
+        $clientPrenom = $devisData['client_prenom'] ?? '';
+        $clientFull = trim($clientPrenom . ' ' . $clientNom);
+        
+        $email = $devisData['email'] ?? '';
+        $telephone = $devisData['telephone'] ?? '';
+        $typeVisiteur = $devisData['type_visiteur'] ?? 'Non spécifié';
+        $prestation = $devisData['prestation'] ?? 'Non spécifiée';
+        $dateSouhaitee = $devisData['date_souhaitee'] ?? 'Non définie';
+        $budget = $devisData['budget'] ?? 'Non défini';
+        $description = $devisData['description'] ?? 'Aucune description';
+        $categories = $devisData['categories'] ?? [];
+        $idDevis = $devisData['id_devis'] ?? '';
+        $pieceJointe = $devisData['piece_jointe'] ?? null;
+
+        $categoriesHtml = '';
+        if (!empty($categories)) {
+            $catList = is_array($categories) ? $categories : [$categories];
+            foreach ($catList as $cat) {
+                $categoriesHtml .= '<li>' . htmlspecialchars($cat) . '</li>';
+            }
+            $categoriesHtml = '<ul style="margin: 8px 0; padding-left: 20px;">' . $categoriesHtml . '</ul>';
+        }
+
+        $devisLink = '<p style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; ">
+                <strong style="color: #2c5f2d;">Devis :</strong><br>
+                <a href="'.$this->hostweb['url'].'espace/admin/devis.php" style="color: #377d49; text-decoration: none;">Voir/Consulter les devis</a>
+            </p>';
+
+        $body = '
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #2c5f2d; border-bottom: 2px solid #377d49; padding-bottom: 10px;">Nouvelle Demande de Devis</h2>
+            
+            <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                <tr>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd; font-weight: bold;">Client :</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">' . htmlspecialchars($clientFull) . '</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd; font-weight: bold;">Email :</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">' . htmlspecialchars($email) . '</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd; font-weight: bold;">Téléphone :</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">' . htmlspecialchars($telephone) . '</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd; font-weight: bold;">Type de visiteur :</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">' . htmlspecialchars($typeVisiteur) . '</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd; font-weight: bold;">Prestation :</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">' . htmlspecialchars($prestation) . '</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd; font-weight: bold;">Date souhaitée :</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">' . htmlspecialchars($dateSouhaitee) . '</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd; font-weight: bold;">Budget estimatif :</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">' . htmlspecialchars($budget) . ' Ar</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd; font-weight: bold;">Catégories :</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">' . $categoriesHtml . '</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd; font-weight: bold;">Description :</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">' . nl2br(htmlspecialchars($description)) . '</td>
+                </tr>
+            </table>
+            
+            ' . $devisLink . '
+            
+            <p style="color: #666; font-size: 12px;">Cette demande est en attente de traitement.</p>
+        </div>';
+
+        $subject = 'Nouvelle demande de devis - ' . htmlspecialchars($clientFull);
+
+        // Si pièce jointe, l'inclure
+        $attachments = [];
+        if ($pieceJointe && file_exists(__DIR__ . '/../' . $pieceJointe)) {
+            $attachments[] = __DIR__ . '/../' . $pieceJointe;
+        }
+
+        if (!empty($attachments)) {
+            return $this->sendWithAttachments($adminEmail, $subject, $body, $attachments, true);
+        }
+
+        return $this->send($adminEmail, $subject, $body, true);
     }
 }
