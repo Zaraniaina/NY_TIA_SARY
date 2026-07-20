@@ -12,10 +12,13 @@ class MailService
     private $config;
     private $mailer;
 
+    private $hostweb;
+
     public function __construct()
     {
         $this->config = require_once __DIR__ . '/../config/mail.php';
         $this->mailer = new PHPMailer(true);
+        $this->hostweb = require_once __DIR__ . '/../config/site.php';
         $this->setupMailer();
     }
 
@@ -236,6 +239,11 @@ class MailService
 
         $prixFormatted = $totalPrix > 0 ? number_format($totalPrix, 0, ',', ' ') . ' Ar' : 'À définir';
 
+         $resLink = '<p style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; ">
+                <strong style="color: #2c5f2d;">Réservation :</strong><br>
+                <a href="'.$this->hostweb['url'].'espace/admin/reservations.php" style="color: #377d49; text-decoration: none;">Voir Consulter les réservations</a>
+            </p>';
+
         $body = '
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <h2 style="color: #2c5f2d; border-bottom: 2px solid #377d49; padding-bottom: 10px;">Nouvelle Réservation</h2>
@@ -269,11 +277,9 @@ class MailService
                     <td style="padding: 10px; border-bottom: 1px solid #ddd; font-weight: bold;">Total :</td>
                     <td style="padding: 10px; border-bottom: 1px solid #ddd; color: #2c5f2d; font-weight: bold;">' . $prixFormatted . '</td>
                 </tr>
-                <tr>
-                    <td style="padding: 10px; border-bottom: 1px solid #ddd; font-weight: bold;">ID Réservation :</td>
-                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">' . htmlspecialchars($idResa) . '</td>
-                </tr>
             </table>
+            
+            ' . $resLink . '
             
             <p style="color: #666; font-size: 12px;">Cette réservation est en attente de confirmation.</p>
         </div>';
@@ -328,9 +334,9 @@ class MailService
 
         $contratLink = '';
         if ($idContrat) {
-            $contratLink = '<p style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #377d49;">
+            $contratLink = '<p style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; ">
                 <strong style="color: #2c5f2d;">Votre contrat est disponible :</strong><br>
-                <a href="https://nytiasary.com/espace/admin/contrats.php" style="color: #377d49; text-decoration: none;">Voir/Consulter le contrat</a>
+                <a href="'.$this->hostweb['url'].'espace/client/contrats.php" style="color: #377d49; text-decoration: none;">Voir/Consulter le contrat</a>
             </p>';
         }
 
@@ -367,10 +373,6 @@ class MailService
                     <td style="padding: 10px; border-bottom: 1px solid #ddd; font-weight: bold;">Total :</td>
                     <td style="padding: 10px; border-bottom: 1px solid #ddd; color: #2c5f2d; font-weight: bold;">' . $prixFormatted . '</td>
                 </tr>
-                <tr>
-                    <td style="padding: 10px; border-bottom: 1px solid #ddd; font-weight: bold;">ID Réservation :</td>
-                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">' . htmlspecialchars($idResa) . '</td>
-                </tr>
             </table>
             
             ' . $contratLink . '
@@ -379,7 +381,7 @@ class MailService
             <strong>Ny Tia Sary - Studio de Photographie</strong></p>
         </div>';
 
-        $subject = 'Confirmation de réservation n°' . htmlspecialchars($idResa);
+        $subject = 'Confirmation de réservation';
 
         return $this->send($clientEmail, $subject, $body, true);
     }
