@@ -86,6 +86,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 }
 
+// ── Contrat ciblé par lien email ────────────────────────────
+$selectedContratId = (int) ($_GET['id'] ?? 0);
+
 // ── Liste des contrats du client ──────────────────────────────
 $stmtContrats = $pdo->prepare(
     'SELECT ct.*, r.DATE_RESERVATION, r.LIEU_RESERVATION, r.STATUS_RESERVATION,
@@ -116,6 +119,18 @@ $contrats = $stmtContrats->fetchAll();
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="../../css/dashboard.css">
+    <style>
+        .row-highlighted {
+            outline: 2px solid var(--primary-green, #377d49);
+            outline-offset: -2px;
+            border-radius: 4px;
+            animation: highlight-pulse 2s ease-out forwards;
+        }
+        @keyframes highlight-pulse {
+            0%   { background: rgba(55, 125, 73, 0.18); }
+            100% { background: transparent; }
+        }
+    </style>
 </head>
 <body>
 <div class="dashboard-wrapper">
@@ -170,8 +185,9 @@ $contrats = $stmtContrats->fetchAll();
                                     'REFUSE'  => 'badge-cancel',
                                     default   => 'badge-waiting',
                                 };
+                                $isSelected = $selectedContratId > 0 && (int)$ct['ID_CONTRAT'] === $selectedContratId;
                                 ?>
-                                <tr>
+                                <tr id="row-<?= (int)$ct['ID_CONTRAT'] ?>"<?= $isSelected ? ' class="row-highlighted"' : '' ?>>
                                     <td>#<?= (int)$ct['ID_CONTRAT'] ?></td>
                                     <td>
                                         <strong><?= htmlspecialchars($ct['LIB_PRESTATION']) ?></strong><br>
@@ -234,6 +250,12 @@ const sidebar = document.getElementById('sidebar');
 const overlay = document.getElementById('sidebarOverlay');
 toggle?.addEventListener('click', () => { sidebar.classList.toggle('open'); overlay.classList.toggle('open'); });
 overlay?.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('open'); });
+
+// Auto-scroll vers le contrat ciblé par lien email
+const selectedRow = document.querySelector('.row-highlighted');
+if (selectedRow) {
+    selectedRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
 </script>
 </body>
 </html>

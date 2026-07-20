@@ -16,9 +16,11 @@ class MailService
 
     public function __construct()
     {
-        $this->config = require_once __DIR__ . '/../config/mail.php';
-        $this->mailer = new PHPMailer(true);
-        $this->hostweb = require_once __DIR__ . '/../config/site.php';
+        // IMPORTANT: utiliser 'require' (pas 'require_once') pour les fichiers
+        // qui retournent un tableau — require_once retourne true si déjà inclus.
+        $this->config   = require __DIR__ . '/../config/mail.php';
+        $this->mailer   = new PHPMailer(true);
+        $this->hostweb  = require __DIR__ . '/../config/site.php';
         $this->setupMailer();
     }
 
@@ -241,7 +243,7 @@ class MailService
 
          $resLink = '<p style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; ">
                 <strong style="color: #2c5f2d;">Réservation :</strong><br>
-                <a href="'.$this->hostweb['url'].'espace/admin/reservations.php" style="color: #377d49; text-decoration: none;">Voir Consulter les réservations</a>
+                <a href="'.$this->hostweb['url'].'espace/admin/reservations.php?id='.$idResa.'" style="color: #377d49; text-decoration: none;">Voir Consulter les réservations</a>
             </p>';
 
         $body = '
@@ -336,7 +338,7 @@ class MailService
         if ($idContrat) {
             $contratLink = '<p style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; ">
                 <strong style="color: #2c5f2d;">Votre contrat est disponible :</strong><br>
-                <a href="'.$this->hostweb['url'].'espace/client/contrats.php" style="color: #377d49; text-decoration: none;">Voir/Consulter le contrat</a>
+                <a href="'.$this->hostweb['url'].'espace/client/contrats.php?id='.$idContrat.'" style="color: #377d49; text-decoration: none;">Voir/Consulter le contrat</a>
             </p>';
         }
 
@@ -433,7 +435,7 @@ class MailService
 
         $devisLink = '<p style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; ">
                 <strong style="color: #2c5f2d;">Devis :</strong><br>
-                <a href="'.$this->hostweb['url'].'espace/admin/devis.php" style="color: #377d49; text-decoration: none;">Voir/Consulter les devis</a>
+                <a href="'.$this->hostweb['url'].'espace/admin/devis.php?id='.$idDevis.'" style="color: #377d49; text-decoration: none;">Voir/Consulter les devis</a>
             </p>';
 
         $body = '

@@ -1,5 +1,11 @@
 <?php
 session_start();
+require_once __DIR__ . '/../util/redirectionpage.php';
+
+if (isset($_GET['redirect']) && isSafeRedirect($_GET['redirect'])) {
+    $_SESSION['redirect_url'] = $_GET['redirect'];
+}
+
 $error = $_SESSION['login_error'] ?? null;
 $success = $_SESSION['register_success'] ?? null;
 unset($_SESSION['login_error'], $_SESSION['register_success']);

@@ -9,6 +9,15 @@ session_start();
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../util/redirectionpage.php';
 
+// Charger la config du site pour les URLs absolues (require, pas require_once)
+$siteConfig = require __DIR__ . '/../config/site.php';
+$baseUrl    = rtrim($siteConfig['url'], '/');
+
+// On récupère juste le domaine pour reconstruire les URL absolues à partir de $_SERVER['REQUEST_URI']
+$scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$host   = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$hostUrl = $scheme . '://' . $host;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Récupérer et assainir les informations du formulaire
     $email = trim($_POST['email'] ?? '');
@@ -17,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Vérifier si les champs sont vides
     if (empty($email) || empty($password)) {
         $_SESSION['login_error'] = "Veuillez remplir tous les champs.";
-        redirectionClient("../login/login.php");
+        redirectionClient($baseUrl . '/login/login.php');
     }
 
     try {
@@ -48,8 +57,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['admin_prenom'] = $client['PRENOM_CLIENT'];
 
 
-                // Authentification réussie : Rediriger l'administrateurs vers la page d'accueil
-                redirectionClient("../espace/admin/home.php");
+                // Authentification réussie : Rediriger l'administrateur vers la page d'accueil ou ressource d'origine
+                if (isset($_SESSION['redirect_url']) && isSafeRedirect($_SESSION['redirect_url'])) {
+                    $redirectUrl = $_SESSION['redirect_url'];
+                    unset($_SESSION['redirect_url']);
+                    // Sécurité : Un admin ne doit pas être redirigé vers l'espace client
+                    if (strpos($redirectUrl, '/espace/client/') !== false) {
+                        redirectionClient($baseUrl . '/espace/admin/home.php');
+                    } else {
+                        redirectionClient($hostUrl . $redirectUrl);
+                    }
+                } else {
+                    redirectionClient($baseUrl . '/espace/admin/home.php');
+                }
 
             }else{
                 // simple client on dois recuperer les information du client
@@ -63,8 +83,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['client_prenom'] = $client['PRENOM_CLIENT'];
                 $_SESSION['client_email'] = $auth['EMAIL_AUTH'];
 
-                // Authentification réussie : Rediriger l'utilisateur vers la page d'accueil
-                redirectionClient("../espace/client/home.php");
+                // Authentification réussie : Rediriger le client vers la page d'accueil ou ressource d'origine
+                if (isset($_SESSION['redirect_url']) && isSafeRedirect($_SESSION['redirect_url'])) {
+                    $redirectUrl = $_SESSION['redirect_url'];
+                    unset($_SESSION['redirect_url']);
+                    // Sécurité : Un client ne doit pas être redirigé vers l'espace admin
+                    if (strpos($redirectUrl, '/espace/admin/') !== false) {
+                        redirectionClient($baseUrl . '/espace/client/home.php');
+                    } else {
+                        redirectionClient($hostUrl . $redirectUrl);
+                    }
+                } else {
+                    redirectionClient($baseUrl . '/espace/client/home.php');
+                }
 
             }
             
@@ -72,15 +103,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             // Identifiants erronés
             $_SESSION['login_error'] = "Adresse e-mail ou mot de passe incorrect.";
-            redirectionClient("../login/login.php");
+            redirectionClient($baseUrl . '/login/login.php');
         }
     } catch (PDOException $e) {
         // Gestion des erreurs de base de données
         $_SESSION['login_error'] = "Une erreur technique est survenue.";
-        redirectionClient("../login/login.php");
+        redirectionClient($baseUrl . '/login/login.php');
     }
 } else {
     // Redirection si l'utilisateur essaie d'accéder au script directement
-    redirectionClient("../login/login.php");
+    redirectionClient($baseUrl . '/login/login.php');
 }
 ?>
