@@ -3,6 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../util/auth_guard.php';
 requireAdmin();
 require_once __DIR__ . '/../../util/delete_file.php';
+require_once __DIR__ . '/../../util/large_upload.php';
 
 require_once __DIR__.'/composante/tolbarDto.php';
 $titre = "Gestion des médias";
@@ -25,40 +26,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delet
 
 // ── Upload de médias ──────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'upload') {
-    $idResa   = (int) ($_POST['id_reservation'] ?? 0);
-    $files    = $_FILES['medias'] ?? null;
+    $idResa = (int) ($_POST['id_reservation'] ?? 0);
+    $files  = $_FILES['medias'] ?? null;
 
     if (!$idResa) {
         $error = 'Veuillez sélectionner une réservation.';
     } elseif (empty($files['name'][0])) {
         $error = 'Veuillez sélectionner au moins un fichier.';
     } else {
-        $uploadDir = __DIR__ . '/../../assets/uploads/medias/';
-        if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
-
-        $allowedImages = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-        $allowedVideos = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'];
-        $allowedAll    = array_merge($allowedImages, $allowedVideos);
+        $uploadResults = uploadMultipleMedias($files, 'medias');
 
         $uploaded = 0;
         $errors   = [];
-        $count    = count($files['name']);
 
-        for ($i = 0; $i < $count; $i++) {
-            if ($files['error'][$i] !== UPLOAD_ERR_OK) { continue; }
-            $mime = mime_content_type($files['tmp_name'][$i]);
-            if (!in_array($mime, $allowedAll)) {
-                $errors[] = $files['name'][$i] . ' : type non autorisé.';
-                continue;
-            }
-            $ext      = pathinfo($files['name'][$i], PATHINFO_EXTENSION);
-            $filename = md5(uniqid('', true)) . '.' . $ext;
-            $dest     = $uploadDir . $filename;
-            if (move_uploaded_file($files['tmp_name'][$i], $dest)) {
-                $type = in_array($mime, $allowedImages) ? 'IMAGE' : 'VIDEO';
+        foreach ($uploadResults as $res) {
+            if ($res['success']) {
                 $pdo->prepare('INSERT INTO MEDIA (ID_RESERVATION, PATH_MEDIA, TYPE_MEDIA) VALUES (?, ?, ?)')
-                    ->execute([$idResa, 'assets/uploads/medias/' . $filename, $type]);
+                    ->execute([$idResa, $res['path'], $res['type']]);
                 $uploaded++;
+            } else {
+                $errors[] = $res['error'];
             }
         }
 
@@ -66,10 +53,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'uploa
             $success = "$uploaded fichier(s) uploadé(s) avec succès.";
         }
         if (!empty($errors)) {
-            $error = implode(' | ', $errors);
+            $error = implode(' | ', array_unique($errors));
         }
     }
 }
+
 
 // ── Réservations TERMINEE (pour le formulaire) ────────────────
 $resasTerminees = $pdo->query(

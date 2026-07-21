@@ -1,6 +1,7 @@
 # objectif: 
- * ajouter un systeme deleter_fichier 
- * dans le dossier util
+ Je veux corriger un problème dans mon projet PHP : quand je soumets mes formulaire 
+ et que je fais F5 (refresh) sur la page de résultat, le navigateur 
+redemande "renvoyer les données du formulaire" et ré-exécute une seconde fois.
 
-*applique cette fonctionnalite dans le projet qui le utiliser
-* ne pas lire dompdf et phpmailer
+* lire mon projet entier , sauf dompdf et phpmailer, et les assets et les css 
+* donner un plan d'execution 
