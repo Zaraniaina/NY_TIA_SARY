@@ -399,6 +399,85 @@ body {
     border-left: 4px solid var(--primary-green);
 }
 
+/* ── RESPONSIVE / MOBILE ADJUSTMENTS ── */
+/* Show hamburger and make sidebar off-canvas on smaller screens */
+/* Use 768px breakpoint for stacking and mobile behaviour */
+@media (max-width: 768px) {
+    .sidebar-toggle {
+        display: inline-block;
+    }
+
+    .dashboard-sidebar {
+        transform: translateX(-110%);
+        width: 280px;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        position: fixed;
+        z-index: 1100;
+        transition: transform 0.32s cubic-bezier(.16,.84,.44,1), box-shadow 0.25s ease;
+    }
+
+    .dashboard-sidebar.open {
+        transform: translateX(0);
+        box-shadow: 0 40px 80px rgba(0,0,0,0.36);
+    }
+
+    .sidebar-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.45);
+        z-index: 1050;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.28s ease, backdrop-filter 0.28s ease;
+    }
+
+    .sidebar-overlay.open {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .dashboard-main {
+        margin-left: 0;
+    }
+
+    .dashboard-content {
+        padding: 20px;
+    }
+
+    /* Stack the two-column grid on smaller screens */
+    .two-col-grid {
+        grid-template-columns: 1fr !important;
+        gap: 18px !important;
+        align-items: stretch !important;
+    }
+}
+
+@media (max-width: 600px) {
+    .topbar-title { font-size: 1rem; }
+    .topbar-avatar { width: 38px; height: 38px; }
+    .topbar-notification { font-size: 1.3rem; margin-right: 8px; }
+    .dashboard-content { padding: 14px; }
+    .dash-card { border-radius: 12px; }
+    .dash-page-header h2 { font-size: 1.3rem; }
+    .dash-form-group .dash-input, .dash-form-group .dash-textarea { font-size: 0.95rem; }
+
+    /* Tables: allow horizontal scroll on very small screens */
+    .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .dash-table { width: 100%; min-width: 480px; }
+}
+
+/* Utility: ensure images inside cards scale nicely */
+.dash-card img, .table-responsive img { max-width: 100%; height: auto; display: block; }
+
+/* When sidebar is open on mobile, prevent body scroll */
+body.sidebar-open {
+    overflow: hidden;
+    touch-action: none;
+}
+
+
 .notification-card-top {
     display: flex;
     justify-content: space-between;
@@ -570,6 +649,17 @@ body {
     transition: var(--transition-smooth);
 }
 
+.dash-card.compact-card {
+    max-width: 680px;
+    width: 100%;
+}
+
+@media (max-width: 1024px) {
+    .dash-card.compact-card {
+        max-width: 100%;
+    }
+}
+
 .dash-card-header {
     padding: 20px 25px;
     border-bottom: 1px solid var(--border-color);
@@ -599,12 +689,15 @@ body {
 .table-responsive {
     width: 100%;
     overflow-x: auto;
+    min-width: 0;
 }
 
 .dash-table {
     width: 100%;
     border-collapse: collapse;
     text-align: left;
+    table-layout: auto;
+    min-width: 0;
 }
 
 .dash-table thead th {
@@ -625,6 +718,26 @@ body {
     color: var(--text-body);
     border-bottom: 1px solid rgba(0, 0, 0, 0.04);
     vertical-align: middle;
+    white-space: normal;
+    word-break: break-word;
+    min-width: 0;
+}
+
+.dash-table td,
+.dash-table td > * {
+    min-width: 0;
+}
+
+.dash-table td .badge {
+    white-space: normal;
+    word-break: break-word;
+}
+
+.dash-table td > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
 }
 
 .dash-table tbody tr:last-child td {
@@ -721,20 +834,89 @@ body {
     background: transparent;
     border: 2px solid var(--primary-green);
     color: var(--primary-green);
-}
+    }
 
-.btn-dash-outline:hover {
-    background: var(--primary-green);
-    color: var(--white);
-}
+    .btn-dash-outline:hover {
+        background: var(--primary-green);
+        color: var(--white);
+    }
 
-.btn-dash-sm {
-    padding: 6px 14px;
-    font-size: 0.78rem;
-}
+    @media (max-width: 1400px) {
+        .dash-table thead {
+            display: none;
+        }
+        .dash-table,
+        .dash-table tbody,
+        .dash-table tr,
+        .dash-table td {
+            display: block;
+            width: 100%;
+        }
+        .dash-table tr {
+            margin: 0 0 14px 0;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 10px;
+            background: var(--card-bg);
+        }
+        .dash-table td {
+            padding: 10px 12px;
+            border: none;
+            display: block;
+            position: relative;
+            white-space: normal;
+        }
+        .dash-table td::before {
+            content: attr(data-label);
+            display: block;
+            font-weight: 700;
+            color: #666;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+        }
+        .dash-table td.actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-start;
+            flex-wrap: wrap;
+        }
+        .dash-table td.actions button,
+        .dash-table td.actions .btn-dash {
+            width: 100%;
+        }
+        .dash-table td .badge {
+            max-width: 100%;
+            white-space: normal;
+        }
+        .btn-dash {
+            padding: 8px 14px;
+            font-size: 0.82rem;
+        }
+        .dash-card-body.padded {
+            padding: 18px;
+        }
+        .dashboard-content {
+            padding: 26px;
+        }
+        .table-responsive {
+            overflow: visible;
+        }
+    }
 
-.btn-dash-icon {
-    padding: 8px 10px;
+    @media (max-width: 480px) {
+        .dash-table td {
+            padding: 8px 10px;
+        }
+        .dash-table tr {
+            padding: 8px;
+        }
+        .dash-table td::before {
+            font-size: 0.8rem;
+        }
+    }
+
+    .btn-dash-icon {
+        padding: 8px 10px;
 }
 
 /* ── FORM ELEMENTS ── */
@@ -797,6 +979,27 @@ body {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
+}
+
+/* Generic two-column layout used by admin pages (e.g. form + list) */
+.two-col-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 28px;
+    align-items: start;
+    width: 100%;
+}
+
+.two-col-grid.blog-stack {
+    grid-template-columns: 1fr;
+    gap: 22px;
+}
+
+@media (max-width: 1024px) {
+    .two-col-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
 }
 
 /* ── FILE UPLOAD ZONE ── */
@@ -1249,6 +1452,28 @@ body {
         font-size: 0.8rem;
     }
 
+    .dash-table tbody td {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .dash-table td::before {
+        display: block;
+        margin-bottom: 6px;
+        width: 100%;
+    }
+
+    .dash-table td.actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .dash-table td.actions button,
+    .dash-table td.actions .btn-dash {
+        width: 100%;
+    }
+
     .btn-dash {
         padding: 8px 14px;
         font-size: 0.8rem;
@@ -1660,4 +1885,14 @@ body {
 * {
     scrollbar-width: thin;
     scrollbar-color: var(--primary-green) var(--bg-body);
+}
+
+/* Ensure table content can wrap on small screens to avoid overflow */
+@media (max-width: 768px) {
+    .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .dash-table { min-width: 0; width: 100%; }
+    .dash-table tbody td { white-space: normal !important; word-break: break-word; }
+    .dash-table tbody td > div { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .dash-table img { width: 36px; height: 36px; }
+    .btn-dash-sm { padding: 6px 10px; font-size: 0.72rem; }
 }

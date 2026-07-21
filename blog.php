@@ -115,6 +115,11 @@ try {
                             Lire l'article
                             <i class="fas fa-arrow-right"></i>
                         </a>
+                        <div class="blog-card-actions" style="margin-top:12px;display:flex;gap:12px;align-items:center;">
+                            <span class="view-count" data-blog-id="<?= $articleId ?>">0 vues</span>
+                            <button class="reaction like" data-blog-id="<?= $articleId ?>" aria-label="Like">👍 <span class="count">0</span></button>
+                            <button class="reaction dislike" data-blog-id="<?= $articleId ?>" aria-label="Dislike">👎 <span class="count">0</span></button>
+                        </div>
                     </div>
                 </article>
                 <?php endforeach; ?>
@@ -220,17 +225,111 @@ try {
                 card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
                 observer.observe(card);
             });
+
+            // Helper: fetch stats for a blog id
+            async function fetchStats(id, method = 'GET'){
+                const form = new FormData();
+                if (method === 'POST') return; // placeholder
+                try {
+                    const res = await fetch('api/blog_stats.php?action=get&id=' + id);
+                    return await res.json();
+                } catch(e){ return null; }
+            }
+
+            // Use IntersectionObserver to count a view once when card enters viewport
+            const viewObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const card = entry.target;
+                        const id = card.getAttribute('data-category') ? card.querySelector('.view-count')?.getAttribute('data-blog-id') : null;
+                        if (id) {
+                            // send view
+                            fetch('api/blog_stats.php', { method: 'POST', body: new URLSearchParams({ action: 'view', id }) })
+                                .then(r => r.json())
+                                .then(data => {
+                                    const span = card.querySelector('.view-count');
+                                    if (span && data.stats) span.textContent = data.stats.views + ' vues';
+                                    const likeBtn = card.querySelector('.reaction.like .count');
+                                    const dislikeBtn = card.querySelector('.reaction.dislike .count');
+                                    if (data.stats){ if (likeBtn) likeBtn.textContent = data.stats.likes; if (dislikeBtn) dislikeBtn.textContent = data.stats.dislikes; }
+                                });
+                        }
+                        viewObserver.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.4 });
+
+            // initial load: fetch and render existing stats for visible cards
+            document.querySelectorAll('.blog-card').forEach(card => {
+                const id = card.querySelector('.view-count')?.getAttribute('data-blog-id');
+                if (id) {
+                    fetch('api/blog_stats.php?id=' + id)
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.stats) {
+                                const span = card.querySelector('.view-count');
+                                const likeBtn = card.querySelector('.reaction.like .count');
+                                const dislikeBtn = card.querySelector('.reaction.dislike .count');
+                                const likeBtnRoot = card.querySelector('.reaction.like');
+                                const dislikeBtnRoot = card.querySelector('.reaction.dislike');
+                                if (span) span.textContent = data.stats.views + ' vues';
+                                if (likeBtn) likeBtn.textContent = data.stats.likes;
+                                if (dislikeBtn) dislikeBtn.textContent = data.stats.dislikes;
+                                // mark user's reaction if present
+                                if (data.user_reaction === 'like' && likeBtnRoot) { likeBtnRoot.classList.add('voted'); }
+                                if (data.user_reaction === 'dislike' && dislikeBtnRoot) { dislikeBtnRoot.classList.add('voted'); }
+                            }
+                        }).catch(()=>{});
+                }
+                viewObserver.observe(card);
+            });
+
+            // Reaction buttons
+            document.querySelectorAll('.reaction.like, .reaction.dislike').forEach(btn => {
+                btn.addEventListener('click', function(e){
+                    const id = this.getAttribute('data-blog-id');
+                    const action = this.classList.contains('like') ? 'like' : 'dislike';
+                    fetch('api/blog_stats.php', { method: 'POST', body: new URLSearchParams({ action, id }) })
+                        .then(async (r) => {
+                            const data = await r.json().catch(() => ({}));
+                            if (!r.ok) {
+                                if (data && data.error) {
+                                    // show minimal feedback
+                                    alert(data.error);
+                                }
+                                return;
+                            }
+                            if (data.stats) {
+                                // update counts in same card
+                                const card = document.querySelector('.blog-card [data-blog-id="' + id + '"]').closest('.blog-card');
+                                if (card) {
+                                    const likeSpan = card.querySelector('.reaction.like .count');
+                                    const dislikeSpan = card.querySelector('.reaction.dislike .count');
+                                    const viewSpan = card.querySelector('.view-count');
+                                    const likeBtnRoot = card.querySelector('.reaction.like');
+                                    const dislikeBtnRoot = card.querySelector('.reaction.dislike');
+                                    if (likeSpan) likeSpan.textContent = data.stats.likes;
+                                    if (dislikeSpan) dislikeSpan.textContent = data.stats.dislikes;
+                                    if (viewSpan) viewSpan.textContent = data.stats.views + ' vues';
+                                    // update visual state
+                                    if (data.user_reaction === 'like') { likeBtnRoot?.classList.add('voted'); dislikeBtnRoot?.classList.remove('voted'); }
+                                    else if (data.user_reaction === 'dislike') { dislikeBtnRoot?.classList.add('voted'); likeBtnRoot?.classList.remove('voted'); }
+                                }
+                            }
+                        });
+                });
+            });
         });
     </script>
         <!-- Boutons Flottants -->
     <div class="floating-buttons">
-        <button class="btn-float btn-devis" id="btn-open-devis-float" title="Demander un Devis">
-            <i class="fas fa-file-invoice-dollar"></i> Demander devis
-        </button>
-        <a href="login/login.php" class="btn-float btn-reserver" title="Réserver">
-            <i class="far fa-calendar-check"></i> Réserver
-        </a>
-    </div>
+    <button class="btn-float btn-devis" id="btn-open-devis-float" title="Demander un Devis">
+        <i class="fas fa-file-invoice-dollar"></i> <span>Demander devis</span>
+    </button>
+    <a href="login/login.php" class="btn-float btn-reserver" title="Réserver">
+        <i class="far fa-calendar-check"></i> <span>Réserver</span>
+    </a>
+</div>
     <?php include 'composante/footer.php'; ?>
 </body>
 

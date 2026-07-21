@@ -139,6 +139,11 @@
             color: var(--white);
         }
 
+        .btn-sm {
+            padding: 10px 20px;
+            font-size: 0.8rem;
+        }
+
         /* ============================================================
            2. HEADER & MENU (The Dynamic Entry)
            ============================================================ */
@@ -268,7 +273,6 @@
             background-attachment: fixed;
             position: relative;
             background-color: var(--white);
-            /* Fallback */
         }
 
         .hero::before {
@@ -359,7 +363,6 @@
             border-width: 15px 0 0 15px;
         }
 
-        /* Focus Bracket shape */
         .hero-brackets::after {
             bottom: 0;
             right: 0;
@@ -664,7 +667,6 @@
             transform: translateY(0);
         }
 
-        /* Lightbox structure */
         .lightbox {
             position: fixed;
             top: 0;
@@ -715,9 +717,8 @@
             border: 5px solid var(--white);
         }
 
-
         /* ============================================================
-           7. TÉMOIGNAGES CLIENTS (Nouveau Slider Simple)
+           7. TÉMOIGNAGES CLIENTS
            ============================================================ */
         .temoignages {
             background-color: var(--bg-accent);
@@ -914,7 +915,6 @@
             border-radius: 5px;
         }
 
-        /* Responsivité */
         @media (max-width: 768px) {
             .temoignages-slider-container {
                 gap: 15px;
@@ -988,7 +988,6 @@
             width: 140px;
         }
 
-        /* Reset footer logo size */
         .footer-logo-box p {
             font-size: 1rem;
             color: var(--text-body);
@@ -1082,7 +1081,7 @@
         }
 
         /* ============================================================
-           8. RESPONSIVE MEDIA QUERIES
+           8. RESPONSIVE MEDIA QUERIES (globales)
            ============================================================ */
         @media (max-width: 1200px) {
             .hero-container {
@@ -1251,8 +1250,60 @@
             }
         }
 
+        /* Le menu passe en hamburger dès 1024px : 6 liens + le bouton
+           "Se connecter" ne tiennent plus sur une ligne avant ça et
+           débordaient hors de l'écran. */
+        @media (max-width: 1024px) {
+            header {
+                padding: 15px 0;
+                background-color: var(--white);
+                box-shadow: var(--shadow-subtle);
+            }
+
+            .menu-toggle {
+                display: inline-flex;
+                width: 30px;
+                height: 26px;
+                cursor: pointer;
+                flex-direction: column;
+                justify-content: space-between;
+                gap: 5px;
+            }
+
+            .nav-menu {
+                display: flex;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                background-color: var(--white);
+                flex-direction: column;
+                padding: 0;
+                box-shadow: var(--shadow-md);
+                overflow: hidden;
+                max-height: 0;
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.4s ease, visibility 0s linear 0.4s;
+            }
+
+            .nav-menu.active {
+                max-height: 1000px;
+                opacity: 1;
+                padding: 30px 0 50px 0;
+                visibility: visible;
+                pointer-events: auto;
+                transition: max-height 0.4s ease, opacity 0.35s ease, padding 0.4s ease, visibility 0s linear 0s;
+            }
+
+            .nav-item {
+                margin: 15px 0;
+            }
+        }
+
         /* ============================================================
-           9. VIDEO BANNER SECTION (Immersive & Premium)
+           9. VIDEO BANNER SECTION
            ============================================================ */
         .video-banner-section {
             position: relative;
@@ -1402,7 +1453,6 @@
             transform: scale(1.08);
         }
 
-        /* Animations */
         @keyframes fadeInUpBanner {
             to {
                 opacity: 1;
@@ -1429,7 +1479,6 @@
             }
         }
 
-        /* Responsive Banner Adjustments */
         @media (max-width: 992px) {
             .video-banner-section {
                 height: 60vh;
@@ -1469,7 +1518,7 @@
         }
 
         /* ============================================================
-           10. DETAILED SERVICES PAGE (Grand Plan Alterné)
+           10. DETAILED SERVICES PAGE
            ============================================================ */
         .services-detail-container {
             padding: 80px 0;
@@ -1497,7 +1546,6 @@
             order: 1;
         }
 
-        /* Image reference styling */
         .service-detail-image-box {
             position: relative;
             border-radius: 14px;
@@ -1519,7 +1567,6 @@
             transform: scale(1.05);
         }
 
-        /* Decorative bracket or outline on image */
         .service-detail-image-box::before {
             content: '';
             position: absolute;
@@ -1542,7 +1589,6 @@
             border-color: rgba(255, 255, 255, 0.6);
         }
 
-        /* Content styling */
         .service-detail-content {
             display: flex;
             flex-direction: column;
@@ -1581,7 +1627,6 @@
             margin-bottom: 30px;
         }
 
-        /* Sub-services layout grid */
         .sub-services-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -1634,7 +1679,6 @@
             margin-bottom: 0;
         }
 
-        /* Responsive styling for detailed services */
         @media (max-width: 992px) {
             .services-detail-container {
                 gap: 80px;
@@ -1861,7 +1905,6 @@
             z-index: 1;
         }
 
-
         @media (max-width: 992px) {
 
             .vm .service-detail-row,
@@ -1899,8 +1942,8 @@
         }
 
         /* ============================================================
-   MODAL DEMANDE DE DEVIS
-   ============================================================ */
+           MODAL DEMANDE DE DEVIS
+           ============================================================ */
         .devis-modal {
             position: fixed;
             top: 0;
@@ -1977,7 +2020,6 @@
 
         .devis-modal-close:hover {
             color: var(--primary-red);
-
         }
 
         .devis-form {
@@ -2039,6 +2081,7 @@
 
         .devis-form-full {
             grid-column: 1 / -1;
+            width: 100%;
         }
 
         .devis-form-actions {
@@ -2052,60 +2095,6 @@
 
         .devis-form-actions .btn {
             padding: 13px 30px;
-        }
-
-        @media (max-width: 600px) {
-            .devis-form-row {
-                grid-template-columns: 1fr;
-            }
-
-            .devis-modal-header,
-            .devis-form {
-                padding-left: 22px;
-                padding-right: 22px;
-            }
-
-            .devis-form-actions {
-                flex-direction: column-reverse;
-            }
-
-            .devis-form-actions .btn {
-                width: 100%;
-            }
-        }
-
-        /* ============================================================
-   SCROLLBAR PERSONNALISÉE (Chrome, Edge, Safari)
-   ============================================================ */
-        ::-webkit-scrollbar {
-            width: 12px;
-            height: 12px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: var(--bg-body);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background-color: var(--primary-green);
-            border-radius: 999px;
-            border: 3px solid var(--bg-body);
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background-color: var(--logo-black);
-        }
-
-        /* ============================================================
-   SCROLLBAR PERSONNALISÉE (Firefox)
-   ============================================================ */
-        * {
-            scrollbar-width: thin;
-            scrollbar-color: var(--primary-green) var(--bg-body);
-        }
-
-        .devis-form-full {
-            width: 100%;
         }
 
         .devis-categories-fieldset {
@@ -2145,9 +2134,56 @@
             margin: 0;
         }
 
+        @media (max-width: 600px) {
+            .devis-form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .devis-modal-header,
+            .devis-form {
+                padding-left: 22px;
+                padding-right: 22px;
+            }
+
+            .devis-form-actions {
+                flex-direction: column-reverse;
+            }
+
+            .devis-form-actions .btn {
+                width: 100%;
+            }
+        }
+
         /* ============================================================
-   BOUTONS FLOTTANTS EN BAS À DROITE
-   ============================================================ */
+           SCROLLBAR PERSONNALISÉE
+           ============================================================ */
+        ::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-body);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background-color: var(--primary-green);
+            border-radius: 999px;
+            border: 3px solid var(--bg-body);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: var(--logo-black);
+        }
+
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-green) var(--bg-body);
+        }
+
+        /* ============================================================
+           BOUTONS FLOTTANTS EN BAS À DROITE
+           ============================================================ */
         .floating-buttons {
             position: fixed;
             bottom: 30px;
@@ -2177,6 +2213,7 @@
             letter-spacing: 0.5px;
             transition: var(--transition-smooth);
             text-decoration: none;
+            white-space: nowrap;
         }
 
         .btn-float i {
@@ -2211,8 +2248,33 @@
             }
         }
 
+        /* Icône seule sur très petit écran, pour ne rien cacher */
+        @media (max-width: 480px) {
+            .floating-buttons {
+                bottom: 15px;
+                right: 15px;
+                gap: 10px;
+            }
+
+            .btn-float {
+                width: 46px;
+                height: 46px;
+                padding: 0;
+                border-radius: 50%;
+            }
+
+            .btn-float span {
+                display: none;
+            }
+
+            .btn-float i {
+                font-size: 1.1rem;
+                margin: 0;
+            }
+        }
+
         /* ============================================================
-            BLOG MODERNE (Inspiré des tendances actuelles)
+            BLOG MODERNE
             ============================================================ */
         .blog-hero {
             background: linear-gradient(135deg, var(--white) 0%, var(--bg-body) 100%);
@@ -2239,7 +2301,7 @@
 
         .blog-title {
             font-family: var(--font-headings);
-            font-size: 3.2rem;
+            font-size: clamp(1.9rem, 4vw + 1rem, 3.2rem);
             font-weight: 800;
             color: var(--logo-black);
             line-height: 1.2;
@@ -2247,7 +2309,7 @@
         }
 
         .blog-subtitle {
-            font-size: 1.2rem;
+            font-size: clamp(1rem, 1vw + 0.8rem, 1.2rem);
             color: var(--text-body);
             font-family: var(--font-body);
             line-height: 1.6;
@@ -2260,7 +2322,7 @@
 
         .blog-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 40px;
         }
 
@@ -2279,19 +2341,28 @@
             box-shadow: var(--shadow-md);
         }
 
-        .blog-card-image {
-            position: relative;
-            aspect-ratio: 16/9;
-            overflow: hidden;
-        }
+       .blog-card-image {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 12px; /* facultatif */
+}
 
-        .blog-card-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
-        }
+.blog-card-image img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
 
+    /* Permet de remonter le sujet dans le cadre */
+    object-position: center 20%;
+
+    transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.blog-card:hover .blog-card-image img {
+    transform: scale(1.05);
+}
         .blog-card:hover .blog-card-image img {
             transform: scale(1.05);
         }
@@ -2337,7 +2408,7 @@
 
         .blog-card-title {
             font-family: var(--font-headings);
-            font-size: 1.4rem;
+            font-size: clamp(1.15rem, 1vw + 1rem, 1.4rem);
             font-weight: 700;
             color: var(--logo-black);
             margin-bottom: 15px;
@@ -2380,6 +2451,31 @@
             transform: translateX(3px);
         }
 
+        /* Reaction buttons (like/dislike) */
+        .reaction {
+            background: transparent;
+            border: 1px solid rgba(0,0,0,0.06);
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 700;
+        }
+
+        .reaction .count {
+            font-weight: 800;
+            margin-left: 6px;
+            font-size: 0.95rem;
+        }
+
+        .reaction.voted {
+            background: rgba(55,125,73,0.08);
+            color: var(--primary-green);
+            border-color: rgba(55,125,73,0.12);
+        }
+
         .blog-filters {
             display: flex;
             justify-content: center;
@@ -2388,7 +2484,7 @@
             flex-wrap: wrap;
         }
 
-        .filter-btn {
+        .blog-filters .filter-btn {
             background-color: #f0f0ed;
             color: var(--text-body);
             border: 1px solid rgba(0, 0, 0, 0.05);
@@ -2403,8 +2499,8 @@
             transition: var(--transition-smooth);
         }
 
-        .filter-btn:hover,
-        .filter-btn.active {
+        .blog-filters .filter-btn:hover,
+        .blog-filters .filter-btn.active {
             background-color: var(--primary-green);
             color: var(--white);
             border-color: var(--primary-green);
@@ -2454,12 +2550,7 @@
             transition: var(--transition-smooth);
         }
 
-        .pagination-btn:hover {
-            background-color: var(--primary-green);
-            color: var(--white);
-            border-color: var(--primary-green);
-        }
-
+        .pagination-btn:hover,
         .pagination-btn.active {
             background-color: var(--primary-green);
             color: var(--white);
@@ -2504,13 +2595,25 @@
             margin-bottom: 25px;
         }
 
+        /* ---- Palier tablette (jusqu'à 992px) ---- */
+        @media (max-width: 992px) {
+            .blog-hero {
+                padding: 150px 0 90px;
+            }
+
+            .blog {
+                padding: 70px 0;
+            }
+
+            .blog-grid {
+                gap: 30px;
+            }
+        }
+
+        /* ---- Palier mobile (jusqu'à 768px) ---- */
         @media (max-width: 768px) {
             .blog-hero {
                 padding: 120px 0 80px;
-            }
-
-            .blog-title {
-                font-size: 2.2rem;
             }
 
             .blog {
@@ -2528,9 +2631,22 @@
 
             .blog-filters {
                 padding: 0 20px;
+                gap: 10px;
             }
 
             .blog-cta-content h2 {
                 font-size: 1.6rem;
+            }
+        }
+
+        /* ---- Très petits écrans (jusqu'à 400px) ---- */
+        @media (max-width: 400px) {
+            .blog-hero {
+                padding: 110px 0 60px;
+            }
+
+            .blog-filters .filter-btn {
+                padding: 8px 16px;
+                font-size: 0.72rem;
             }
         }

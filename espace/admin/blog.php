@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // ── Données ───────────────────────────────────────────────────
-$articles   = $pdo->query('SELECT b.*, t.LIB_TYPE_BLOG FROM BLOG b LEFT JOIN TYPE_BLOG t ON b.ID_TYPE_BLOG  = t.ID_TYPE_BLOG ORDER BY b.DATE_PUBLICATION DESC')->fetchAll();
+$articles   = $pdo->query('SELECT b.*, t.LIB_TYPE_BLOG, COALESCE(bs.views,0) AS VIEWS, COALESCE(bs.likes,0) AS LIKES, COALESCE(bs.dislikes,0) AS DISLIKES FROM BLOG b LEFT JOIN TYPE_BLOG t ON b.ID_TYPE_BLOG  = t.ID_TYPE_BLOG LEFT JOIN blog_stats bs ON b.ID_BLOG = bs.id_blog ORDER BY b.DATE_PUBLICATION DESC')->fetchAll();
 $categories = $pdo->query('SELECT ID_TYPE_BLOG, LIB_TYPE_BLOG FROM TYPE_BLOG ORDER BY LIB_TYPE_BLOG')->fetchAll();
 
 // Article à éditer ?
@@ -97,10 +97,10 @@ if (isset($_GET['edit'])) {
             </nav>
 
 
-            <div style="display:grid;grid-template-columns:1fr 1.8fr;gap:28px;align-items:start;">
+            <div class="two-col-grid blog-stack">
 
                 <!-- FORMULAIRE -->
-                <div class="dash-card">
+                <div class="dash-card compact-card">
                     <div class="dash-card-header">
                         <h3><i class="fas fa-<?= $editArticle ? 'edit' : 'plus-circle' ?>" style="color:var(--primary-green);margin-right:8px;"></i>
                             <?= $editArticle ? 'Modifier l\'article' : 'Nouvel article' ?>
@@ -166,9 +166,14 @@ if (isset($_GET['edit'])) {
 
                 <!-- LISTE ARTICLES -->
                 <div class="dash-card">
-                    <div class="dash-card-header">
-                        <h3><i class="fas fa-newspaper" style="color:var(--primary-green);margin-right:8px;"></i> Articles</h3>
-                        <span class="badge badge-confirm"><?= count($articles) ?></span>
+                    <div class="dash-card-header" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <h3><i class="fas fa-newspaper" style="color:var(--primary-green);margin-right:8px;"></i> Articles</h3>
+                            <span class="badge badge-confirm"><?= count($articles) ?></span>
+                        </div>
+                        <div>
+                            <a href="export_blog_stats.php" class="btn-dash btn-dash-outline btn-dash-sm" style="margin-left:8px;"><i class="fas fa-file-csv"></i> Export CSV</a>
+                        </div>
                     </div>
                     <div class="dash-card-body">
                         <?php if (empty($articles)): ?>
@@ -176,11 +181,11 @@ if (isset($_GET['edit'])) {
                         <?php else: ?>
                         <div class="table-responsive">
                             <table class="dash-table">
-                                <thead><tr><th>Titre</th><th>Type</th><th>Statut</th><th>Date</th><th>Actions</th></tr></thead>
+                                <thead><tr><th>Titre</th><th>Type</th><th>Statut</th><th>Date</th><th>Stats</th><th>Actions</th></tr></thead>
                                 <tbody>
                                 <?php foreach ($articles as $art): ?>
-                                    <tr>
-                                        <td>
+                                    <tr data-blog-id="<?= (int)$art['ID_BLOG'] ?>">
+                                        <td data-label="Titre">
                                             <div style="display:flex;align-items:center;gap:10px;">
                                                 <?php if ($art['IMAGE_COURVERTURE']): ?>
                                                     <img src="../../<?= htmlspecialchars($art['IMAGE_COURVERTURE']) ?>" style="width:40px;height:40px;border-radius:6px;object-fit:cover;flex-shrink:0;">
@@ -190,16 +195,23 @@ if (isset($_GET['edit'])) {
                                                 <strong style="font-size:0.88rem;"><?= htmlspecialchars($art['TITRE_BLOG']) ?></strong>
                                             </div>
                                         </td>
-                                        <td><?= htmlspecialchars($art['LIB_TYPE_BLOG'] ?? '—') ?></td>
-                                        <td>
+                                        <td data-label="Type"><?= htmlspecialchars($art['LIB_TYPE_BLOG'] ?? '—') ?></td>
+                                        <td data-label="Statut">
                                             <?php if ($art['STATUS_BLOG'] === 'PUBLIER'): ?>
                                                 <span class="badge badge-confirm">Publié</span>
                                             <?php else: ?>
                                                 <span class="badge badge-waiting">Brouillon</span>
                                             <?php endif; ?>
                                         </td>
-                                        <td><?= date('d/m/Y', strtotime($art['DATE_PUBLICATION'])) ?></td>
-                                        <td style="white-space:nowrap;">
+                                        <td data-label="Date"><?= date('d/m/Y', strtotime($art['DATE_PUBLICATION'])) ?></td>
+                                        <td data-label="Stats">
+                                            <div style="display:flex;gap:8px;align-items:center;">
+                                                <span class="badge badge-confirm" title="Vues">👁️ <?= (int)($art['VIEWS'] ?? 0) ?></span>
+                                                <span class="badge" style="background:transparent;color:#666;border:1px solid rgba(0,0,0,0.06);" title="Likes">👍 <?= (int)($art['LIKES'] ?? 0) ?></span>
+                                                <span class="badge" style="background:transparent;color:#666;border:1px solid rgba(0,0,0,0.06);" title="Dislikes">👎 <?= (int)($art['DISLIKES'] ?? 0) ?></span>
+                                            </div>
+                                        </td>
+                                        <td data-label="Actions" class="actions" style="white-space:nowrap;">
                                             <a href="?edit=<?= (int)$art['ID_BLOG'] ?>" class="btn-dash btn-dash-outline btn-dash-sm"><i class="fas fa-edit"></i></a>
                                             <?php if ($art['STATUS_BLOG'] === 'PUBLIER'): ?>
                                             <form method="POST" style="display:inline;" onsubmit="return confirm('Mettre cet article en brouillon ?');">
@@ -234,11 +246,16 @@ if (isset($_GET['edit'])) {
 </div>
 
 <script>
+// Sidebar toggle: add body lock and Esc shortcut for better UX on mobile
 const toggle  = document.getElementById('sidebarToggle');
 const sidebar = document.getElementById('sidebar');
 const overlay = document.getElementById('sidebarOverlay');
-toggle?.addEventListener('click', () => { sidebar.classList.toggle('open'); overlay.classList.toggle('open'); });
-overlay?.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('open'); });
+const bodyEl  = document.body;
+function openSidebar() { sidebar.classList.add('open'); overlay.classList.add('open'); bodyEl.classList.add('sidebar-open'); }
+function closeSidebar(){ sidebar.classList.remove('open'); overlay.classList.remove('open'); bodyEl.classList.remove('sidebar-open'); }
+toggle?.addEventListener('click', () => { sidebar.classList.contains('open') ? closeSidebar() : openSidebar(); });
+overlay?.addEventListener('click', closeSidebar);
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && sidebar.classList.contains('open')) { closeSidebar(); } });
 
 // Aperçu image
 document.getElementById('image_couverture')?.addEventListener('change', function() {
@@ -248,6 +265,37 @@ document.getElementById('image_couverture')?.addEventListener('change', function
         prev.innerHTML = `<img src="${url}" style="width:100%;max-height:120px;object-fit:cover;border-radius:8px;">`;
     }
 });
+</script>
+
+<script>
+// Admin: polling to refresh stats every 10s
+(() => {
+    const rows = Array.from(document.querySelectorAll('tr[data-blog-id]'));
+    if (!rows.length) return;
+    async function refresh() {
+        await Promise.all(rows.map(async row => {
+            const id = row.getAttribute('data-blog-id');
+            if (!id) return;
+            try {
+                const res = await fetch('../../api/blog_stats.php?id=' + id);
+                const data = await res.json();
+                if (data.stats) {
+                    const views = row.querySelector('span[title="Vues"]');
+                    const likes = row.querySelector('span[title="Likes"]');
+                    const dislikes = row.querySelector('span[title="Dislikes"]');
+                    if (views) views.textContent = '👁️ ' + data.stats.views;
+                    if (likes) likes.textContent = '👍 ' + data.stats.likes;
+                    if (dislikes) dislikes.textContent = '👎 ' + data.stats.dislikes;
+                }
+            } catch(e) {
+                // ignore
+            }
+        }));
+    }
+    // initial refresh
+    refresh();
+    setInterval(refresh, 10000);
+})();
 </script>
 
 <!-- Toastify JS -->
