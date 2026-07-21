@@ -1,11 +1,14 @@
-### objectif corriger l'erreur:
+### objectif rendre bien responsive le site vitrine et une animation professionnelle :
+* corriger les erreur deja existant
+* probleme d'affichage sur tout plaformer
+* probleme d'animation
+
+# fichier a lire :
+ * index.php
+ * blog.php
+ * portfolio.php
+ * service.php
+ * apropos.php
  
 
-* apres la connexion il faut rediriger l'utilisateur vers la pages cibles 
-
-# or le lien est comme ca :
-
- "
-http://localhost/projet_ny/NY_TIA_SARY/projet_ny/NY_TIA_SARY/espace/admin/reservations.php?id=10"
-
-* 
+ # contrainte sans casse le code deja existant 

@@ -5,9 +5,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof ScrollReveal !== 'undefined') {
         const sr = ScrollReveal({
             duration: 900,
-            distance: '60px',
+            distance: '40px', /* Réduit pour éviter les sauts brusques sur mobile */
             easing: 'cubic-bezier(0.165, 0.84, 0.44, 1)',
-            reset: true,
+            reset: false, /* Désactivé pour de meilleures perfos au scroll sur mobile */
+            mobile: true
         });
 
         // ---------- HERO (index.php) ----------

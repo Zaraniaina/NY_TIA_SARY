@@ -1,0 +1,45 @@
+# Objectif : Rendre le site vitrine responsive et optimiser les animations
+
+Ce plan vise à corriger les problèmes d'affichage sur mobiles/tablettes et à perfectionner les animations professionnelles sur l'ensemble des pages publiques (site vitrine), tout en respectant la contrainte stricte de ne pas casser le code PHP ni les fonctionnalités existantes.
+
+## Analyse des problèmes identifiés
+
+1. **Responsivité (Responsive Design) inexistante** : Après vérification, le fichier principal `css/mainStyle.css` ne contient **aucune règle `@media`**. Cela explique pourquoi le site s'affiche mal sur les petits écrans (téléphones, tablettes). Les grilles (ex: `grid-template-columns: 1fr 1fr;`), les menus de navigation et les grandes tailles de texte cassent la mise en page sur mobile.
+2. **Animations** : La bibliothèque `ScrollReveal` est bien présente dans `script.js`, mais certaines classes ou timings peuvent être ajustés pour un rendu encore plus fluide, et surtout, il faut s'assurer que les éléments ne restent pas invisibles si le script met du temps à charger sur mobile.
+
+## Modifications Proposées
+
+### 1. Ajout de la Responsivité dans `css/mainStyle.css`
+Je vais injecter un bloc complet de requêtes média (`@media queries`) à la fin de `mainStyle.css` pour adapter tous les éléments structurels :
+
+*   **Header & Navigation** :
+    *   Cacher le menu en ligne `nav-menu` sur mobile et afficher le bouton "Hamburger" (`.menu-toggle`).
+    *   Styliser l'ouverture du menu mobile (pleine page ou panneau latéral).
+*   **Typographie** : 
+    *   Réduire proportionnellement la taille des titres (`h1`, `h2`, `.section-title`) sur tablettes et mobiles pour éviter les débordements.
+*   **Sections et Grilles** :
+    *   **Hero Section** : Passer de 2 colonnes à 1 colonne empilée.
+    *   **À propos (`.about-grid`)** : Passer l'image au-dessus ou en dessous du texte en 1 colonne.
+    *   **Services (`.services-grid`, `.sub-services-grid`, `.service-detail-row`)** : Empiler les cartes et les descriptions verticalement.
+    *   **Portfolio (`.portfolio-grid`)** : Passer de 3 colonnes à 2 (tablette) puis 1 (mobile).
+    *   **Blog (`.blog-grid`)** : Adapter les cartes de blog.
+    *   **Footer (`.footer-grid`)** : Empiler les colonnes du pied de page.
+    *   **Modales / Devis** : S'assurer que le formulaire de devis est consultable et scrollable sur petit écran.
+
+### 2. Optimisation des Animations (`script.js` & `mainStyle.css`)
+*   **ScrollReveal** : Vérifier que les paramètres de distance et de durée sont adaptés aux petits écrans (réduire la distance de translation sur mobile pour éviter des effets "pop" trop brusques).
+*   **Hover Effects** : S'assurer que les effets de survol (`hover`) sont gérés gracieusement sur les appareils tactiles (souvent, le `hover` reste "bloqué" sur mobile après un clic).
+*   **Transitions fluides** : Ajouter un `overflow-x: hidden` global strict pour empêcher tout glissement horizontal accidentel du site sur téléphone dû aux animations.
+
+## Plan de Vérification
+
+### Tests automatisés / visuels
+- Simulation des affichages via l'outil de vue Responsive.
+- Clics et interactions sur le menu Hamburger.
+- Vérification du défilement sans débordement horizontal.
+- Déclenchement naturel des animations ScrollReveal lors du défilement vers le bas.
+
+> [!IMPORTANT]
+> **VOTRE VALIDATION EST REQUISE**
+> Aucune logique PHP, aucun nom de variable, et aucun chemin de fichier ne sera modifié. Seules des règles CSS seront ajoutées/ajustées, ainsi que de petites retouches JavaScript pour le menu mobile et les animations.
+> Êtes-vous d'accord avec ce plan pour que je puisse commencer l'intégration du code responsive ?
