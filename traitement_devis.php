@@ -2,6 +2,7 @@
 // Adapter ce chemin si besoin (même dossier que celui utilisé dans prestations.php)
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/util/mailService.php';
+require_once __DIR__ . '/util/delete_file.php';
 
 $pdo = getPDO();
 
@@ -284,8 +285,8 @@ try {
     $pdo->rollBack();
 
     // Si le fichier a été déplacé avant l'échec de l'insertion, on le supprime
-    if ($fichierValide && $cheminFinal && file_exists($cheminFinal)) {
-        unlink($cheminFinal);
+    if ($fichierValide && !empty($cheminPublicFinal) && $cheminPublicFinal !== 'aucun') {
+        deleteFile($cheminPublicFinal);
     }
 
     // En dev tu peux temporairement afficher $e->getMessage() pour déboguer.

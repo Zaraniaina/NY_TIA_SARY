@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../../util/auth_guard.php';
 requireAdmin();
+require_once __DIR__ . '/../../util/delete_file.php';
 
 require_once __DIR__.'/composante/tolbarDto.php';
 $titre = "Gestion des médias";
@@ -15,8 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delet
         $stmt->execute([$idMedia]);
         $path = $stmt->fetchColumn();
         if ($path) {
-            $fullPath = __DIR__ . '/../../' . $path;
-            if (file_exists($fullPath)) unlink($fullPath);
+            deleteFile($path);
         }
         $pdo->prepare('DELETE FROM MEDIA WHERE ID_MEDIA = ?')->execute([$idMedia]);
         $success = 'Média supprimé.';

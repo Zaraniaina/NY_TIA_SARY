@@ -6,7 +6,3 @@ assets/uploads/
 __MACOSX/
 .DS_Store
 *.log
-
-# Fichiers de configuration locaux contenant des informations sensibles
-config/database.php
-config/mail.php

@@ -3,6 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../util/auth_guard.php';
 requireAdmin();
 require_once __DIR__ . '/../../util/file_upload.php';
+require_once __DIR__ . '/../../util/delete_file.php';
 require_once __DIR__.'/composante/tolbarDto.php';
 //on changer le titre
 $titre="Gestion des Blog";
@@ -49,6 +50,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->prepare('UPDATE BLOG SET STATUS_BLOG = "BROUILLON" WHERE ID_BLOG = ?')->execute([$idBlog]);
         $success = "Article mis en brouillon avec succès.";
     } elseif ($action === 'delete' && $idBlog) {
+        // Supprimer l'image de couverture du serveur avant de supprimer en base
+        $stmtImg = $pdo->prepare('SELECT IMAGE_COURVERTURE FROM BLOG WHERE ID_BLOG = ?');
+        $stmtImg->execute([$idBlog]);
+        $imgToDelete = $stmtImg->fetchColumn();
+        if ($imgToDelete) {
+            deleteFile($imgToDelete);
+        }
         $pdo->prepare('DELETE FROM BLOG WHERE ID_BLOG = ?')->execute([$idBlog]);
         $success = "Article supprimé.";
     }
