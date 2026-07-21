@@ -87,6 +87,15 @@ try {
             } else {
                 $pdo->prepare('INSERT INTO blog_stats (id_blog, dislikes) VALUES (?,1) ON DUPLICATE KEY UPDATE dislikes = dislikes + 1')->execute([$id]);
             }
+
+            // create admin notification for new reaction
+            $stmt = $pdo->prepare('SELECT TITRE_BLOG FROM BLOG WHERE ID_BLOG = ? LIMIT 1');
+            $stmt->execute([$id]);
+            $blog = $stmt->fetch(PDO::FETCH_ASSOC);
+            $blogTitle = $blog['TITRE_BLOG'] ?? 'cet article';
+            $reactionLabel = $reaction === 'like' ? 'aimé' : 'détesté';
+            $pdo->prepare('INSERT INTO notification (TYPE_NOTIF, ID_REF_NOTIF, TITRE_NOTIF, MESS_NOTIF, LU_NOTIF, SUP_NOTIF) VALUES (?, ?, ?, ?, 0, 0)')
+                ->execute(['reaction', $id, 'Nouvelle réaction', "Le blog « {$blogTitle} » a été {$reactionLabel}."]);
         } else {
             // existing reaction found
             if ($existing['reaction'] === $reaction) {
@@ -108,6 +117,14 @@ try {
                 } else {
                     $pdo->prepare('UPDATE blog_stats SET dislikes = dislikes + 1, likes = GREATEST(likes - 1, 0) WHERE id_blog = ?')->execute([$id]);
                 }
+
+                $stmt = $pdo->prepare('SELECT TITRE_BLOG FROM BLOG WHERE ID_BLOG = ? LIMIT 1');
+                $stmt->execute([$id]);
+                $blog = $stmt->fetch(PDO::FETCH_ASSOC);
+                $blogTitle = $blog['TITRE_BLOG'] ?? 'cet article';
+                $reactionLabel = $reaction === 'like' ? 'aimé' : 'détesté';
+                $pdo->prepare('INSERT INTO notification (TYPE_NOTIF, ID_REF_NOTIF, TITRE_NOTIF, MESS_NOTIF, LU_NOTIF, SUP_NOTIF) VALUES (?, ?, ?, ?, 0, 0)')
+                    ->execute(['reaction', $id, 'Changement de réaction', "Le blog « {$blogTitle} » a changé de réaction en {$reactionLabel}."]);
             }
         }
     }

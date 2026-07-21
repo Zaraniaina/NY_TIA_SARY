@@ -17,136 +17,151 @@ require_once __DIR__.'/composante/tolbarDto.php';
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="../../css/dashboard.css">
     <style>
-        .notifications-shell {
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
-            margin-top: 8px;
+        /* ===== Panel dropdown façon Facebook, caché par défaut ===== */
+        #notifDropdownPanel {
+            display: none;
+            position: fixed;
+            width: 360px;
+            max-height: 480px;
+            overflow-y: auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
+            z-index: 999;
+            padding: 6px;
         }
-        .notifications-toolbar {
+        #notifDropdownPanel.open {
+            display: block;
+        }
+
+        .notif-panel-header {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
+            gap: 6px;
+            padding: 8px 8px 10px 8px;
+            border-bottom: 1px solid #ececec;
+            margin-bottom: 4px;
         }
-        .notifications-filters {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .notif-filter {
-            border: 1px solid #d8d8d8;
-            background: #f4f4f2;
-            color: #333;
-            padding: 10px 16px;
-            border-radius: 999px;
+        .notif-tab {
+            border: none;
+            background: #f0f2f5;
+            color: #050505;
             font-weight: 700;
+            font-size: 0.85rem;
+            padding: 7px 14px;
+            border-radius: 999px;
             cursor: pointer;
         }
-        .notif-filter.active,
-        .notif-filter:hover {
-            background: #d93d3d;
-            color: #fff;
-            border-color: #d93d3d;
+        .notif-tab.active {
+            background: #e7f3ff;
+            color: #1877f2;
         }
-        .summary-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 14px;
-            border-radius: 999px;
-            background: rgba(55, 125, 73, 0.12);
-            color: #377d49;
-            font-weight: 700;
-        }
+
         .notifications-list {
             display: flex;
             flex-direction: column;
-            gap: 14px;
+            gap: 2px;
         }
-        .notification-card {
-            border: 1px solid #ececec;
-            border-radius: 14px;
-            padding: 16px 18px;
-            background: linear-gradient(135deg, #ffffff 0%, #f8f8f6 100%);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-        }
-        .notification-card-top {
+
+        .fb-notif-item {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             gap: 10px;
-            margin-bottom: 8px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: inherit;
+            position: relative;
+            transition: background 0.15s ease;
         }
-        .notification-title-wrap {
+        .fb-notif-item:hover {
+            background: #f2f2f2;
+        }
+        .fb-notif-item.unread {
+            background: #e7f3ff;
+        }
+        .fb-notif-item.unread:hover {
+            background: #dbeaff;
+        }
+
+        .fb-notif-avatar {
+            position: relative;
+            width: 42px;
+            height: 42px;
+            flex-shrink: 0;
+        }
+        .fb-notif-avatar-circle {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
-            gap: 10px;
+            justify-content: center;
+            background: #e4e6eb;
+            color: #65676b;
+            font-size: 1rem;
         }
-        .notification-dot {
+        .fb-notif-badge {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 0.62rem;
+            border: 2px solid #fff;
+        }
+        .fb-notif-badge.type-devis { background: #f7b928; }
+        .fb-notif-badge.type-reservation { background: #42b72a; }
+        .fb-notif-badge.type-reaction { background: #e41e3f; }
+        .fb-notif-badge.type-default { background: #1877f2; }
+
+        .fb-notif-text {
+            flex: 1;
+            min-width: 0;
+            font-size: 0.85rem;
+            line-height: 1.3;
+            color: #050505;
+        }
+        .fb-notif-text strong {
+            font-weight: 700;
+        }
+        .fb-notif-message {
+            display: block;
+            color: #050505;
+            margin-top: 1px;
+        }
+        .fb-notif-details {
+            display: block;
+            color: #444;
+            font-size: 0.78rem;
+            margin-top: 1px;
+        }
+        .fb-notif-time {
+            display: block;
+            color: #1877f2;
+            font-weight: 700;
+            font-size: 0.75rem;
+            margin-top: 3px;
+        }
+
+        .fb-notif-dot {
             width: 10px;
             height: 10px;
             border-radius: 50%;
-            background: #377d49;
-            box-shadow: 0 0 0 4px rgba(55, 125, 73, 0.16);
+            background: #1877f2;
+            flex-shrink: 0;
+            margin-top: 8px;
         }
-        .notification-card h3 {
-            font-size: 1rem;
-            font-weight: 700;
-            color: #222;
-            margin: 0;
-        }
-        .notification-card {
-            position: relative;
-        }
-        .notification-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-            margin-top: 10px;
-            flex-wrap: wrap;
-        }
-        .notification-time-wrap {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            position: absolute;
-            top: 16px;
-            right: 16px;
-        }
-        .notification-time {
-            font-size: 0.85rem;
-            color: #8a8a8a;
-            font-weight: 600;
-        }
-        .notification-client-details {
-            display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
-            margin-bottom: 6px;
-            color: #444;
-            font-size: 0.95rem;
-        }
-        .notification-message {
-            color: #666;
-            margin: 0;
-            font-size: 0.95rem;
-        }
-        .notification-view-btn {
-            align-self: flex-start;
-            margin-top: 6px;
-            border: none;
-            border-radius: 999px;
-            padding: 8px 14px;
-            background: #d93d3d;
-            color: #fff;
-            font-weight: 700;
-            cursor: pointer;
+
+        .fb-notif-empty {
+            padding: 30px 12px;
+            text-align: center;
+            color: #65676b;
+            font-size: 0.9rem;
         }
     </style>
 </head>
@@ -163,8 +178,7 @@ require_once __DIR__.'/composante/tolbarDto.php';
                 <h2>Notifications</h2>
             </div>
 
-            <div class="notifications-shell">
-                <?php
+            <?php
     $notifications = [];
     try {
         $stmt = $pdo->prepare("
@@ -175,6 +189,7 @@ require_once __DIR__.'/composante/tolbarDto.php';
             LEFT JOIN devis d ON n.TYPE_NOTIF = 'devis' AND n.ID_REF_NOTIF = d.ID
             LEFT JOIN RESERVATION r ON n.TYPE_NOTIF = 'Reservation' AND n.ID_REF_NOTIF = r.ID_RESERVATION
             LEFT JOIN CLIENT c ON c.ID_CLIENT = r.ID_CLIENT
+            LEFT JOIN BLOG b ON n.TYPE_NOTIF = 'reaction' AND n.ID_REF_NOTIF = b.ID_BLOG
             WHERE n.SUP_NOTIF = 0
             ORDER BY n.DATE_NOTIF DESC
         ");
@@ -188,7 +203,8 @@ require_once __DIR__.'/composante/tolbarDto.php';
                 'id_notif' => (int) $row['ID_NOTIF'],
                 'id_ref'   => (int) $row['ID_REF_NOTIF'],
                 'type'     => $row['TYPE_NOTIF'],
-                'title'    => $row['TITRE_NOTIF'],
+                'title'    => $row['TYPE_NOTIF'] === 'reaction' ? 'Nouvelle réaction' : $row['TITRE_NOTIF'],
+                'blog_title' => $row['TYPE_NOTIF'] === 'reaction' ? ($row['TITRE_BLOG'] ?? 'Article') : null,
                 'nom'      => $isResa ? ($row['NOM_RESA'] ?? '')    : ($row['NOM_DEVIS'] ?? ''),
                 'prenom'   => $isResa ? ($row['PRENOM_RESA'] ?? '') : ($row['PRENOM_DEVIS'] ?? ''),
                 'time'     => date('d/m/Y', strtotime($row['DATE_NOTIF'])),
@@ -199,53 +215,88 @@ require_once __DIR__.'/composante/tolbarDto.php';
     } catch (PDOException $e) {
         $notifications = [];
     }
+
+    // Icône + badge selon le type de notification
+    function fb_notif_icon(string $type): string {
+        return match ($type) {
+            'devis' => 'fa-file-invoice',
+            'Reservation' => 'fa-calendar-check',
+            'reaction' => 'fa-heart',
+            default => 'fa-bell',
+        };
+    }
+    function fb_notif_badge_class(string $type): string {
+        return match ($type) {
+            'devis' => 'type-devis',
+            'Reservation' => 'type-reservation',
+            'reaction' => 'type-reaction',
+            default => 'type-default',
+        };
+    }
     ?>
-                <div class="notifications-toolbar">
-                    <div class="notifications-filters" role="tablist" aria-label="Filtres notifications">
-                        <button class="notif-filter active" data-filter="all" type="button">Tous</button>
-                        <button class="notif-filter" data-filter="unread" type="button">Nouvelle notification</button>
-                    </div>
-                    <div class="notifications-summary">
-                        <span class="summary-pill" id="notifCountPill"><i class="fas fa-bell"></i> <span id="notifCount"><?= count($notifications) ?></span> notification<?= count($notifications) > 1 ? 's' : '' ?></span>
-                    </div>
+
+            <!-- Panel dropdown, caché par défaut, ouvert au clic sur la cloche -->
+            <div id="notifDropdownPanel">
+                <div class="notif-panel-header">
+                    <button class="notif-tab active" data-filter="all" type="button">Tout</button>
+                    <button class="notif-tab" data-filter="unread" type="button">Non lu</button>
                 </div>
 
                 <div class="notifications-list">
-                    <?php
-      
-                    foreach ($notifications as $notification):
-                        $cardClass = $notification['unread'] ? 'notification-card unread' : 'notification-card';
-                    ?>
-                        <article class="<?= htmlspecialchars($cardClass) ?>" data-filter="<?= $notification['unread'] ? 'unread' : 'read' ?>">
-                            <div class="notification-card-top">
-                                <div class="notification-title-wrap">
-                                    <h3><?= htmlspecialchars($notification['title']) ?></h3>
-                                </div>
-                            </div>
-                            <div class="notification-body">
-                                <div class="notification-client-details">
-                                    <span><strong>Nom :</strong> <?= htmlspecialchars($notification['nom']) ?></span>
-                                    <span><strong>Prénom :</strong> <?= htmlspecialchars($notification['prenom']) ?></span>
-                                </div>
-                                <p class="notification-message"><?= htmlspecialchars($notification['message']) ?></p>
-                                <div class="notification-footer">
-                                   <?php
-                                    $targetPage = $notification['type'] === 'Reservation' ? 'reservations.php' : 'devis.php';
-                                    ?>
-                                    <a href="<?= $targetPage ?>?id=<?= $notification['id_ref'] ?>&mark_notif=<?= $notification['id_notif'] ?>"
-                                    class="notification-view-btn" style="display:inline-block;text-decoration:none;">Voir</a>
-                                    <span class="notification-time-wrap">
-                                        <?php if ($notification['unread']): ?>
-                                            <span class="notification-dot" aria-hidden="true"></span>
-                                        <?php endif; ?>
-                                        <span class="notification-time"><?= htmlspecialchars($notification['time']) ?></span>
+                    <?php if (empty($notifications)): ?>
+                        <div class="fb-notif-empty">Aucune notification pour le moment</div>
+                    <?php else: ?>
+                        <?php foreach ($notifications as $notification):
+                            $isUnread = $notification['unread'];
+                            $itemClass = $isUnread ? 'fb-notif-item unread' : 'fb-notif-item';
+
+                            if ($notification['type'] === 'Reservation') {
+                                $targetPage = 'reservations.php';
+                            } elseif ($notification['type'] === 'devis') {
+                                $targetPage = 'devis.php';
+                            } elseif ($notification['type'] === 'reaction') {
+                                $targetPage = 'blog.php';
+                            } else {
+                                $targetPage = 'notifications.php';
+                            }
+
+                            $icon = fb_notif_icon($notification['type']);
+                            $badgeClass = fb_notif_badge_class($notification['type']);
+                        ?>
+                            <a href="<?= $targetPage ?>?id=<?= $notification['id_ref'] ?>&mark_notif=<?= $notification['id_notif'] ?>"
+                               class="<?= htmlspecialchars($itemClass) ?>"
+                               data-filter="<?= $isUnread ? 'unread' : 'read' ?>">
+
+                                <div class="fb-notif-avatar">
+                                    <div class="fb-notif-avatar-circle">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <span class="fb-notif-badge <?= $badgeClass ?>">
+                                        <i class="fas <?= $icon ?>"></i>
                                     </span>
                                 </div>
-                            </div>
-                        </article>
-                    <?php endforeach; ?>
+
+                                <div class="fb-notif-text">
+                                    <?php if ($notification['type'] === 'reaction'): ?>
+                                        <span><strong><?= htmlspecialchars($notification['title']) ?></strong></span>
+                                        <span class="fb-notif-details">Article : <?= htmlspecialchars($notification['blog_title'] ?? 'Article inconnu') ?></span>
+                                    <?php else: ?>
+                                        <span><strong><?= htmlspecialchars(trim($notification['prenom'].' '.$notification['nom'])) ?></strong> — <?= htmlspecialchars($notification['title']) ?></span>
+                                    <?php endif; ?>
+
+                                    <span class="fb-notif-message"><?= htmlspecialchars($notification['message']) ?></span>
+                                    <span class="fb-notif-time"><?= htmlspecialchars($notification['time']) ?></span>
+                                </div>
+
+                                <?php if ($isUnread): ?>
+                                    <span class="fb-notif-dot" aria-hidden="true"></span>
+                                <?php endif; ?>
+                            </a>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
             </div>
+
         </div>
     </div>
 </div>
@@ -254,24 +305,44 @@ require_once __DIR__.'/composante/tolbarDto.php';
 const toggle  = document.getElementById('sidebarToggle');
 const sidebar = document.getElementById('sidebar');
 const overlay = document.getElementById('sidebarOverlay');
-const filters = document.querySelectorAll('.notif-filter');
-const cards = document.querySelectorAll('.notification-card');
 
 toggle?.addEventListener('click', () => { sidebar.classList.toggle('open'); overlay.classList.toggle('open'); });
 overlay?.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('open'); });
 
-filters.forEach((button) => {
-    button.addEventListener('click', () => {
-        filters.forEach((item) => item.classList.remove('active'));
-        button.classList.add('active');
+// ===== Onglets Tout / Non lu à l'intérieur du panel =====
+const tabs = document.querySelectorAll('.notif-tab');
+const items = document.querySelectorAll('.fb-notif-item');
 
-        const selected = button.dataset.filter || 'all';
-        cards.forEach((card) => {
-            const shouldShow = selected === 'all' || card.dataset.filter === 'unread';
-            card.style.display = shouldShow ? 'block' : 'none';
+tabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+        tabs.forEach((t) => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        const selected = tab.dataset.filter || 'all';
+        items.forEach((item) => {
+            const show = selected === 'all' || item.dataset.filter === 'unread';
+            item.style.display = show ? 'flex' : 'none';
         });
     });
 });
+
+// ===== Positionne le panel directement sous la cloche =====
+function positionNotifPanel() {
+    const bell = document.getElementById('notifBellBtn');
+    const panel = document.getElementById('notifDropdownPanel');
+    if (!bell || !panel) return;
+
+    const rect = bell.getBoundingClientRect();
+    const panelWidth = panel.offsetWidth || 360;
+
+    let left = rect.left + rect.width / 2 - panelWidth + 50;
+    if (left < 8) left = 8;
+
+    panel.style.top = (rect.bottom + 10) + 'px';
+    panel.style.left = left + 'px';
+}
+
+window.addEventListener('resize', positionNotifPanel);
 </script>
 </body>
 </html>
