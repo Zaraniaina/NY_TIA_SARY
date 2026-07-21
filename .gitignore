@@ -1,0 +1,12 @@
+# Ignorer les dossiers contenant des fichiers médias uploadés par les utilisateurs
+assets/uploads/
+
+# Ignorer les dossiers systèmes et de configuration de l'éditeur de code
+.vscode/
+__MACOSX/
+.DS_Store
+*.log
+
+# Fichiers de configuration locaux contenant des informations sensibles
+config/database.php
+config/mail.php

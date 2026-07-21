@@ -1,16 +1,16 @@
 <?php
 declare(strict_types=1);
 
-
 function getPDO(): PDO
 {
     static $pdo = null;
 
     if ($pdo === null) {
+        // Remplacez ces valeurs par celles de votre serveur de production
         $host = 'localhost';
-        $db   = 'ny_tia_sary_db';
-        $user = 'root';
-        $pass = '';
+        $db   = 'nom_de_la_base';
+        $user = 'utilisateur_db';
+        $pass = 'mot_de_passe_db';
         $charset = 'utf8mb4';
 
         $dsn = "mysql:host={$host};dbname={$db};charset={$charset}";
@@ -32,5 +32,4 @@ function getPDO(): PDO
 
     return $pdo;
 }
-
 ?>
