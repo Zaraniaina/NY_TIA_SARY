@@ -1,20 +1,26 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../../util/auth_guard.php';
+require_once __DIR__ . '/../../util/prg_helper.php';
 requireAdmin();
 
 require_once __DIR__.'/composante/tolbarDto.php';
 $titre = "Témoignages clients";
-$success = $error = '';
 
-// ── Suppression d'un témoignage ───────────────────────────────
+// ── TRAITEMENT POST (PRG Pattern) ──────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
     $idTemo = (int) ($_POST['id_temoignage'] ?? 0);
     if ($idTemo) {
         $pdo->prepare('DELETE FROM TEMOIGNAGE WHERE ID_TEMOIGNAGE = ?')->execute([$idTemo]);
-        $success = 'Témoignage supprimé.';
+        prg_set_message('success', 'Témoignage supprimé.');
+    } else {
+        prg_set_message('error', 'Témoignage invalide.');
     }
+    prg_redirect();
 }
+
+// ── Récupérer les messages PRG pour affichage ──────────────────
+$prgMessages = prg_get_messages();
 
 // ── Liste des témoignages ─────────────────────────────────────
 $temoignages = $pdo->query(
@@ -151,48 +157,15 @@ toggle?.addEventListener('click', () => { sidebar.classList.toggle('open'); over
 overlay?.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('open'); });
 </script>
 
-<!-- Toastify JS -->
+<!-- Toastify pour messages PRG -->
 <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<?php if (!empty($prgMessages)): ?>
 <script>
 window.addEventListener('DOMContentLoaded', () => {
-    const errorMsg = <?php echo json_encode($error ?? '', JSON_UNESCAPED_UNICODE); ?>;
-    const successMsg = <?php echo json_encode($success ?? '', JSON_UNESCAPED_UNICODE); ?>;
-    
-    if (errorMsg) {
-        Toastify({
-            text: errorMsg,
-            duration: 6000,
-            gravity: "top",
-            position: "right",
-            close: true,
-            style: {
-                background: "linear-gradient(135deg, #d93d3d, #a82c2c)",
-                borderRadius: "6px",
-                fontFamily: "system-ui, -apple-system, sans-serif",
-                fontWeight: "600",
-                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.25)"
-            }
-        }).showToast();
-    }
-    
-    if (successMsg) {
-        Toastify({
-            text: successMsg,
-            duration: 6000,
-            gravity: "top",
-            position: "right",
-            close: true,
-            style: {
-                background: "linear-gradient(135deg, #377d49, #2a5c3a)",
-                borderRadius: "6px",
-                fontFamily: "system-ui, -apple-system, sans-serif",
-                fontWeight: "600",
-                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.25)"
-            }
-        }).showToast();
-    }
+    <?= prg_render_toasts($prgMessages) ?>
 });
 </script>
+<?php endif; ?>
 
 </body>
 </html>

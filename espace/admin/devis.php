@@ -1,40 +1,45 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../../util/auth_guard.php';
+require_once __DIR__ . '/../../util/prg_helper.php';
 requireAdmin();
 
 require_once __DIR__.'/composante/tolbarDto.php';
 //on changer le titre
 $titre="Gestion des devis";
-$success = $error = '';
 
-// ── Traitement actions ────────────────────────────────────────
+// ── TRAITEMENT POST (PRG Pattern) ──────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action  = $_POST['action'] ?? '';
     $idDevis = (int) ($_POST['id'] ?? 0);
 
     if ($action === 'valider' && $idDevis) {
-    // Vérifier qu'une réservation existe (on crée un contrat symbolique)
-    $stmt = $pdo->prepare('SELECT * FROM DEVIS WHERE ID = ?');
-    $stmt->execute([$idDevis]);
-    $devis = $stmt->fetch();
-    $success = "Devis #$idDevis marqué comme validé. Un contrat devra être associé à une réservation.";
-} elseif ($action === 'supprimer' && $idDevis) {
-    try {
-        $pdo->beginTransaction();
+        // Vérifier qu'une réservation existe (on crée un contrat symbolique)
+        $stmt = $pdo->prepare('SELECT * FROM DEVIS WHERE ID = ?');
+        $stmt->execute([$idDevis]);
+        $devis = $stmt->fetch();
+        prg_set_message('success', "Devis #$idDevis marqué comme validé. Un contrat devra être associé à une réservation.");
+        prg_redirect();
+    } elseif ($action === 'supprimer' && $idDevis) {
+        try {
+            $pdo->beginTransaction();
 
-        $pdo->prepare('DELETE FROM DEVIS_CATEGORIES WHERE ID_DEVIS = ?')->execute([$idDevis]);
-        $pdo->prepare('DELETE FROM PIECES_JOINTES WHERE ID = ?')->execute([$idDevis]);
-        $pdo->prepare('DELETE FROM DEVIS WHERE ID = ?')->execute([$idDevis]);
+            $pdo->prepare('DELETE FROM DEVIS_CATEGORIES WHERE ID_DEVIS = ?')->execute([$idDevis]);
+            $pdo->prepare('DELETE FROM PIECES_JOINTES WHERE ID = ?')->execute([$idDevis]);
+            $pdo->prepare('DELETE FROM DEVIS WHERE ID = ?')->execute([$idDevis]);
 
-        $pdo->commit();
-        $success = "Devis #$idDevis supprimé.";
-    } catch (PDOException $e) {
-        $pdo->rollBack();
-        $error = "Erreur lors de la suppression du devis.";
+            $pdo->commit();
+            prg_set_message('success', "Devis #$idDevis supprimé.");
+        } catch (PDOException $e) {
+            $pdo->rollBack();
+            prg_set_message('error', "Erreur lors de la suppression du devis.");
+        }
+        prg_redirect();
     }
 }
-}
+
+// ── Récupérer les messages PRG pour affichage ──────────────────
+$prgMessages = prg_get_messages();
 
 // ── Liste des devis ───────────────────────────────────────────
 $devis = $pdo->query(
@@ -107,25 +112,25 @@ $selectedDevisId = (int) ($_GET['id'] ?? 0);
                     <h3><i class="fas fa-file-alt" style="color:var(--primary-green);margin-right:8px;"></i> Demandes de devis reçues</h3>
                     <span class="badge badge-waiting" id="devisCount"><?= count($devis) ?></span>
                 </div>
-                                <div class="dash-card-body">
-                                    <div style="padding:16px 20px;">
-                        <div class="dash-form-group" style="position:relative;margin-bottom:0;">
-                            <i class="fas fa-search" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#999;"></i>
-                            <input type="text" id="searchDevis" class="dash-input"
-                                style="padding-left:38px;padding-right:14px;width:100%;box-sizing:border-box;border-radius:8px;"
-                                placeholder="Rechercher par client, téléphone, prestation, catégorie...">
-                        </div>
+                        <div class="dash-card-body">
+                            <div style="padding:16px 20px;">
+                    <div class="dash-form-group" style="position:relative;margin-bottom:0;">
+                        <i class="fas fa-search" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#999;"></i>
+                        <input type="text" id="searchDevis" class="dash-input"
+                            style="padding-left:38px;padding-right:14px;width:100%;box-sizing:border-box;border-radius:8px;"
+                            placeholder="Rechercher par client, téléphone, prestation, catégorie...">
                     </div>
-                    <?php if (empty($devis)): ?>
-                        <div class="empty-state"><i class="fas fa-file-times"></i><p>Aucune demande de devis pour le moment.</p></div>
-                    <?php else: ?>
-                    <div class="table-responsive">
-                        <table class="dash-table" id="devisTable">
-                            <thead>
-                                <tr><th>#</th><th>Client</th><th>Téléphone</th><th>Prestation</th><th>Catégorie</th><th>Budget</th><th>Date souhaitée</th><th>PJ</th><th>Actions</th></tr>
-                            </thead>
-                            <tbody>
-                            <?php foreach ($devis as $d): ?>
+                </div>
+                <?php if (empty($devis)): ?>
+                    <div class="empty-state"><i class="fas fa-file-times"></i><p>Aucune demande de devis pour le moment.</p></div>
+                <?php else: ?>
+                <div class="table-responsive">
+                    <table class="dash-table" id="devisTable">
+                        <thead>
+                            <tr><th>#</th><th>Client</th><th>Téléphone</th><th>Prestation</th><th>Catégorie</th><th>Budget</th><th>Date souhaitée</th><th>PJ</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody>
+                        <?php foreach ($devis as $d): ?>
                         <?php
                         $isSelected     = $selectedDevisId > 0 && (int)$d['ID'] === $selectedDevisId;
                         $categoriesArr  = !empty($d['CATEGORIES_LIST']) ? explode('||', $d['CATEGORIES_LIST']) : [];
@@ -255,9 +260,8 @@ $selectedDevisId = (int) ($_GET['id'] ?? 0);
                                 </tr>
                             </tbody>
                         </table>
-                    </div>
-                    <?php endif; ?>
                 </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -323,48 +327,20 @@ searchDevis?.addEventListener('input', () => {
 });
 </script>
 
-<!-- Toastify JS -->
+<!-- Toastify pour messages PRG -->
 <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<?php if (!empty($prgMessages)): ?>
 <script>
 window.addEventListener('DOMContentLoaded', () => {
-    const errorMsg = <?php echo json_encode($error ?? '', JSON_UNESCAPED_UNICODE); ?>;
-    const successMsg = <?php echo json_encode($success ?? '', JSON_UNESCAPED_UNICODE); ?>;
-    
-    if (errorMsg) {
-        Toastify({
-            text: errorMsg,
-            duration: 6000,
-            gravity: "top",
-            position: "right",
-            close: true,
-            style: {
-                background: "linear-gradient(135deg, #d93d3d, #a82c2c)",
-                borderRadius: "6px",
-                fontFamily: "system-ui, -apple-system, sans-serif",
-                fontWeight: "600",
-                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.25)"
-            }
-        }).showToast();
-    }
-    
-    if (successMsg) {
-        Toastify({
-            text: successMsg,
-            duration: 6000,
-            gravity: "top",
-            position: "right",
-            close: true,
-            style: {
-                background: "linear-gradient(135deg, #377d49, #2a5c3a)",
-                borderRadius: "6px",
-                fontFamily: "system-ui, -apple-system, sans-serif",
-                fontWeight: "600",
-                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.25)"
-            }
-        }).showToast();
-    }
+    <?= prg_render_toasts($prgMessages) ?>
+    // Nettoyer l'URL
+    const url = new URL(window.location);
+    url.searchParams.delete('id');
+    url.searchParams.delete('mark_notif');
+    window.history.replaceState({}, '', url);
 });
 </script>
+<?php endif; ?>
 
 </body>
 </html>

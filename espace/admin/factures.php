@@ -1,71 +1,86 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../../util/auth_guard.php';
+require_once __DIR__ . '/../../util/prg_helper.php';
 requireAdmin();
 
 require_once __DIR__.'/composante/tolbarDto.php';
 $titre = "Gestion des factures";
-$success = $error = '';
+
+// ── TRAITEMENT POST (PRG Pattern) ──────────────────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+    
+    // ── Création d'une facture ────────────────────────────────────
+    if ($action === 'create') {
+        $idContrat = (int) ($_POST['id_contrat'] ?? 0);
+
+        if (!$idContrat) {
+            prg_set_message('error', 'Veuillez sélectionner un contrat.');
+        } else {
+            // Vérifier qu'une facture n'existe pas déjà
+            $chk = $pdo->prepare('SELECT COUNT(*) FROM FACTURE WHERE ID_CONTRAT = ?');
+            $chk->execute([$idContrat]);
+            if ((int)$chk->fetchColumn() > 0) {
+                prg_set_message('error', 'Une facture existe déjà pour ce contrat.');
+            } else {
+                // Générer un numéro unique FAC-YYYY-XXXX
+                $annee  = date('Y');
+                $cntStmt = $pdo->query("SELECT COUNT(*) FROM FACTURE WHERE YEAR(DATE_FACTURE) = $annee");
+                $cnt    = (int)$cntStmt->fetchColumn() + 1;
+                $numFac = 'FAC-' . $annee . '-' . str_pad((string)$cnt, 4, '0', STR_PAD_LEFT);
+
+                // Récupérer le montant total depuis le contrat -> réservation -> catégories
+                $stmtPrice = $pdo->prepare(
+                    'SELECT SUM(rc.PRIX) 
+                     FROM CONTRAT ct
+                     JOIN RESERVATION r ON ct.ID_RESERVATION = r.ID_RESERVATION
+                     LEFT JOIN RESERVATION_CATEGORIE rc ON rc.ID_RESERVATION = r.ID_RESERVATION
+                     WHERE ct.ID_CONTRAT = ?'
+                );
+                $stmtPrice->execute([$idContrat]);
+                $montant = (int)($stmtPrice->fetchColumn() ?: 0);
+
+                $pdo->prepare("INSERT INTO FACTURE (ID_CONTRAT, NUM_FACTURE, STATUS_FACTURE, MONTANT_FACTURE, DATE_FACTURE) VALUES (?, ?, 'NON PAYEE', ?, CURDATE())")
+                    ->execute([$idContrat, $numFac, $montant]);
+                prg_set_message('success', "Facture $numFac créée avec succès.");
+            }
+        }
+        prg_redirect();
+    }
+
+    // ── Modification du statut d'une facture ─────────────────────────
+    if ($action === 'update_status') {
+        $idFac  = (int) ($_POST['id_facture'] ?? 0);
+        $status = trim($_POST['status'] ?? '');
+        if ($idFac && in_array($status, ['PAYEE', 'NON PAYEE'], true)) {
+            $pdo->prepare('UPDATE FACTURE SET STATUS_FACTURE = ? WHERE ID_FACTURE = ?')
+                ->execute([$status, $idFac]);
+            prg_set_message('success', 'Le statut de la facture a été mis à jour avec succès.');
+        } else {
+            prg_set_message('error', 'Données invalides.');
+        }
+        prg_redirect();
+    }
+
+    // ── Suppression d'une facture ─────────────────────────────────
+    if ($action === 'delete') {
+        $idFac = (int) ($_POST['id_facture'] ?? 0);
+        if ($idFac) {
+            $pdo->prepare('DELETE FROM FACTURE WHERE ID_FACTURE = ?')->execute([$idFac]);
+            prg_set_message('success', 'Facture supprimée.');
+        } else {
+            prg_set_message('error', 'Facture invalide.');
+        }
+        prg_redirect();
+    }
+}
+
+// ── Récupérer les messages PRG pour affichage ──────────────────
+$prgMessages = prg_get_messages();
 
 // ── Pré-sélection depuis l'URL (venant de contrats.php) ───────
 $preselContrat = (int) ($_GET['id_contrat'] ?? 0);
-
-// ── Création d'une facture ────────────────────────────────────
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'create') {
-    $idContrat = (int) ($_POST['id_contrat'] ?? 0);
-
-    if (!$idContrat) {
-        $error = 'Veuillez sélectionner un contrat.';
-    } else {
-        // Vérifier qu'une facture n'existe pas déjà
-        $chk = $pdo->prepare('SELECT COUNT(*) FROM FACTURE WHERE ID_CONTRAT = ?');
-        $chk->execute([$idContrat]);
-        if ((int)$chk->fetchColumn() > 0) {
-            $error = 'Une facture existe déjà pour ce contrat.';
-        } else {
-            // Générer un numéro unique FAC-YYYY-XXXX
-            $annee  = date('Y');
-            $cntStmt = $pdo->query("SELECT COUNT(*) FROM FACTURE WHERE YEAR(DATE_FACTURE) = $annee");
-            $cnt    = (int)$cntStmt->fetchColumn() + 1;
-            $numFac = 'FAC-' . $annee . '-' . str_pad((string)$cnt, 4, '0', STR_PAD_LEFT);
-
-            // Récupérer le montant total depuis le contrat -> réservation -> catégories
-            $stmtPrice = $pdo->prepare(
-                'SELECT SUM(rc.PRIX) 
-                 FROM CONTRAT ct
-                 JOIN RESERVATION r ON ct.ID_RESERVATION = r.ID_RESERVATION
-                 LEFT JOIN RESERVATION_CATEGORIE rc ON rc.ID_RESERVATION = r.ID_RESERVATION
-                 WHERE ct.ID_CONTRAT = ?'
-            );
-            $stmtPrice->execute([$idContrat]);
-            $montant = (int)($stmtPrice->fetchColumn() ?: 0);
-
-            $pdo->prepare("INSERT INTO FACTURE (ID_CONTRAT, NUM_FACTURE, STATUS_FACTURE, MONTANT_FACTURE, DATE_FACTURE) VALUES (?, ?, 'NON PAYEE', ?, CURDATE())")
-                ->execute([$idContrat, $numFac, $montant]);
-            $success = "Facture $numFac créée avec succès.";
-        }
-    }
-}
-
-// ── Modification du statut d'une facture ─────────────────────────
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_status') {
-    $idFac  = (int) ($_POST['id_facture'] ?? 0);
-    $status = trim($_POST['status'] ?? '');
-    if ($idFac && in_array($status, ['PAYEE', 'NON PAYEE'], true)) {
-        $pdo->prepare('UPDATE FACTURE SET STATUS_FACTURE = ? WHERE ID_FACTURE = ?')
-            ->execute([$status, $idFac]);
-        $success = 'Le statut de la facture a été mis à jour avec succès.';
-    }
-}
-
-// ── Suppression d'une facture ─────────────────────────────────
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
-    $idFac = (int) ($_POST['id_facture'] ?? 0);
-    if ($idFac) {
-        $pdo->prepare('DELETE FROM FACTURE WHERE ID_FACTURE = ?')->execute([$idFac]);
-        $success = 'Facture supprimée.';
-    }
-}
 
 // ── Contrats sans facture (pour le formulaire) ────────────────
 $contratsSansFac = $pdo->query(
@@ -83,12 +98,12 @@ $contratsSansFac = $pdo->query(
 // ── Recherche et Liste complète des factures ───────────────────
 $search = trim($_GET['q'] ?? '');
 $sql = 'SELECT f.*, ct.DATE_CONTRAT, r.DATE_RESERVATION, r.LIEU_RESERVATION,
-               p.LIB_PRESTATION, c.NOM_CLIENT, c.PRENOM_CLIENT
-        FROM FACTURE f
-        JOIN CONTRAT ct ON f.ID_CONTRAT = ct.ID_CONTRAT
-        JOIN RESERVATION r ON ct.ID_RESERVATION = r.ID_RESERVATION
-        JOIN PRESTATIONS p ON r.ID_PRESTATION = p.ID_PRESTATION
-        JOIN CLIENT c ON r.ID_CLIENT = c.ID_CLIENT';
+                p.LIB_PRESTATION, c.NOM_CLIENT, c.PRENOM_CLIENT
+         FROM FACTURE f
+         JOIN CONTRAT ct ON f.ID_CONTRAT = ct.ID_CONTRAT
+         JOIN RESERVATION r ON ct.ID_RESERVATION = r.ID_RESERVATION
+         JOIN PRESTATIONS p ON r.ID_PRESTATION = p.ID_PRESTATION
+         JOIN CLIENT c ON r.ID_CLIENT = c.ID_CLIENT';
 
 $params = [];
 if ($search !== '') {
@@ -225,48 +240,20 @@ toggle?.addEventListener('click', () => { sidebar.classList.toggle('open'); over
 overlay?.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('open'); });
 </script>
 
-<!-- Toastify JS -->
+<!-- Toastify pour messages PRG -->
 <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<?php if (!empty($prgMessages)): ?>
 <script>
 window.addEventListener('DOMContentLoaded', () => {
-    const errorMsg = <?php echo json_encode($error ?? '', JSON_UNESCAPED_UNICODE); ?>;
-    const successMsg = <?php echo json_encode($success ?? '', JSON_UNESCAPED_UNICODE); ?>;
-    
-    if (errorMsg) {
-        Toastify({
-            text: errorMsg,
-            duration: 6000,
-            gravity: "top",
-            position: "right",
-            close: true,
-            style: {
-                background: "linear-gradient(135deg, #d93d3d, #a82c2c)",
-                borderRadius: "6px",
-                fontFamily: "system-ui, -apple-system, sans-serif",
-                fontWeight: "600",
-                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.25)"
-            }
-        }).showToast();
-    }
-    
-    if (successMsg) {
-        Toastify({
-            text: successMsg,
-            duration: 6000,
-            gravity: "top",
-            position: "right",
-            close: true,
-            style: {
-                background: "linear-gradient(135deg, #377d49, #2a5c3a)",
-                borderRadius: "6px",
-                fontFamily: "system-ui, -apple-system, sans-serif",
-                fontWeight: "600",
-                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.25)"
-            }
-        }).showToast();
-    }
+    <?= prg_render_toasts($prgMessages) ?>
+    // Nettoyer l'URL
+    const url = new URL(window.location);
+    url.searchParams.delete('q');
+    url.searchParams.delete('id_contrat');
+    window.history.replaceState({}, '', url);
 });
 </script>
+<?php endif; ?>
 
 </body>
 </html>

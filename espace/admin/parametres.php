@@ -1,24 +1,15 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../../util/auth_guard.php';
+require_once __DIR__ . '/../../util/prg_helper.php';
 requireAdmin();
 require_once __DIR__ . '/../../util/file_upload.php';
 
 require_once __DIR__.'/composante/tolbarDto.php';
 //on changer le titre
 $titre="Paramètre";
-$success  = '';
-$error    = '';
-$showSuccessModal = false;
-$successModalTitle = '';
-$successModalMessage = '';
 
-// Get authId for password operations
-$stmtAuthId = $pdo->prepare("SELECT ID_AUTH FROM CLIENT WHERE ID_CLIENT = ?");
-$stmtAuthId->execute([$adminId]);
-$authId = (int) $stmtAuthId->fetchColumn();
-
-// --- GESTION DES REQUÊTES POST ---
+// ── TRAITEMENT POST (PRG Pattern) ──────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     
     // ACTION : Gestion des types de blog (CRUD)
@@ -28,35 +19,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $libType = trim($_POST['lib_type_blog'] ?? '');
 
         if ($subAction === 'create') {
-            if (!$libType) {
-                $error = 'Le nom du type de blog est requis.';
-            } else {
+            if (!$libType) { prg_set_message('error', 'Le nom du type de blog est requis.'); }
+            else {
                 $pdo->prepare('INSERT INTO TYPE_BLOG (LIB_TYPE_BLOG) VALUES (?)')->execute([$libType]);
-                $success = "Type de blog « $libType » ajouté.";
+                prg_set_message('success', "Type de blog « $libType » ajouté.");
             }
+            prg_redirect();
         } elseif ($subAction === 'edit' && $idType) {
-            if (!$libType) {
-                $error = 'Le nom du type de blog est requis.';
-            } else {
+            if (!$libType) { prg_set_message('error', 'Le nom du type de blog est requis.'); }
+            else {
                 $pdo->prepare('UPDATE TYPE_BLOG SET LIB_TYPE_BLOG = ? WHERE ID_TYPE_BLOG = ?')->execute([$libType, $idType]);
-                $success = "Type de blog mis à jour.";
+                prg_set_message('success', "Type de blog mis à jour.");
             }
+            prg_redirect();
         } elseif ($subAction === 'delete' && $idType) {
-            // Vérifier si des articles utilisent ce type
             $stmt = $pdo->prepare('SELECT COUNT(*) FROM BLOG WHERE ID_TYPE_BLOG = ?');
             $stmt->execute([$idType]);
             $count = (int) $stmt->fetchColumn();
             if ($count > 0) {
-                $error = "Impossible de supprimer : $count article(s) utilisent ce type de blog.";
+                prg_set_message('error', "Impossible de supprimer : $count article(s) utilisent ce type de blog.");
             } else {
                 $pdo->prepare('DELETE FROM TYPE_BLOG WHERE ID_TYPE_BLOG = ?')->execute([$idType]);
-                $success = "Type de blog supprimé.";
+                prg_set_message('success', "Type de blog supprimé.");
             }
+            prg_redirect();
         }
     }
 
     // ACTION : Mettre à jour les informations personnelles
-    elseif ($_POST['action'] === 'update_info') {
+    if ($_POST['action'] === 'update_info') {
         $nom    = trim($_POST['nom'] ?? '');
         $prenom = trim($_POST['prenom'] ?? '');
         $tel    = trim($_POST['telephone'] ?? '');
@@ -66,7 +57,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             try {
                 $pdo->beginTransaction();
 
-                // 1. Update EMAIL in AUTHENTIFICATION (Check for uniqueness)
                 $stmtCheck = $pdo->prepare("SELECT ID_AUTH FROM AUTHENTIFICATION WHERE EMAIL_AUTH = ? AND ID_AUTH != ?");
                 $stmtCheck->execute([$email, $authId]);
                 if ($stmtCheck->fetch()) {
@@ -76,39 +66,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $stmtUpdateAuth = $pdo->prepare("UPDATE AUTHENTIFICATION SET EMAIL_AUTH = ? WHERE ID_AUTH = ?");
                 $stmtUpdateAuth->execute([$email, $authId]);
 
-                // 2. Update CLIENT info (admin is stored in CLIENT table)
                 $stmtUpdateClient = $pdo->prepare("UPDATE CLIENT SET NOM_CLIENT = ?, PRENOM_CLIENT = ?, TEL_CLIENT = ? WHERE ID_CLIENT = ?");
                 $stmtUpdateClient->execute([$nom, $prenom, $tel, $adminId]);
 
                 $pdo->commit();
                 
-                // Mettre à jour la session
                 $_SESSION['admin_nom'] = $nom;
                 $_SESSION['admin_prenom'] = $prenom;
                 $_SESSION['admin_email'] = $email;
 
-                $success = "Vos informations ont été mises à jour avec succès.";
-                $showSuccessModal = true;
-                $successModalTitle = "Information mise à jour";
-                $successModalMessage = "Vos informations personnelles ont été modifiées avec succès.";
+                prg_set_message('success', "Vos informations ont été mises à jour avec succès.");
             } catch (Exception $e) {
                 $pdo->rollBack();
-                $error = "Erreur : " . $e->getMessage();
+                prg_set_message('error', "Erreur : " . $e->getMessage());
             }
         } else {
-            $error = "Veuillez remplir tous les champs obligatoires.";
+            prg_set_message('error', "Veuillez remplir tous les champs obligatoires.");
         }
+        prg_redirect();
     }
 
     // ACTION : Mettre à jour le mot de passe
-    elseif ($_POST['action'] === 'update_password') {
+    if ($_POST['action'] === 'update_password') {
         $old_pass = $_POST['old_password'] ?? '';
         $new_pass = $_POST['new_password'] ?? '';
         $confirm_pass = $_POST['confirm_password'] ?? '';
 
         if ($old_pass && $new_pass && $confirm_pass) {
             if ($new_pass === $confirm_pass) {
-                // Fetch current password hash
                 $stmt = $pdo->prepare("SELECT MDP_AUTH FROM AUTHENTIFICATION WHERE ID_AUTH = ?");
                 $stmt->execute([$authId]);
                 $auth = $stmt->fetch();
@@ -117,32 +102,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     $new_hash = password_hash($new_pass, PASSWORD_DEFAULT);
                     $stmtUpdate = $pdo->prepare("UPDATE AUTHENTIFICATION SET MDP_AUTH = ? WHERE ID_AUTH = ?");
                     if ($stmtUpdate->execute([$new_hash, $authId])) {
-                        $success = "Votre mot de passe a été modifié avec succès.";
-                        $showSuccessModal = true;
-                        $successModalTitle = "Mot de passe modifié";
-                        $successModalMessage = "Votre mot de passe a été modifié avec succès.";
+                        prg_set_message('success', "Votre mot de passe a été modifié avec succès.");
                     } else {
-                        $error = "Une erreur est survenue lors de la modification du mot de passe.";
+                        prg_set_message('error', "Une erreur est survenue lors de la modification du mot de passe.");
                     }
                 } else {
-                    $error = "L'ancien mot de passe est incorrect.";
+                    prg_set_message('error', "L'ancien mot de passe est incorrect.");
                 }
             } else {
-                $error = "Les nouveaux mots de passe ne correspondent pas.";
+                prg_set_message('error', "Les nouveaux mots de passe ne correspondent pas.");
             }
         } else {
-            $error = "Veuillez remplir tous les champs obligatoires.";
+            prg_set_message('error', "Veuillez remplir tous les champs obligatoires.");
         }
+        prg_redirect();
     }
 
     // ACTION : Uploader / Changer la photo de profil
-    elseif ($_POST['action'] === 'update_photo' && isset($_FILES['photo_profil'])) {
+    if ($_POST['action'] === 'update_photo' && isset($_FILES['photo_profil'])) {
         $result = uploadFile($_FILES['photo_profil'], 'avatars', 'image');
         
         if ($result['success']) {
             $newPath = $result['path'];
             
-            // Fetch old photo to delete it if it's not the default
             $stmt = $pdo->prepare("SELECT PHOTO_CLIENT FROM CLIENT WHERE ID_CLIENT = ?");
             $stmt->execute([$adminId]);
             $client = $stmt->fetch();
@@ -153,20 +135,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             
             $stmtUpdate = $pdo->prepare("UPDATE CLIENT SET PHOTO_CLIENT = ? WHERE ID_CLIENT = ?");
             if ($stmtUpdate->execute([$newPath, $adminId])) {
-                $success = "Votre photo de profil a été mise à jour.";
-                $showSuccessModal = true;
-                $successModalTitle = "Photo mise à jour";
-                $successModalMessage = "Votre photo de profil a été modifiée avec succès.";
+                prg_set_message('success', "Votre photo de profil a été mise à jour.");
             } else {
-                $error = "Erreur lors de la mise à jour de la base de données.";
+                prg_set_message('error', "Erreur lors de la mise à jour de la base de données.");
             }
         } else {
-            $error = $result['error'];
+            prg_set_message('error', $result['error']);
         }
+        prg_redirect();
     }
 
     // ACTION : Supprimer la photo de profil
-    elseif ($_POST['action'] === 'delete_photo') {
+    if ($_POST['action'] === 'delete_photo') {
         $stmt = $pdo->prepare("SELECT PHOTO_CLIENT FROM CLIENT WHERE ID_CLIENT = ?");
         $stmt->execute([$adminId]);
         $client = $stmt->fetch();
@@ -175,20 +155,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             deleteUploadedFile($client['PHOTO_CLIENT']);
             $stmtUpdate = $pdo->prepare("UPDATE CLIENT SET PHOTO_CLIENT = 'assets/images/avatar.png' WHERE ID_CLIENT = ?");
             if ($stmtUpdate->execute([$adminId])) {
-                $success = "Votre photo de profil a été supprimée.";
-                $showSuccessModal = true;
-                $successModalTitle = "Photo supprimée";
-                $successModalMessage = "Votre photo de profil a été supprimée avec succès.";
+                prg_set_message('success', "Votre photo de profil a été supprimée.");
             } else {
-                $error = "Erreur lors de la suppression dans la base de données.";
+                prg_set_message('error', "Erreur lors de la suppression dans la base de données.");
             }
         } else {
-             $error = "Vous utilisez déjà la photo par défaut.";
+             prg_set_message('error', "Vous utilisez déjà la photo par défaut.");
         }
+        prg_redirect();
     }
 }
 
-// --- RECUPERATION DES DONNEES ---
+// ── Récupérer les messages PRG pour affichage ──────────────────
+$prgMessages = prg_get_messages();
+
+// Get authId for password operations
+$stmtAuthId = $pdo->prepare("SELECT ID_AUTH FROM CLIENT WHERE ID_CLIENT = ?");
+$stmtAuthId->execute([$adminId]);
+$authId = (int) $stmtAuthId->fetchColumn();
+
+// ── RECUPERATION DES DONNEES ──────────────────────────────────────────
 
 // Récupérer les données pour l'édition d'un type de blog
 $editTypeBlog = null;
@@ -511,7 +497,7 @@ $adminEmail = $_SESSION['admin_email'] ?? $adminData['EMAIL_AUTH'] ?? 'Admin';
             <div style="text-align: center; margin-bottom: 20px;">
                 <div style="width: 120px; height: 120px; border-radius: 50%; overflow: hidden; border: 3px solid var(--light-green); margin: 0 auto 15px; display:flex; align-items:center; justify-content:center; background:var(--primary-red); color:var(--white); font-family:var(--font-headings); font-weight:700; font-size: 2.5rem;">
                      <img src="../../<?= htmlspecialchars($photoAdmin) ?>" alt="Photo de profil" id="previewPhoto" style="width: 100%; height: 100%; object-fit: cover;">
-                </div>
+                 </div>
                 <p style="font-size:0.85rem; color:#666;">Cliquez sur une image pour la sélectionner</p>
             </div>
             
@@ -643,63 +629,22 @@ uploadZones.forEach(zone => {
         }
     });
 });
-
-// Success modal - open on page load if needed
-<?php if ($showSuccessModal): ?>
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('successModalTitle').textContent = <?= json_encode($successModalTitle) ?>;
-    document.getElementById('successModalMessage').textContent = <?= json_encode($successModalMessage) ?>;
-    openModal('successModal');
-});
-<?php endif; ?>
-
-// Close success modal
-document.getElementById('closeSuccessModal')?.addEventListener('click', () => closeModal('successModal'));
-document.getElementById('closeSuccessModalBtn')?.addEventListener('click', () => closeModal('successModal'));
 </script>
 
-<!-- Toastify JS -->
+<!-- Toastify pour messages PRG -->
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<?php if (!empty($prgMessages)): ?>
 <script>
 window.addEventListener('DOMContentLoaded', () => {
-    const errorMsg = <?php echo json_encode($error ?? '', JSON_UNESCAPED_UNICODE); ?>;
-    const successMsg = <?php echo json_encode($success ?? '', JSON_UNESCAPED_UNICODE); ?>;
-    
-    if (errorMsg) {
-        Toastify({
-            text: errorMsg,
-            duration: 6000,
-            gravity: "top",
-            position: "right",
-            close: true,
-            style: {
-                background: "linear-gradient(135deg, #d93d3d, #a82c2c)",
-                borderRadius: "6px",
-                fontFamily: "system-ui, -apple-system, sans-serif",
-                fontWeight: "600",
-                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.25)"
-            }
-        }).showToast();
-    }
-    
-    if (successMsg) {
-        Toastify({
-            text: successMsg,
-            duration: 6000,
-            gravity: "top",
-            position: "right",
-            close: true,
-            style: {
-                background: "linear-gradient(135deg, #377d49, #2a5c3a)",
-                borderRadius: "6px",
-                fontFamily: "system-ui, -apple-system, sans-serif",
-                fontWeight: "600",
-                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.25)"
-            }
-        }).showToast();
-    }
+    <?= prg_render_toasts($prgMessages) ?>
+    // Nettoyer l'URL
+    const url = new URL(window.location);
+    url.searchParams.delete('action');
+    url.searchParams.delete('edit_type');
+    window.history.replaceState({}, '', url);
 });
 </script>
-
+<?php endif; ?>
 </body>
 </html>

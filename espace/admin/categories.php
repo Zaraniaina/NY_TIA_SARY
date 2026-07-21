@@ -1,13 +1,13 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../../util/auth_guard.php';
+require_once __DIR__ . '/../../util/prg_helper.php';
 requireAdmin();
 
 require_once __DIR__.'/composante/tolbarDto.php';
 $titre = "Gestion des catégories";
-$success = $error = '';
 
-// ── CRUD Catégories ───────────────────────────────────────────
+// ── TRAITEMENT POST (PRG Pattern) ──────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action    = $_POST['action'] ?? '';
     $idCat     = (int) ($_POST['id_categorie'] ?? 0);
@@ -17,29 +17,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'create') {
         if (!$libCat || !$idPrest) {
-            $error = 'Le nom et la prestation sont requis.';
+            prg_set_message('error', 'Le nom et la prestation sont requis.');
         } elseif ($tarif < 0) {
-            $error = 'Le tarif doit être positif ou nul.';
+            prg_set_message('error', 'Le tarif doit être positif ou nul.');
         } else {
             $pdo->prepare('INSERT INTO CATEGORIE (ID_PRESTATION, LIB_CATEGORIE, TARIF_CATEGORIE) VALUES (?, ?, ?)')
                 ->execute([$idPrest, $libCat, $tarif]);
-            $success = "Catégorie « $libCat » ajoutée.";
+            prg_set_message('success', "Catégorie « $libCat » ajoutée.");
         }
+        prg_redirect();
     } elseif ($action === 'edit' && $idCat) {
         if (!$libCat || !$idPrest) {
-            $error = 'Le nom et la prestation sont requis.';
+            prg_set_message('error', 'Le nom et la prestation sont requis.');
         } elseif ($tarif < 0) {
-            $error = 'Le tarif doit être positif ou nul.';
+            prg_set_message('error', 'Le tarif doit être positif ou nul.');
         } else {
             $pdo->prepare('UPDATE CATEGORIE SET ID_PRESTATION=?, LIB_CATEGORIE=?, TARIF_CATEGORIE=? WHERE ID_CATEGORIE=?')
                 ->execute([$idPrest, $libCat, $tarif, $idCat]);
-            $success = "Catégorie mise à jour.";
+            prg_set_message('success', "Catégorie mise à jour.");
         }
+        prg_redirect();
     } elseif ($action === 'delete' && $idCat) {
         $pdo->prepare('DELETE FROM CATEGORIE WHERE ID_CATEGORIE = ?')->execute([$idCat]);
-        $success = "Catégorie supprimée.";
+        prg_set_message('success', "Catégorie supprimée.");
+        prg_redirect();
     }
 }
+
+// ── Récupérer les messages PRG pour affichage ──────────────────
+$prgMessages = prg_get_messages();
 
 // ── Données ───────────────────────────────────────────────────
 $prestations = $pdo->query('SELECT ID_PRESTATION, LIB_PRESTATION FROM PRESTATIONS ORDER BY LIB_PRESTATION')->fetchAll();
@@ -230,48 +236,19 @@ toggle?.addEventListener('click', () => { sidebar.classList.toggle('open'); over
 overlay?.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('open'); });
 </script>
 
-<!-- Toastify JS -->
+<!-- Toastify pour messages PRG -->
 <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<?php if (!empty($prgMessages)): ?>
 <script>
 window.addEventListener('DOMContentLoaded', () => {
-    const errorMsg = <?php echo json_encode($error ?? '', JSON_UNESCAPED_UNICODE); ?>;
-    const successMsg = <?php echo json_encode($success ?? '', JSON_UNESCAPED_UNICODE); ?>;
-    
-    if (errorMsg) {
-        Toastify({
-            text: errorMsg,
-            duration: 6000,
-            gravity: "top",
-            position: "right",
-            close: true,
-            style: {
-                background: "linear-gradient(135deg, #d93d3d, #a82c2c)",
-                borderRadius: "6px",
-                fontFamily: "system-ui, -apple-system, sans-serif",
-                fontWeight: "600",
-                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.25)"
-            }
-        }).showToast();
-    }
-    
-    if (successMsg) {
-        Toastify({
-            text: successMsg,
-            duration: 6000,
-            gravity: "top",
-            position: "right",
-            close: true,
-            style: {
-                background: "linear-gradient(135deg, #377d49, #2a5c3a)",
-                borderRadius: "6px",
-                fontFamily: "system-ui, -apple-system, sans-serif",
-                fontWeight: "600",
-                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.25)"
-            }
-        }).showToast();
-    }
+    <?= prg_render_toasts($prgMessages) ?>
+    // Nettoyer l'URL
+    const url = new URL(window.location);
+    url.searchParams.delete('edit');
+    window.history.replaceState({}, '', url);
 });
 </script>
+<?php endif; ?>
 
 </body>
 </html>

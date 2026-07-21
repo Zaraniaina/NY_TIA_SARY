@@ -1,63 +1,74 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../../util/auth_guard.php';
+require_once __DIR__ . '/../../util/prg_helper.php';
 requireAdmin();
 require_once __DIR__ . '/../../util/delete_file.php';
 require_once __DIR__ . '/../../util/large_upload.php';
 
 require_once __DIR__.'/composante/tolbarDto.php';
 $titre = "Gestion des médias";
-$success = $error = '';
 
-// ── Suppression d'un média ────────────────────────────────────
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
-    $idMedia = (int) ($_POST['id_media'] ?? 0);
-    if ($idMedia) {
-        $stmt = $pdo->prepare('SELECT PATH_MEDIA FROM MEDIA WHERE ID_MEDIA = ?');
-        $stmt->execute([$idMedia]);
-        $path = $stmt->fetchColumn();
-        if ($path) {
-            deleteFile($path);
+// ── TRAITEMENT POST (PRG Pattern) ──────────────────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+    
+    // ── Suppression d'un média ────────────────────────────────────
+    if ($action === 'delete') {
+        $idMedia = (int) ($_POST['id_media'] ?? 0);
+        if ($idMedia) {
+            $stmt = $pdo->prepare('SELECT PATH_MEDIA FROM MEDIA WHERE ID_MEDIA = ?');
+            $stmt->execute([$idMedia]);
+            $path = $stmt->fetchColumn();
+            if ($path) {
+                deleteFile($path);
+            }
+            $pdo->prepare('DELETE FROM MEDIA WHERE ID_MEDIA = ?')->execute([$idMedia]);
+            prg_set_message('success', 'Média supprimé.');
+        } else {
+            prg_set_message('error', 'Média invalide.');
         }
-        $pdo->prepare('DELETE FROM MEDIA WHERE ID_MEDIA = ?')->execute([$idMedia]);
-        $success = 'Média supprimé.';
+        prg_redirect();
     }
-}
+    
+    // ── Upload de médias ──────────────────────────────────────────
+    if ($action === 'upload') {
+        $idResa = (int) ($_POST['id_reservation'] ?? 0);
+        $files  = $_FILES['medias'] ?? null;
 
-// ── Upload de médias ──────────────────────────────────────────
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'upload') {
-    $idResa = (int) ($_POST['id_reservation'] ?? 0);
-    $files  = $_FILES['medias'] ?? null;
+        if (!$idResa) {
+            prg_set_message('error', 'Veuillez sélectionner une réservation.');
+        } elseif (empty($files['name'][0])) {
+            prg_set_message('error', 'Veuillez sélectionner au moins un fichier.');
+        } else {
+            $uploadResults = uploadMultipleMedias($files, 'medias');
 
-    if (!$idResa) {
-        $error = 'Veuillez sélectionner une réservation.';
-    } elseif (empty($files['name'][0])) {
-        $error = 'Veuillez sélectionner au moins un fichier.';
-    } else {
-        $uploadResults = uploadMultipleMedias($files, 'medias');
+            $uploaded = 0;
+            $errors   = [];
 
-        $uploaded = 0;
-        $errors   = [];
+            foreach ($uploadResults as $res) {
+                if ($res['success']) {
+                    $pdo->prepare('INSERT INTO MEDIA (ID_RESERVATION, PATH_MEDIA, TYPE_MEDIA) VALUES (?, ?, ?)')
+                        ->execute([$idResa, $res['path'], $res['type']]);
+                    $uploaded++;
+                } else {
+                    $errors[] = $res['error'];
+                }
+            }
 
-        foreach ($uploadResults as $res) {
-            if ($res['success']) {
-                $pdo->prepare('INSERT INTO MEDIA (ID_RESERVATION, PATH_MEDIA, TYPE_MEDIA) VALUES (?, ?, ?)')
-                    ->execute([$idResa, $res['path'], $res['type']]);
-                $uploaded++;
-            } else {
-                $errors[] = $res['error'];
+            if ($uploaded > 0) {
+                prg_set_message('success', "$uploaded fichier(s) uploadé(s) avec succès.");
+            }
+            if (!empty($errors)) {
+                prg_set_message('error', implode(' | ', array_unique($errors)));
             }
         }
-
-        if ($uploaded > 0) {
-            $success = "$uploaded fichier(s) uploadé(s) avec succès.";
-        }
-        if (!empty($errors)) {
-            $error = implode(' | ', array_unique($errors));
-        }
+        prg_redirect();
     }
 }
 
+// ── Récupérer les messages PRG pour affichage ──────────────────
+$prgMessages = prg_get_messages();
 
 // ── Réservations TERMINEE (pour le formulaire) ────────────────
 $resasTerminees = $pdo->query(
@@ -258,48 +269,21 @@ toggle?.addEventListener('click', () => { sidebar.classList.toggle('open'); over
 overlay?.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('open'); });
 </script>
 
-<!-- Toastify JS -->
+<!-- Toastify pour messages PRG -->
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<?php if (!empty($prgMessages)): ?>
 <script>
 window.addEventListener('DOMContentLoaded', () => {
-    const errorMsg = <?php echo json_encode($error ?? '', JSON_UNESCAPED_UNICODE); ?>;
-    const successMsg = <?php echo json_encode($success ?? '', JSON_UNESCAPED_UNICODE); ?>;
-    
-    if (errorMsg) {
-        Toastify({
-            text: errorMsg,
-            duration: 6000,
-            gravity: "top",
-            position: "right",
-            close: true,
-            style: {
-                background: "linear-gradient(135deg, #d93d3d, #a82c2c)",
-                borderRadius: "6px",
-                fontFamily: "system-ui, -apple-system, sans-serif",
-                fontWeight: "600",
-                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.25)"
-            }
-        }).showToast();
-    }
-    
-    if (successMsg) {
-        Toastify({
-            text: successMsg,
-            duration: 6000,
-            gravity: "top",
-            position: "right",
-            close: true,
-            style: {
-                background: "linear-gradient(135deg, #377d49, #2a5c3a)",
-                borderRadius: "6px",
-                fontFamily: "system-ui, -apple-system, sans-serif",
-                fontWeight: "600",
-                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.25)"
-            }
-        }).showToast();
-    }
+    <?= prg_render_toasts($prgMessages) ?>
+    // Nettoyer l'URL
+    const url = new URL(window.location);
+    url.searchParams.delete('action');
+    url.searchParams.delete('resa');
+    window.history.replaceState({}, '', url);
 });
 </script>
+<?php endif; ?>
 
 </body>
 </html>

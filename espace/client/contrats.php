@@ -1,15 +1,13 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../../util/auth_guard.php';
+require_once __DIR__ . '/../../util/prg_helper.php';
 requireClient();
 
 require_once __DIR__ . '/composante/tolbarDto.php';
 $titre = "Mes Contrats";
 
-$success = '';
-$error = '';
-
-// ── Traitement des décisions du client ────────────────────────
+// ── TRAITEMENT POST (PRG Pattern) ─────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $idContrat = (int) ($_POST['id_contrat'] ?? 0);
     $action = $_POST['action'];
@@ -28,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
         if ($contratInfo) {
             if ($contratInfo['STATUS_CONTRAT'] !== 'EN ATTENTE') {
-                $error = 'Ce contrat a déjà été traité.';
+                prg_set_message('error', 'Ce contrat a déjà été traité.');
             } elseif ($action === 'accept') {
                 try {
                     $pdo->beginTransaction();
@@ -54,11 +52,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     $stmtFact->execute([$idContrat, $numFac, 'NON PAYEE', $montant]);
 
                     $pdo->commit();
-                    $success = 'Contrat accepté avec succès ! Votre facture a été générée.';
+                    prg_set_message('success', 'Contrat accepté avec succès ! Votre facture a été générée.');
                 } catch (Throwable $e) {
                     $pdo->rollBack();
                     error_log('[contrats_client.php] ' . $e->getMessage());
-                    $error = 'Une erreur est survenue lors de la validation du contrat.';
+                    prg_set_message('error', 'Une erreur est survenue lors de la validation du contrat.');
                 }
             } elseif ($action === 'reject') {
                 try {
@@ -73,18 +71,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     $stmtResa->execute([$contratInfo['ID_RESERVATION']]);
 
                     $pdo->commit();
-                    $success = 'Contrat refusé. La réservation a été annulée.';
+                    prg_set_message('success', 'Contrat refusé. La réservation a été annulée.');
                 } catch (Throwable $e) {
                     $pdo->rollBack();
                     error_log('[contrats_client.php] ' . $e->getMessage());
-                    $error = 'Une erreur est survenue lors du refus du contrat.';
+                    prg_set_message('error', 'Une erreur est survenue lors du refus du contrat.');
                 }
             }
         } else {
-            $error = 'Contrat introuvable ou non autorisé.';
+            prg_set_message('error', 'Contrat introuvable ou non autorisé.');
         }
+    } else {
+        prg_set_message('error', 'Identifiant de contrat invalide.');
     }
+    prg_redirect();
 }
+
+// ── Récupérer les messages PRG pour affichage ──────────────────
+$prgMessages = prg_get_messages();
 
 // ── Contrat ciblé par lien email ────────────────────────────
 $selectedContratId = (int) ($_GET['id'] ?? 0);
@@ -147,8 +151,7 @@ $contrats = $stmtContrats->fetchAll();
                 <span>Mes Contrats</span>
             </nav>
 
-            <?php if ($success): ?><div class="dash-alert dash-alert-success"><i class="fas fa-check-circle"></i><?= htmlspecialchars($success) ?></div><?php endif; ?>
-            <?php if ($error): ?><div class="dash-alert dash-alert-error"><i class="fas fa-exclamation-circle"></i><?= htmlspecialchars($error) ?></div><?php endif; ?>
+            <!-- Les messages PRG sont affichés via Toastify (script en bas de page) -->
 
             <div class="dash-card">
                 <div class="dash-card-header">
@@ -257,5 +260,20 @@ if (selectedRow) {
     selectedRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 </script>
+
+<!-- Toastify pour messages PRG -->
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<?php if (!empty($prgMessages)): ?>
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+    <?= prg_render_toasts($prgMessages) ?>
+    // Nettoyer l'URL
+    const url = new URL(window.location);
+    url.searchParams.delete('action');
+    window.history.replaceState({}, '', url);
+});
+</script>
+<?php endif; ?>
 </body>
 </html>

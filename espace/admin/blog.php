@@ -1,15 +1,15 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../../util/auth_guard.php';
+require_once __DIR__ . '/../../util/prg_helper.php';
 requireAdmin();
 require_once __DIR__ . '/../../util/file_upload.php';
 require_once __DIR__ . '/../../util/delete_file.php';
 require_once __DIR__.'/composante/tolbarDto.php';
 //on changer le titre
 $titre="Gestion des Blog";
-$success = $error = '';
 
-// ── CRUD Blog ─────────────────────────────────────────────────
+// ── TRAITEMENT POST (PRG Pattern) ─────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action  = $_POST['action'] ?? '';
     $idBlog  = (int) ($_POST['id_blog'] ?? 0);
@@ -22,33 +22,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $status  = $_POST['status'] ?? 'PUBLIER';
 
         if (!$idCat || !$titre || !$contenu) {
-            $error = 'Veuillez remplir tous les champs obligatoires.';
+            prg_set_message('error', 'Veuillez remplir tous les champs obligatoires.');
         } else {
             // Upload image couverture si fournie
             if (!empty($_FILES['image_couverture']['name'])) {
                 $res = uploadFile($_FILES['image_couverture'], 'blog', 'image');
                 if ($res['success']) { $imgPath = $res['path']; }
-                else { $error = $res['error']; }
+                else { prg_set_message('error', $res['error']); }
             }
 
-            if (!$error) {
+            if (!$imgPath || $_POST['img_actuelle'] || empty($_FILES['image_couverture']['name'])) {
                 if ($action === 'create') {
                     $stmt = $pdo->prepare('INSERT INTO BLOG (ID_TYPE_BLOG, TITRE_BLOG, CONTENU, IMAGE_COURVERTURE, STATUS_BLOG) VALUES (?,?,?,?,?)');
                     $stmt->execute([$idCat, $titre, $contenu, $imgPath, $status]);
-                    $success = "Article « $titre » créé avec succès.";
+                    prg_set_message('success', "Article « $titre » créé avec succès.");
                 } else {
                     $stmt = $pdo->prepare('UPDATE BLOG SET ID_TYPE_BLOG=?, TITRE_BLOG=?, CONTENU=?, IMAGE_COURVERTURE=?, DATE_MODIFICATION=CURDATE(), STATUS_BLOG=? WHERE ID_BLOG=?');
                     $stmt->execute([$idCat, $titre, $contenu, $imgPath, $status, $idBlog]);
-                    $success = "Article modifié avec succès.";
+                    prg_set_message('success', "Article modifié avec succès.");
                 }
             }
         }
+        prg_redirect();
     } elseif ($action === 'publish' && $idBlog) {
         $pdo->prepare('UPDATE BLOG SET STATUS_BLOG = "PUBLIER" WHERE ID_BLOG = ?')->execute([$idBlog]);
-        $success = "Article publié avec succès.";
+        prg_set_message('success', "Article publié avec succès.");
+        prg_redirect();
     } elseif ($action === 'draft' && $idBlog) {
         $pdo->prepare('UPDATE BLOG SET STATUS_BLOG = "BROUILLON" WHERE ID_BLOG = ?')->execute([$idBlog]);
-        $success = "Article mis en brouillon avec succès.";
+        prg_set_message('success', "Article mis en brouillon avec succès.");
+        prg_redirect();
     } elseif ($action === 'delete' && $idBlog) {
         // Supprimer l'image de couverture du serveur avant de supprimer en base
         $stmtImg = $pdo->prepare('SELECT IMAGE_COURVERTURE FROM BLOG WHERE ID_BLOG = ?');
@@ -58,9 +61,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             deleteFile($imgToDelete);
         }
         $pdo->prepare('DELETE FROM BLOG WHERE ID_BLOG = ?')->execute([$idBlog]);
-        $success = "Article supprimé.";
+        prg_set_message('success', "Article supprimé.");
+        prg_redirect();
     }
 }
+
+// ── Récupérer les messages PRG pour affichage ──────────────────
+$prgMessages = prg_get_messages();
 
 // ── Données ───────────────────────────────────────────────────
 $articles   = $pdo->query('SELECT b.*, t.LIB_TYPE_BLOG FROM BLOG b LEFT JOIN TYPE_BLOG t ON b.ID_TYPE_BLOG  = t.ID_TYPE_BLOG ORDER BY b.DATE_PUBLICATION DESC')->fetchAll();
@@ -84,10 +91,6 @@ if (isset($_GET['edit'])) {
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="../../css/dashboard.css">
-
-    <!-- Toastify CSS -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-
 </head>
 <body>
 <div class="dashboard-wrapper">
@@ -258,48 +261,20 @@ document.getElementById('image_couverture')?.addEventListener('change', function
 });
 </script>
 
-<!-- Toastify JS -->
+<!-- Toastify pour messages PRG -->
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<?php if (!empty($prgMessages)): ?>
 <script>
 window.addEventListener('DOMContentLoaded', () => {
-    const errorMsg = <?php echo json_encode($error ?? '', JSON_UNESCAPED_UNICODE); ?>;
-    const successMsg = <?php echo json_encode($success ?? '', JSON_UNESCAPED_UNICODE); ?>;
-    
-    if (errorMsg) {
-        Toastify({
-            text: errorMsg,
-            duration: 6000,
-            gravity: "top",
-            position: "right",
-            close: true,
-            style: {
-                background: "linear-gradient(135deg, #d93d3d, #a82c2c)",
-                borderRadius: "6px",
-                fontFamily: "system-ui, -apple-system, sans-serif",
-                fontWeight: "600",
-                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.25)"
-            }
-        }).showToast();
-    }
-    
-    if (successMsg) {
-        Toastify({
-            text: successMsg,
-            duration: 6000,
-            gravity: "top",
-            position: "right",
-            close: true,
-            style: {
-                background: "linear-gradient(135deg, #377d49, #2a5c3a)",
-                borderRadius: "6px",
-                fontFamily: "system-ui, -apple-system, sans-serif",
-                fontWeight: "600",
-                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.25)"
-            }
-        }).showToast();
-    }
+    <?= prg_render_toasts($prgMessages) ?>
+    // Nettoyer l'URL
+    const url = new URL(window.location);
+    url.searchParams.delete('edit');
+    window.history.replaceState({}, '', url);
 });
 </script>
+<?php endif; ?>
 
 </body>
 </html>

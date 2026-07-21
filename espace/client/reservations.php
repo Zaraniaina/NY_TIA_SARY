@@ -2,144 +2,155 @@
 
 declare(strict_types=1);
 require_once __DIR__ . '/../../util/auth_guard.php';
+require_once __DIR__ . '/../../util/prg_helper.php';
 requireClient();
 
 require_once __DIR__ . '/../../util/mailService.php';
 require_once __DIR__ . '/composante/tolbarDto.php';
 $titre = "Mes Réservations";
 
-$success      = '';
-$error        = '';
+// ── TRAITEMENT POST (PRG Pattern) ─────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+    
+    // ── Nouvelle réservation ──────────────────────────────────
+    if ($action === 'new_resa') {
+        $idPrestation    = (int) ($_POST['id_prestation'] ?? 0);
+        $idCategories    = $_POST['id_categories'] ?? [];
+        $dateResa        = trim($_POST['date_reservation'] ?? '');
+        $heureResa       = trim($_POST['heure_reservation'] ?? '');
+        $lieuResa        = trim($_POST['lieu_reservation'] ?? '');
+        $commentaire     = trim($_POST['commentaire'] ?? '');
 
-// ── Traitement nouvelle réservation ──────────────────────────
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'new_resa') {
-    $idPrestation    = (int) ($_POST['id_prestation'] ?? 0);
-    $idCategories    = $_POST['id_categories'] ?? [];
-    $dateResa        = trim($_POST['date_reservation'] ?? '');
-    $heureResa       = trim($_POST['heure_reservation'] ?? '');
-    $lieuResa        = trim($_POST['lieu_reservation'] ?? '');
-    $commentaire     = trim($_POST['commentaire'] ?? '');
+        if (!$idPrestation || empty($idCategories) || !$dateResa || !$heureResa || !$lieuResa) {
+            prg_set_message('error', 'Veuillez remplir tous les champs obligatoires et choisir au moins une formule.');
+        } else {
+            try {
+                $pdo->beginTransaction();
 
-    if (!$idPrestation || empty($idCategories) || !$dateResa || !$heureResa || !$lieuResa) {
-        $error = 'Veuillez remplir tous les champs obligatoires et choisir au moins une formule.';
-    } else {
-        try {
-            $pdo->beginTransaction();
+                $stmt = $pdo->prepare(
+                    'INSERT INTO RESERVATION (ID_PRESTATION, ID_CLIENT, DATE_RESERVATION, HEURE_RESERVATION, LIEU_RESERVATION, COMME_RESERVATION, STATUS_RESERVATION)
+                     VALUES (?, ?, ?, ?, ?, ?, ?)'
+                );
+                $stmt->execute([$idPrestation, $clientId, $dateResa, $heureResa, $lieuResa, $commentaire, 'EN ATTENTE']);
 
-            $stmt = $pdo->prepare(
-                'INSERT INTO RESERVATION (ID_PRESTATION, ID_CLIENT, DATE_RESERVATION, HEURE_RESERVATION, LIEU_RESERVATION, COMME_RESERVATION, STATUS_RESERVATION)
-                 VALUES (?, ?, ?, ?, ?, ?, ?)'
-            );
-            $stmt->execute([$idPrestation, $clientId, $dateResa, $heureResa, $lieuResa, $commentaire, 'EN ATTENTE']);
+                $idResa = $pdo->lastInsertId();
 
-            $idResa = $pdo->lastInsertId();
+                $stmtCat = $pdo->prepare('SELECT TARIF_CATEGORIE FROM CATEGORIE WHERE ID_CATEGORIE = ?');
+                $stmtRc  = $pdo->prepare('INSERT INTO RESERVATION_CATEGORIE (ID_RESERVATION, ID_CATEGORIE, PRIX) VALUES (?, ?, ?)');
 
-            $stmtCat = $pdo->prepare('SELECT TARIF_CATEGORIE FROM CATEGORIE WHERE ID_CATEGORIE = ?');
-            $stmtRc  = $pdo->prepare('INSERT INTO RESERVATION_CATEGORIE (ID_RESERVATION, ID_CATEGORIE, PRIX) VALUES (?, ?, ?)');
-
-            // Récupérer les catégories et leurs prix pour le total
-            $categoriesLib = [];
-            $totalPrix = 0;
-            foreach ($idCategories as $idCat) {
-                $idCat = (int) $idCat;
-                if ($idCat > 0) {
-                    $stmtCat->execute([$idCat]);
-                    $prix = (int) $stmtCat->fetchColumn();
-                    $stmtRc->execute([$idResa, $idCat, $prix]);
-                    $totalPrix += $prix;
-                    // Récupérer le nom de la catégorie
-                    $stmtCatLib = $pdo->prepare('SELECT LIB_CATEGORIE FROM CATEGORIE WHERE ID_CATEGORIE = ?');
-                    $stmtCatLib->execute([$idCat]);
-                    $libCat = $stmtCatLib->fetchColumn();
-                    if ($libCat) {
-                        $categoriesLib[] = $libCat;
+                $categoriesLib = [];
+                $totalPrix = 0;
+                foreach ($idCategories as $idCat) {
+                    $idCat = (int) $idCat;
+                    if ($idCat > 0) {
+                        $stmtCat->execute([$idCat]);
+                        $prix = (int) $stmtCat->fetchColumn();
+                        $stmtRc->execute([$idResa, $idCat, $prix]);
+                        $totalPrix += $prix;
+                        $stmtCatLib = $pdo->prepare('SELECT LIB_CATEGORIE FROM CATEGORIE WHERE ID_CATEGORIE = ?');
+                        $stmtCatLib->execute([$idCat]);
+                        $libCat = $stmtCatLib->fetchColumn();
+                        if ($libCat) {
+                            $categoriesLib[] = $libCat;
+                        }
                     }
                 }
+
+                // ── Notification pour l'admin ────────────────────────
+                $nomComplet = trim(($clientNom ?? 'Client') . ' ' . ($clientPrenom ?? ''));
+
+                $stmtNotif = $pdo->prepare(
+                    'INSERT INTO notification (TYPE_NOTIF, ID_REF_NOTIF, TITRE_NOTIF, MESS_NOTIF, LU_NOTIF, SUP_NOTIF)
+                     VALUES (:type_notif, :id_ref_notif, :titre_notif, :mess_notif, :lu_notif, :sup_notif)'
+                );
+                $stmtNotif->execute([
+                    ':type_notif'   => 'Reservation',
+                    ':id_ref_notif' => $idResa,
+                    ':titre_notif'  => 'Demande de reservation',
+                    ':mess_notif'   => "Reservation de {$nomComplet}",
+                    ':lu_notif'     => 0,
+                    ':sup_notif'    => 0,
+                ]);
+
+                $pdo->commit();
+
+                // ── Envoi email de notification à l'admin ──────────────
+                $stmtPrestation = $pdo->prepare('SELECT LIB_PRESTATION FROM PRESTATIONS WHERE ID_PRESTATION = ?');
+                $stmtPrestation->execute([$idPrestation]);
+                $prestationLib = $stmtPrestation->fetchColumn() ?: 'Non spécifiée';
+
+                $mailService = new MailService();
+                $reservationData = [
+                    'client_nom' => $clientNom ?? 'Inconnu',
+                    'client_prenom' => $clientPrenom ?? '',
+                    'prestation' => $prestationLib,
+                    'date_reservation' => $dateResa,
+                    'heure_reservation' => $heureResa,
+                    'lieu_reservation' => $lieuResa,
+                    'categories' => $categoriesLib,
+                    'total_prix' => $totalPrix,
+                    'id_reservation' => $idResa
+                ];
+                $mailService->sendReservationNew('admin@gmail.com', $reservationData);
+
+                prg_set_message('success', 'Votre réservation a été soumise avec succès ! Nous vous contacterons bientôt.');
+            } catch (Throwable $e) {
+                $pdo->rollBack();
+                error_log('[reservation.php] ' . $e->getMessage());
+                prg_set_message('error', 'Une erreur est survenue lors de la création de votre réservation.');
             }
-
-            // ── Notification pour l'admin ────────────────────────
-            $nomComplet = trim(($clientNom ?? 'Client') . ' ' . ($clientPrenom ?? ''));
-
-            $stmtNotif = $pdo->prepare(
-                'INSERT INTO notification (TYPE_NOTIF, ID_REF_NOTIF, TITRE_NOTIF, MESS_NOTIF, LU_NOTIF, SUP_NOTIF)
-                 VALUES (:type_notif, :id_ref_notif, :titre_notif, :mess_notif, :lu_notif, :sup_notif)'
-            );
-            $stmtNotif->execute([
-                ':type_notif'   => 'Reservation',
-                ':id_ref_notif' => $idResa,
-                ':titre_notif'  => 'Demande de reservation',
-                ':mess_notif'   => "Reservation de {$nomComplet}",
-                ':lu_notif'     => 0,
-                ':sup_notif'    => 0,
-            ]);
-
-            $pdo->commit();
-
-            // ── Envoi email de notification à l'admin ──────────────
-            $stmtPrestation = $pdo->prepare('SELECT LIB_PRESTATION FROM PRESTATIONS WHERE ID_PRESTATION = ?');
-            $stmtPrestation->execute([$idPrestation]);
-            $prestationLib = $stmtPrestation->fetchColumn() ?: 'Non spécifiée';
-
-            $mailService = new MailService();
-            $reservationData = [
-                'client_nom' => $clientNom ?? 'Inconnu',
-                'client_prenom' => $clientPrenom ?? '',
-                'prestation' => $prestationLib,
-                'date_reservation' => $dateResa,
-                'heure_reservation' => $heureResa,
-                'lieu_reservation' => $lieuResa,
-                'categories' => $categoriesLib,
-                'total_prix' => $totalPrix,
-                'id_reservation' => $idResa
-            ];
-            $mailService->sendReservationNew('admin@gmail.com', $reservationData);
-
-            $success = 'Votre réservation a été soumise avec succès ! Nous vous contacterons bientôt.';
-        } catch (Throwable $e) {
-            $pdo->rollBack();
-            error_log('[reservation.php] ' . $e->getMessage());
-            $error = 'Une erreur est survenue lors de la création de votre réservation.';
         }
+        prg_redirect();
     }
-}
-
-// ── Annulation d'une réservation ─────────────────────────────
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'cancel') {
-    $idResa = (int) ($_POST['id_reservation'] ?? 0);
-    if ($idResa) {
-        $pdo->prepare("UPDATE RESERVATION SET STATUS_RESERVATION='ANNULEE' WHERE ID_RESERVATION=? AND ID_CLIENT=? AND STATUS_RESERVATION='EN ATTENTE'")
-            ->execute([$idResa, $clientId]);
-        $success = 'Réservation annulée.';
-    }
-}
-
-// ── Soumission d'un témoignage ────────────────────────────────
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'temoignage') {
-    $idResa = (int) ($_POST['id_reservation'] ?? 0);
-    $note   = (int) ($_POST['note'] ?? 0);
-    $mess   = trim($_POST['message'] ?? '');
-    if (!$idResa || $note < 1 || $note > 5 || !$mess) {
-        $error = 'Veuillez remplir tous les champs du témoignage.';
-    } else {
-        // Vérifier que la réservation appartient au client et est TERMINEE
-        $chk = $pdo->prepare("SELECT COUNT(*) FROM RESERVATION WHERE ID_RESERVATION=? AND ID_CLIENT=? AND STATUS_RESERVATION='TERMINEE'");
-        $chk->execute([$idResa, $clientId]);
-        if ((int)$chk->fetchColumn() === 0) {
-            $error = 'Opération non autorisée.';
-        } else {
-            // Vérifier qu'un avis n'existe pas déjà
-            $exists = $pdo->prepare('SELECT COUNT(*) FROM TEMOIGNAGE WHERE ID_RESERVATION=?');
-            $exists->execute([$idResa]);
-            if ((int)$exists->fetchColumn() > 0) {
-                $error = 'Vous avez déjà laissé un avis pour cette réservation.';
+    
+    // ── Annulation d'une réservation ─────────────────────────────
+    if ($action === 'cancel') {
+        $idResa = (int) ($_POST['id_reservation'] ?? 0);
+        if ($idResa) {
+            $stmt = $pdo->prepare("UPDATE RESERVATION SET STATUS_RESERVATION='ANNULEE' WHERE ID_RESERVATION=? AND ID_CLIENT=? AND STATUS_RESERVATION='EN ATTENTE'");
+            $stmt->execute([$idResa, $clientId]);
+            if ($stmt->rowCount() > 0) {
+                prg_set_message('success', 'Réservation annulée.');
             } else {
-                $pdo->prepare('INSERT INTO TEMOIGNAGE (ID_RESERVATION, MESS_RESERVATION, NOTE) VALUES (?, ?, ?)')
-                    ->execute([$idResa, $mess, $note]);
-                $success = 'Merci pour votre témoignage !';
+                prg_set_message('error', 'Impossible d\'annuler cette réservation.');
             }
         }
+        prg_redirect();
+    }
+    
+    // ── Soumission d'un témoignage ────────────────────────────────
+    if ($action === 'temoignage') {
+        $idResa = (int) ($_POST['id_reservation'] ?? 0);
+        $note   = (int) ($_POST['note'] ?? 0);
+        $mess   = trim($_POST['message'] ?? '');
+        if (!$idResa || $note < 1 || $note > 5 || !$mess) {
+            prg_set_message('error', 'Veuillez remplir tous les champs du témoignage.');
+        } else {
+            // Vérifier que la réservation appartient au client et est TERMINEE
+            $chk = $pdo->prepare("SELECT COUNT(*) FROM RESERVATION WHERE ID_RESERVATION=? AND ID_CLIENT=? AND STATUS_RESERVATION='TERMINEE'");
+            $chk->execute([$idResa, $clientId]);
+            if ((int)$chk->fetchColumn() === 0) {
+                prg_set_message('error', 'Opération non autorisée.');
+            } else {
+                // Vérifier qu'un avis n'existe pas déjà
+                $exists = $pdo->prepare('SELECT COUNT(*) FROM TEMOIGNAGE WHERE ID_RESERVATION=?');
+                $exists->execute([$idResa]);
+                if ((int)$exists->fetchColumn() > 0) {
+                    prg_set_message('error', 'Vous avez déjà laissé un avis pour cette réservation.');
+                } else {
+                    $pdo->prepare('INSERT INTO TEMOIGNAGE (ID_RESERVATION, MESS_RESERVATION, NOTE) VALUES (?, ?, ?)')
+                        ->execute([$idResa, $mess, $note]);
+                    prg_set_message('success', 'Merci pour votre témoignage !');
+                }
+            }
+        }
+        prg_redirect();
     }
 }
+
+// ── Récupérer les messages PRG pour affichage ──────────────────
+$prgMessages = prg_get_messages();
 
 // ── Liste des prestations disponibles ────────────────────────
 $prestations = $pdo->query('SELECT ID_PRESTATION, LIB_PRESTATION FROM PRESTATIONS ORDER BY LIB_PRESTATION')->fetchAll();
@@ -194,12 +205,7 @@ $reservations = $stmtResas->fetchAll();
                     <span>Mes Réservations</span>
                 </nav>
 
-                <?php if ($success): ?>
-                    <div class="dash-alert dash-alert-success"><i class="fas fa-check-circle"></i><?= htmlspecialchars($success) ?></div>
-                <?php endif; ?>
-                <?php if ($error): ?>
-                    <div class="dash-alert dash-alert-error"><i class="fas fa-exclamation-circle"></i><?= htmlspecialchars($error) ?></div>
-                <?php endif; ?>
+                <!-- Les messages PRG sont affichés via Toastify (script en bas de page) -->
 
                 <!-- FORMULAIRE NOUVELLE RÉSERVATION -->
                 <div class="dash-card" style="margin-bottom:28px;">
@@ -499,6 +505,21 @@ $reservations = $stmtResas->fetchAll();
             });
         });
     </script>
+
+    <!-- Toastify pour messages PRG -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <?php if (!empty($prgMessages)): ?>
+    <script>
+    window.addEventListener('DOMContentLoaded', () => {
+        <?= prg_render_toasts($prgMessages) ?>
+        // Nettoyer l'URL
+        const url = new URL(window.location);
+        url.searchParams.delete('action');
+        window.history.replaceState({}, '', url);
+    });
+    </script>
+    <?php endif; ?>
 </body>
 
 </html>

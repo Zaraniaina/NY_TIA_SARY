@@ -1,44 +1,50 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../../util/auth_guard.php';
+require_once __DIR__ . '/../../util/prg_helper.php';
 requireAdmin();
 
 require_once __DIR__.'/composante/tolbarDto.php';
 //on changer le titre
 $titre="Gestion des prestations";
-$success = $error = '';
 
-// ── CRUD Prestations ──────────────────────────────────────────
+// ── TRAITEMENT POST (PRG Pattern) ──────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action      = $_POST['action'] ?? '';
     $idPrest     = (int) ($_POST['id_prestation'] ?? 0);
     $libPrest    = trim($_POST['lib_prestation'] ?? '');
 
     if ($action === 'create') {
-        if (!$libPrest) { $error = 'Le nom de la prestation est requis.'; }
+        if (!$libPrest) { prg_set_message('error', 'Le nom de la prestation est requis.'); }
         else {
             $pdo->prepare('INSERT INTO PRESTATIONS (LIB_PRESTATION) VALUES (?)')->execute([$libPrest]);
-            $success = "Prestation « $libPrest » ajoutée.";
+            prg_set_message('success', "Prestation « $libPrest » ajoutée.");
         }
+        prg_redirect();
     } elseif ($action === 'edit' && $idPrest) {
-        if (!$libPrest) { $error = 'Le nom de la prestation est requis.'; }
+        if (!$libPrest) { prg_set_message('error', 'Le nom de la prestation est requis.'); }
         else {
             $pdo->prepare('UPDATE PRESTATIONS SET LIB_PRESTATION = ? WHERE ID_PRESTATION = ?')->execute([$libPrest, $idPrest]);
-            $success = "Prestation mise à jour.";
+            prg_set_message('success', "Prestation mise à jour.");
         }
+        prg_redirect();
     } elseif ($action === 'delete' && $idPrest) {
         // Vérifier qu'aucune réservation n'utilise cette prestation
         $stmt = $pdo->prepare('SELECT COUNT(*) FROM RESERVATION WHERE ID_PRESTATION = ?');
         $stmt->execute([$idPrest]);
         $count = (int) $stmt->fetchColumn();
         if ($count > 0) {
-            $error = "Impossible de supprimer : $count réservation(s) utilisent cette prestation.";
+            prg_set_message('error', "Impossible de supprimer : $count réservation(s) utilisent cette prestation.");
         } else {
             $pdo->prepare('DELETE FROM PRESTATIONS WHERE ID_PRESTATION = ?')->execute([$idPrest]);
-            $success = "Prestation supprimée.";
+            prg_set_message('success', "Prestation supprimée.");
         }
+        prg_redirect();
     }
 }
+
+// ── Récupérer les messages PRG pour affichage ──────────────────
+$prgMessages = prg_get_messages();
 
 $prestations = $pdo->query(
     'SELECT p.*, COUNT(r.ID_RESERVATION) AS nb_resas
@@ -182,48 +188,20 @@ toggle?.addEventListener('click', () => { sidebar.classList.toggle('open'); over
 overlay?.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('open'); });
 </script>
 
-<!-- Toastify JS -->
+<!-- Toastify pour messages PRG -->
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<?php if (!empty($prgMessages)): ?>
 <script>
 window.addEventListener('DOMContentLoaded', () => {
-    const errorMsg = <?php echo json_encode($error ?? '', JSON_UNESCAPED_UNICODE); ?>;
-    const successMsg = <?php echo json_encode($success ?? '', JSON_UNESCAPED_UNICODE); ?>;
-    
-    if (errorMsg) {
-        Toastify({
-            text: errorMsg,
-            duration: 6000,
-            gravity: "top",
-            position: "right",
-            close: true,
-            style: {
-                background: "linear-gradient(135deg, #d93d3d, #a82c2c)",
-                borderRadius: "6px",
-                fontFamily: "system-ui, -apple-system, sans-serif",
-                fontWeight: "600",
-                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.25)"
-            }
-        }).showToast();
-    }
-    
-    if (successMsg) {
-        Toastify({
-            text: successMsg,
-            duration: 6000,
-            gravity: "top",
-            position: "right",
-            close: true,
-            style: {
-                background: "linear-gradient(135deg, #377d49, #2a5c3a)",
-                borderRadius: "6px",
-                fontFamily: "system-ui, -apple-system, sans-serif",
-                fontWeight: "600",
-                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.25)"
-            }
-        }).showToast();
-    }
+    <?= prg_render_toasts($prgMessages) ?>
+    // Nettoyer l'URL
+    const url = new URL(window.location);
+    url.searchParams.delete('edit');
+    window.history.replaceState({}, '', url);
 });
 </script>
+<?php endif; ?>
 
 </body>
 </html>

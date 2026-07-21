@@ -2,28 +2,20 @@
 
 declare(strict_types=1);
 require_once __DIR__ . '/../../util/auth_guard.php';
+require_once __DIR__ . '/../../util/prg_helper.php';
 requireClient();
+
 require_once __DIR__ . '/../../util/file_upload.php';
 
 require_once __DIR__ . '/composante/tolbarDto.php';
 $titre = "Paramètres";
 
-// Fetch authId from DB directly instead of relying on session key
-$stmtAuth = $pdo->prepare("SELECT ID_AUTH FROM CLIENT WHERE ID_CLIENT = ?");
-$stmtAuth->execute([$clientId]);
-$authId   = (int) $stmtAuth->fetchColumn();
-
-$success  = '';
-$error    = '';
-$showSuccessModal = false;
-$successModalTitle = '';
-$successModalMessage = '';
-
-// --- GESTION DES REQUÊTES POST ---
+// ── TRAITEMENT POST (PRG Pattern) ─────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    $action = $_POST['action'];
 
     // ACTION : Mettre à jour les informations personnelles
-    if ($_POST['action'] === 'update_info') {
+    if ($action === 'update_info') {
         $nom    = trim($_POST['nom'] ?? '');
         $prenom = trim($_POST['prenom'] ?? '');
         $tel    = trim($_POST['telephone'] ?? '');
@@ -55,21 +47,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $_SESSION['client_prenom'] = $prenom;
                 $_SESSION['user_email'] = $email;
 
-                $success = "Vos informations ont été mises à jour avec succès.";
-                $showSuccessModal = true;
-                $successModalTitle = "Information mise à jour";
-                $successModalMessage = "Vos informations personnelles ont été modifiées avec succès.";
+                prg_set_message('success', "Vos informations ont été mises à jour avec succès.");
             } catch (Exception $e) {
                 $pdo->rollBack();
-                $error = "Erreur : " . $e->getMessage();
+                prg_set_message('error', "Erreur : " . $e->getMessage());
             }
         } else {
-            $error = "Veuillez remplir tous les champs obligatoires.";
+            prg_set_message('error', "Veuillez remplir tous les champs obligatoires.");
         }
+        prg_redirect();
     }
 
     // ACTION : Mettre à jour le mot de passe
-    elseif ($_POST['action'] === 'update_password') {
+    if ($action === 'update_password') {
         $old_pass = $_POST['old_password'] ?? '';
         $new_pass = $_POST['new_password'] ?? '';
         $confirm_pass = $_POST['confirm_password'] ?? '';
@@ -85,26 +75,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     $new_hash = password_hash($new_pass, PASSWORD_DEFAULT);
                     $stmtUpdate = $pdo->prepare("UPDATE AUTHENTIFICATION SET MDP_AUTH = ? WHERE ID_AUTH = ?");
                     if ($stmtUpdate->execute([$new_hash, $authId])) {
-                        $success = "Votre mot de passe a été modifié avec succès.";
-                        $showSuccessModal = true;
-                        $successModalTitle = "Mot de passe modifié";
-                        $successModalMessage = "Votre mot de passe a été modifié avec succès.";
+                        prg_set_message('success', "Votre mot de passe a été modifié avec succès.");
                     } else {
-                        $error = "Une erreur est survenue lors de la modification du mot de passe.";
+                        prg_set_message('error', "Une erreur est survenue lors de la modification du mot de passe.");
                     }
                 } else {
-                    $error = "L'ancien mot de passe est incorrect.";
+                    prg_set_message('error', "L'ancien mot de passe est incorrect.");
                 }
             } else {
-                $error = "Les nouveaux mots de passe ne correspondent pas.";
+                prg_set_message('error', "Les nouveaux mots de passe ne correspondent pas.");
             }
         } else {
-            $error = "Veuillez remplir tous les champs obligatoires.";
+            prg_set_message('error', "Veuillez remplir tous les champs obligatoires.");
         }
+        prg_redirect();
     }
 
     // ACTION : Uploader / Changer la photo de profil
-    elseif ($_POST['action'] === 'update_photo' && isset($_FILES['photo_profil'])) {
+    if ($action === 'update_photo' && isset($_FILES['photo_profil'])) {
         $result = uploadFile($_FILES['photo_profil'], 'avatars', 'image');
 
         if ($result['success']) {
@@ -121,20 +109,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
             $stmtUpdate = $pdo->prepare("UPDATE CLIENT SET PHOTO_CLIENT = ? WHERE ID_CLIENT = ?");
             if ($stmtUpdate->execute([$newPath, $clientId])) {
-                $success = "Votre photo de profil a été mise à jour.";
-                $showSuccessModal = true;
-                $successModalTitle = "Photo mise à jour";
-                $successModalMessage = "Votre photo de profil a été modifiée avec succès.";
+                prg_set_message('success', "Votre photo de profil a été mise à jour.");
             } else {
-                $error = "Erreur lors de la mise à jour de la base de données.";
+                prg_set_message('error', "Erreur lors de la mise à jour de la base de données.");
             }
         } else {
-            $error = $result['error'];
+            prg_set_message('error', $result['error']);
         }
+        prg_redirect();
     }
 
     // ACTION : Supprimer la photo de profil
-    elseif ($_POST['action'] === 'delete_photo') {
+    if ($action === 'delete_photo') {
         $stmt = $pdo->prepare("SELECT PHOTO_CLIENT FROM CLIENT WHERE ID_CLIENT = ?");
         $stmt->execute([$clientId]);
         $client = $stmt->fetch();
@@ -143,20 +129,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             deleteUploadedFile($client['PHOTO_CLIENT']);
             $stmtUpdate = $pdo->prepare("UPDATE CLIENT SET PHOTO_CLIENT = 'assets/images/avatar.png' WHERE ID_CLIENT = ?");
             if ($stmtUpdate->execute([$clientId])) {
-                $success = "Votre photo de profil a été supprimée.";
-                $showSuccessModal = true;
-                $successModalTitle = "Photo supprimée";
-                $successModalMessage = "Votre photo de profil a été supprimée avec succès.";
+                prg_set_message('success', "Votre photo de profil a été supprimée.");
             } else {
-                $error = "Erreur lors de la suppression dans la base de données.";
+                prg_set_message('error', "Erreur lors de la suppression dans la base de données.");
             }
         } else {
-            $error = "Vous utilisez déjà la photo par défaut.";
+            prg_set_message('error', "Vous utilisez déjà la photo par défaut.");
         }
+        prg_redirect();
     }
 }
 
-// --- RECUPERATION DES DONNEES CLIENT POUR L'AFFICHAGE ---
+// ── Récupérer les messages PRG pour affichage ──────────────────
+$prgMessages = prg_get_messages();
+
+// ── Fetch authId from DB directly instead of relying on session key
+$stmtAuth = $pdo->prepare("SELECT ID_AUTH FROM CLIENT WHERE ID_CLIENT = ?");
+$stmtAuth->execute([$clientId]);
+$authId   = (int) $stmtAuth->fetchColumn();
+
+// ── RECUPERATION DES DONNEES CLIENT POUR L'AFFICHAGE ─────────────
 $stmtClient = $pdo->prepare("
     SELECT c.*, a.EMAIL_AUTH 
     FROM CLIENT c 
@@ -202,19 +194,7 @@ $isDefaultPhoto = ($photoClient === 'assets/images/avatar.png');
                     <span>Paramètres</span>
                 </nav>
 
-                <?php if (!empty($success)): ?>
-                    <div class="dash-alert dash-alert-success">
-                        <i class="fas fa-check-circle"></i>
-                        <div><?= htmlspecialchars($success) ?></div>
-                    </div>
-                <?php endif; ?>
-
-                <?php if (!empty($error)): ?>
-                    <div class="dash-alert dash-alert-error">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <div><?= htmlspecialchars($error) ?></div>
-                    </div>
-                <?php endif; ?>
+                <!-- Les messages PRG sont affichés via Toastify (script en bas de page) -->
 
                 <div class="form-grid-2">
                     <!-- COLONNE GAUCHE -->
@@ -534,19 +514,36 @@ $isDefaultPhoto = ($photoClient === 'assets/images/avatar.png');
             });
         });
 
-        // Success modal - open on page load if needed
-        <?php if ($showSuccessModal): ?>
-            document.addEventListener('DOMContentLoaded', function() {
-                document.getElementById('successModalTitle').textContent = <?= json_encode($successModalTitle) ?>;
-                document.getElementById('successModalMessage').textContent = <?= json_encode($successModalMessage) ?>;
-                openModal('successModal');
-            });
+        // Success modal - open on page load if needed (ancien système, remplacé par PRG)
+        <?php if (!empty($prgMessages)): ?>
+        document.addEventListener('DOMContentLoaded', function() {
+            <?= prg_render_toasts($prgMessages) ?>
+            // Nettoyer l'URL
+            const url = new URL(window.location);
+            url.searchParams.delete('action');
+            window.history.replaceState({}, '', url);
+        });
         <?php endif; ?>
 
         // Close success modal
         document.getElementById('closeSuccessModal')?.addEventListener('click', () => closeModal('successModal'));
         document.getElementById('closeSuccessModalBtn')?.addEventListener('click', () => closeModal('successModal'));
     </script>
+
+    <!-- Toastify pour messages PRG -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <?php if (!empty($prgMessages)): ?>
+    <script>
+    window.addEventListener('DOMContentLoaded', () => {
+        <?= prg_render_toasts($prgMessages) ?>
+        // Nettoyer l'URL
+        const url = new URL(window.location);
+        url.searchParams.delete('action');
+        window.history.replaceState({}, '', url);
+    });
+    </script>
+    <?php endif; ?>
 </body>
 
 </html>

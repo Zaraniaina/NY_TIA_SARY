@@ -1,51 +1,63 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../../util/auth_guard.php';
+require_once __DIR__ . '/../../util/prg_helper.php';
 requireAdmin();
 
 require_once __DIR__.'/composante/tolbarDto.php';
 $titre = "Gestion des contrats";
-$success = $error = '';
 
-// ── Création d'un contrat ─────────────────────────────────────
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'create') {
-    $idResa      = (int) ($_POST['id_reservation'] ?? 0);
-    $dateContrat = trim($_POST['date_contrat'] ?? '');
+// ── TRAITEMENT POST (PRG Pattern) ──────────────────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+    
+    // ── Création d'un contrat ─────────────────────────────────────
+    if ($action === 'create') {
+        $idResa      = (int) ($_POST['id_reservation'] ?? 0);
+        $dateContrat = trim($_POST['date_contrat'] ?? '');
 
-    if (!$idResa || !$dateContrat) {
-        $error = 'Tous les champs sont requis.';
-    } else {
-        // Vérifier qu'un contrat n'existe pas déjà
-        $chk = $pdo->prepare('SELECT COUNT(*) FROM CONTRAT WHERE ID_RESERVATION = ?');
-        $chk->execute([$idResa]);
-        if ((int)$chk->fetchColumn() > 0) {
-            $error = 'Un contrat existe déjà pour cette réservation.';
+        if (!$idResa || !$dateContrat) {
+            prg_set_message('error', 'Tous les champs sont requis.');
         } else {
-            $pdo->prepare("INSERT INTO CONTRAT (ID_RESERVATION, STATUS_CONTRAT, DATE_CONTRAT) VALUES (?, 'EN ATTENTE', ?)")
-                ->execute([$idResa, $dateContrat]);
-            // Mettre la réservation en CONFIRMEE si pas déjà
-            $pdo->prepare("UPDATE RESERVATION SET STATUS_RESERVATION='CONFIRMEE' WHERE ID_RESERVATION=? AND STATUS_RESERVATION='EN ATTENTE'")
-                ->execute([$idResa]);
-            $success = 'Contrat créé avec succès.';
+            // Vérifier qu'un contrat n'existe pas déjà
+            $chk = $pdo->prepare('SELECT COUNT(*) FROM CONTRAT WHERE ID_RESERVATION = ?');
+            $chk->execute([$idResa]);
+            if ((int)$chk->fetchColumn() > 0) {
+                prg_set_message('error', 'Un contrat existe déjà pour cette réservation.');
+            } else {
+                $pdo->prepare("INSERT INTO CONTRAT (ID_RESERVATION, STATUS_CONTRAT, DATE_CONTRAT) VALUES (?, 'EN ATTENTE', ?)")
+                    ->execute([$idResa, $dateContrat]);
+                // Mettre la réservation en CONFIRMEE si pas déjà
+                $pdo->prepare("UPDATE RESERVATION SET STATUS_RESERVATION='CONFIRMEE' WHERE ID_RESERVATION=? AND STATUS_RESERVATION='EN ATTENTE'")
+                    ->execute([$idResa]);
+                prg_set_message('success', 'Contrat créé avec succès.');
+            }
         }
+        prg_redirect();
+    }
+
+    // ── Suppression d'un contrat ──────────────────────────────────
+    if ($action === 'delete') {
+        $idContrat = (int) ($_POST['id_contrat'] ?? 0);
+        if ($idContrat) {
+            // Vérifier qu'aucune facture n'est liée
+            $chk = $pdo->prepare('SELECT COUNT(*) FROM FACTURE WHERE ID_CONTRAT = ?');
+            $chk->execute([$idContrat]);
+            if ((int)$chk->fetchColumn() > 0) {
+                prg_set_message('error', 'Impossible de supprimer : une facture est liée à ce contrat.');
+            } else {
+                $pdo->prepare('DELETE FROM CONTRAT WHERE ID_CONTRAT = ?')->execute([$idContrat]);
+                prg_set_message('success', 'Contrat supprimé.');
+            }
+        } else {
+            prg_set_message('error', 'Contrat invalide.');
+        }
+        prg_redirect();
     }
 }
 
-// ── Suppression d'un contrat ──────────────────────────────────
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete') {
-    $idContrat = (int) ($_POST['id_contrat'] ?? 0);
-    if ($idContrat) {
-        // Vérifier qu'aucune facture n'est liée
-        $chk = $pdo->prepare('SELECT COUNT(*) FROM FACTURE WHERE ID_CONTRAT = ?');
-        $chk->execute([$idContrat]);
-        if ((int)$chk->fetchColumn() > 0) {
-            $error = 'Impossible de supprimer : une facture est liée à ce contrat.';
-        } else {
-            $pdo->prepare('DELETE FROM CONTRAT WHERE ID_CONTRAT = ?')->execute([$idContrat]);
-            $success = 'Contrat supprimé.';
-        }
-    }
-}
+// ── Récupérer les messages PRG pour affichage ──────────────────
+$prgMessages = prg_get_messages();
 
 // ── Réservations CONFIRMEE sans contrat (pour le formulaire) ──
 $resasSansContrat = $pdo->query(
@@ -183,48 +195,15 @@ toggle?.addEventListener('click', () => { sidebar.classList.toggle('open'); over
 overlay?.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('open'); });
 </script>
 
-<!-- Toastify JS -->
+<!-- Toastify pour messages PRG -->
 <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<?php if (!empty($prgMessages)): ?>
 <script>
 window.addEventListener('DOMContentLoaded', () => {
-    const errorMsg = <?php echo json_encode($error ?? '', JSON_UNESCAPED_UNICODE); ?>;
-    const successMsg = <?php echo json_encode($success ?? '', JSON_UNESCAPED_UNICODE); ?>;
-    
-    if (errorMsg) {
-        Toastify({
-            text: errorMsg,
-            duration: 6000,
-            gravity: "top",
-            position: "right",
-            close: true,
-            style: {
-                background: "linear-gradient(135deg, #d93d3d, #a82c2c)",
-                borderRadius: "6px",
-                fontFamily: "system-ui, -apple-system, sans-serif",
-                fontWeight: "600",
-                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.25)"
-            }
-        }).showToast();
-    }
-    
-    if (successMsg) {
-        Toastify({
-            text: successMsg,
-            duration: 6000,
-            gravity: "top",
-            position: "right",
-            close: true,
-            style: {
-                background: "linear-gradient(135deg, #377d49, #2a5c3a)",
-                borderRadius: "6px",
-                fontFamily: "system-ui, -apple-system, sans-serif",
-                fontWeight: "600",
-                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.25)"
-            }
-        }).showToast();
-    }
+    <?= prg_render_toasts($prgMessages) ?>
 });
 </script>
+<?php endif; ?>
 
 </body>
 </html>
