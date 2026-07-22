@@ -158,7 +158,7 @@ CREATE TABLE `devis` (
   `DATE_SOUHAITE` date NOT NULL,
   `DESCRIPTION` varchar(255) NOT NULL,
   `ID_PRESTATION` bigint(20) NOT NULL,
-  `FICHIER_REPONSE` varchar(255) NOT NULL,
+  `FICHIER_REPONSE` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -229,7 +229,8 @@ CREATE TABLE `notification` (
   `MESS_NOTIF` text NOT NULL,
   `LU_NOTIF` int(11) NOT NULL,
   `SUP_NOTIF` int(11) NOT NULL,
-  `DATE_NOTIF` date NOT NULL DEFAULT current_timestamp()
+  `DATE_NOTIF` date NOT NULL DEFAULT current_timestamp(),
+  `ID_CLIENT` bigint(4) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
@@ -458,7 +459,8 @@ ALTER TABLE `media`
 -- Index pour la table `notification`
 --
 ALTER TABLE `notification`
-  ADD PRIMARY KEY (`ID_NOTIF`);
+  ADD PRIMARY KEY (`ID_NOTIF`),
+  ADD KEY `I_FK_NOTIFICATION_CLIENT` (`ID_CLIENT`);
 
 --
 -- Index pour la table `paiement`
@@ -668,6 +670,12 @@ ALTER TABLE `facture`
 --
 ALTER TABLE `media`
   ADD CONSTRAINT `FK_MEDIA_RESERVATION` FOREIGN KEY (`ID_RESERVATION`) REFERENCES `reservation` (`ID_RESERVATION`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `notification`
+--
+ALTER TABLE `notification`
+  ADD CONSTRAINT `FK_NOTIFICATION_CLIENT` FOREIGN KEY (`ID_CLIENT`) REFERENCES `client` (`ID_CLIENT`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Contraintes pour la table `paiement`

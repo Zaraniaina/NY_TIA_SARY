@@ -30,6 +30,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Mettre la réservation en CONFIRMEE si pas déjà
                 $pdo->prepare("UPDATE RESERVATION SET STATUS_RESERVATION='CONFIRMEE' WHERE ID_RESERVATION=? AND STATUS_RESERVATION='EN ATTENTE'")
                     ->execute([$idResa]);
+                
+                // --- Notification Client ---
+                // Récupérer l'ID du client pour cette réservation
+                $stmtCli = $pdo->prepare('SELECT ID_CLIENT FROM RESERVATION WHERE ID_RESERVATION = ?');
+                $stmtCli->execute([$idResa]);
+                $idClient = $stmtCli->fetchColumn();
+                
+                if ($idClient) {
+                    $pdo->prepare("
+                        INSERT INTO notification (TYPE_NOTIF, ID_REF_NOTIF, TITRE_NOTIF, MESS_NOTIF, LU_NOTIF, SUP_NOTIF, ID_CLIENT) 
+                        VALUES ('client_contrat', ?, 'Réservation Confirmée', 'Votre réservation a été confirmée et un contrat a été généré.', 0, 0, ?)
+                    ")->execute([$idResa, $idClient]);
+                }
+                
                 prg_set_message('success', 'Contrat créé avec succès.');
             }
         }

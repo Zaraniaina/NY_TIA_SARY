@@ -72,6 +72,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Insérer le paiement
                 $pdo->prepare('INSERT INTO PAIEMENT (ID_FACTURE, DATE_PAIEMENT, MONTANT_PAIEMENT) VALUES (?, ?, ?)')
                     ->execute([$idFac, $dateP, $montantP]);
+                $idPaiementInsert = $pdo->lastInsertId();
+
+                // --- Notification Client ---
+                $stmtCli = $pdo->prepare('
+                    SELECT r.ID_CLIENT 
+                    FROM FACTURE f 
+                    JOIN CONTRAT c ON f.ID_CONTRAT = c.ID_CONTRAT 
+                    JOIN RESERVATION r ON c.ID_RESERVATION = r.ID_RESERVATION 
+                    WHERE f.ID_FACTURE = ?
+                ');
+                $stmtCli->execute([$idFac]);
+                $idClient = $stmtCli->fetchColumn();
+                if ($idClient) {
+                    $pdo->prepare("
+                        INSERT INTO notification (TYPE_NOTIF, ID_REF_NOTIF, TITRE_NOTIF, MESS_NOTIF, LU_NOTIF, SUP_NOTIF, ID_CLIENT) 
+                        VALUES ('client_paiement', ?, 'Paiement enregistré', ?, 0, 0, ?)
+                    ")->execute([$idPaiementInsert, "Votre paiement de " . number_format((float)$montantP, 0, ',', ' ') . " Ar a bien été pris en compte.", $idClient]);
+                }
 
                 // Recalculer le total payé et mettre à jour le statut
                 $stmtPaid2 = $pdo->prepare('SELECT COALESCE(SUM(MONTANT_PAIEMENT), 0) FROM PAIEMENT WHERE ID_FACTURE = ?');

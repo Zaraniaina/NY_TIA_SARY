@@ -6,6 +6,12 @@ requireClient();
 require_once __DIR__ . '/composante/tolbarDto.php';
 $titre = "Mes Paiements";
 
+if (isset($_GET['mark_notif']) && (int)$_GET['mark_notif'] > 0) {
+    $idNotif = (int)$_GET['mark_notif'];
+    $pdo->prepare('UPDATE notification SET LU_NOTIF = 1 WHERE ID_NOTIF = ? AND ID_CLIENT = ?')->execute([$idNotif, $clientId]);
+    echo "<script>if (window.history.replaceState) { const url = new URL(window.location); url.searchParams.delete('mark_notif'); window.history.replaceState(null, null, url); }</script>";
+}
+
 // ── Filtre par facture (depuis le lien dans factures.php) ─────
 $filterFac = (int)($_GET['id_facture'] ?? 0);
 

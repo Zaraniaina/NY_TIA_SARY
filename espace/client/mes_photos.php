@@ -7,6 +7,12 @@ require_once __DIR__ . '/composante/tolbarDto.php';
 $titre = "Mes Photos";
 $typeMedia = "IMAGE";
 
+if (isset($_GET['mark_notif']) && (int)$_GET['mark_notif'] > 0) {
+    $idNotif = (int)$_GET['mark_notif'];
+    $pdo->prepare('UPDATE notification SET LU_NOTIF = 1 WHERE ID_NOTIF = ? AND ID_CLIENT = ?')->execute([$idNotif, $clientId]);
+    echo "<script>if (window.history.replaceState) { const url = new URL(window.location); url.searchParams.delete('mark_notif'); window.history.replaceState(null, null, url); }</script>";
+}
+
 // Récupérer les réservations avec leurs photos, groupées par réservation
 $stmt = $pdo->prepare(
     'SELECT r.ID_RESERVATION, r.DATE_RESERVATION, r.LIEU_RESERVATION, r.HEURE_RESERVATION, r.STATUS_RESERVATION,

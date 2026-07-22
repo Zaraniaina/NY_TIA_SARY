@@ -57,6 +57,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             if ($uploaded > 0) {
+                // --- Notification Client ---
+                $stmtCli = $pdo->prepare('SELECT ID_CLIENT FROM RESERVATION WHERE ID_RESERVATION = ?');
+                $stmtCli->execute([$idResa]);
+                $idClient = $stmtCli->fetchColumn();
+                if ($idClient) {
+                    $pdo->prepare("
+                        INSERT INTO notification (TYPE_NOTIF, ID_REF_NOTIF, TITRE_NOTIF, MESS_NOTIF, LU_NOTIF, SUP_NOTIF, ID_CLIENT) 
+                        VALUES ('client_media', ?, 'Nouveaux médias livrés', ?, 0, 0, ?)
+                    ")->execute([$idResa, "$uploaded fichier(s) ont été ajoutés à votre espace.", $idClient]);
+                }
+
                 prg_set_message('success', "$uploaded fichier(s) uploadé(s) avec succès.");
             }
             if (!empty($errors)) {
