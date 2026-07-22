@@ -1,15 +1,5 @@
-### lire le projet pour savoire ce qui t'attente:
+### suite de ce que nous avons fait:
+ * modale de paiment n'est pas tres visibles utiliser un background blanc et les couleur qui se marie avec ;
+ * concernant le pdf adapter le facture avec les information sur le paiment que nous venant de faire et status du paiment; 
 
-### ne pas lire dompdf et phpmailer, les dossier dans assetes
-
-## lire le fichier sql ny_tia_sary_db.sql
-
-# objectif ajouter un system de paiment lie aux fatures
-
-# adapter le facture avec montant à payé,montant deja payé, ou avance payer, reste a payée (pour les historiques)
-# historique de payment pour le client 
-# historique de paiements des  client cote admin 
-
-# c'est admin qui gerer le paiment des clients
-
-### ton plan d'action en fichier plan.md
+ # ton plan d'action stp

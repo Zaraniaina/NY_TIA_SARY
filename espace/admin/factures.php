@@ -283,44 +283,88 @@ if ($viewFacId) {
         }
         .progress-label { font-size: .72rem; color: var(--text-muted); margin-top: 2px; }
 
-        /* ── Modal paiement ── */
+        /* ── Modal paiement — thème blanc ── */
         .modal-overlay {
             display: none; position: fixed; inset: 0;
-            background: rgba(0,0,0,.65); backdrop-filter: blur(4px);
+            background: rgba(0,0,0,.55); backdrop-filter: blur(6px);
             z-index: 1000; align-items: center; justify-content: center;
         }
         .modal-overlay.open { display: flex; }
         .modal-box {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px; padding: 28px;
-            width: 100%; max-width: 440px;
-            box-shadow: 0 20px 60px rgba(0,0,0,.4);
+            background: #ffffff;
+            border: none;
+            border-radius: 20px; padding: 32px;
+            width: 100%; max-width: 460px;
+            box-shadow: 0 24px 80px rgba(0,0,0,.28);
             animation: modalIn .25s ease;
+            position: relative;
         }
         @keyframes modalIn {
-            from { opacity:0; transform: scale(.95) translateY(10px); }
+            from { opacity:0; transform: scale(.95) translateY(12px); }
             to   { opacity:1; transform: scale(1) translateY(0); }
         }
-        .modal-title {
-            font-size: 1.05rem; font-weight: 700; color: var(--text-primary);
-            margin-bottom: 4px; display: flex; align-items: center; gap: 8px;
+        /* En-tête coloré */
+        .modal-header-band {
+            background: linear-gradient(135deg, #377d49, #4ea865);
+            margin: -32px -32px 24px -32px;
+            padding: 22px 28px 20px;
+            border-radius: 20px 20px 0 0;
+            display: flex; align-items: center; justify-content: space-between;
         }
-        .modal-subtitle { font-size: .82rem; color: var(--text-muted); margin-bottom: 20px; }
+        .modal-header-band .modal-title {
+            font-size: 1.05rem; font-weight: 700; color: #fff;
+            display: flex; align-items: center; gap: 10px; margin:0;
+        }
+        .modal-header-band .modal-title i { opacity: .9; }
         .modal-close {
-            float: right; background: none; border: none; cursor: pointer;
-            color: var(--text-muted); font-size: 1.1rem; margin-top: -2px;
+            background: rgba(255,255,255,.2); border: none; cursor: pointer;
+            color: #fff; font-size: .95rem; width: 30px; height: 30px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            transition: background .2s;
         }
-        .modal-close:hover { color: var(--text-primary); }
-        .form-group { margin-bottom: 14px; }
-        .form-group label { display: block; font-size: .82rem; color: var(--text-muted); margin-bottom: 5px; font-weight: 600; }
+        .modal-close:hover { background: rgba(255,255,255,.35); }
+        .modal-subtitle {
+            font-size: .82rem; color: #666; margin-bottom: 18px;
+            padding-bottom: 14px; border-bottom: 1px solid #f0f0f0;
+        }
+        .form-group { margin-bottom: 16px; }
+        .form-group label {
+            display: block; font-size: .82rem; color: #444;
+            margin-bottom: 6px; font-weight: 600;
+        }
+        .form-group input {
+            width: 100%; padding: 10px 14px; border: 1.5px solid #e0e0e0;
+            border-radius: 8px; font-size: .92rem; color: #1a1a1a;
+            background: #fafafa; box-sizing: border-box;
+            transition: border-color .2s, box-shadow .2s;
+            outline: none;
+        }
+        .form-group input:focus {
+            border-color: #377d49; background: #fff;
+            box-shadow: 0 0 0 3px rgba(55,125,73,.12);
+        }
         .modal-info-row {
             display: flex; justify-content: space-between; align-items: center;
-            background: rgba(255,255,255,.04); border-radius: 8px;
-            padding: 10px 12px; margin-bottom: 16px; font-size: .85rem;
+            background: #f0faf4; border: 1px solid #c6e8d1; border-radius: 10px;
+            padding: 12px 16px; margin-bottom: 20px; font-size: .88rem;
         }
-        .modal-info-row .label { color: var(--text-muted); }
-        .modal-info-row .value { font-weight: 700; color: var(--primary-green); }
+        .modal-info-row .label { color: #555; font-weight: 500; }
+        .modal-info-row .value { font-weight: 800; color: #377d49; font-size: 1rem; }
+        /* Boutons dans le modal blanc */
+        .modal-btn-submit {
+            flex: 1; padding: 11px; border: none; border-radius: 10px; cursor: pointer;
+            background: linear-gradient(135deg, #377d49, #4ea865);
+            color: #fff; font-size: .92rem; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; gap: 7px;
+            transition: opacity .2s;
+        }
+        .modal-btn-submit:hover { opacity: .88; }
+        .modal-btn-cancel {
+            flex: 1; padding: 11px; border: 1.5px solid #e0e0e0; border-radius: 10px;
+            cursor: pointer; background: #fff; color: #555; font-size: .92rem;
+            font-weight: 600; transition: background .2s, border-color .2s;
+        }
+        .modal-btn-cancel:hover { background: #f5f5f5; border-color: #ccc; }
 
         /* ── Historique paiements d'une facture ── */
         .pay-hist-item {
@@ -631,15 +675,26 @@ if ($viewFacId) {
     </div>
 </div>
 
-<!-- ── MODAL PAIEMENT ───────────────────────────────────────────── -->
+<!-- ── MODAL PAIEMENT (thème blanc) ────────────────────────────── -->
 <div class="modal-overlay" id="payModal">
     <div class="modal-box">
-        <button class="modal-close" onclick="closePayModal()"><i class="fas fa-times"></i></button>
-        <div class="modal-title"><i class="fas fa-coins" style="color:var(--primary-green);"></i> Enregistrer un paiement</div>
+
+        <!-- Bandeau vert en-tête -->
+        <div class="modal-header-band">
+            <div class="modal-title">
+                <i class="fas fa-coins"></i>
+                Enregistrer un paiement
+            </div>
+            <button class="modal-close" onclick="closePayModal()" title="Fermer">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
         <div class="modal-subtitle" id="modalSubtitle">Facture —</div>
 
+        <!-- Reste à payer mis en avant -->
         <div class="modal-info-row">
-            <span class="label"><i class="fas fa-money-bill-wave"></i> Reste à payer</span>
+            <span class="label"><i class="fas fa-money-bill-wave" style="color:#377d49;"></i>&nbsp; Reste à payer</span>
             <span class="value" id="modalReste">0 Ar</span>
         </div>
 
@@ -648,21 +703,26 @@ if ($viewFacId) {
             <input type="hidden" name="id_facture" id="modalIdFac" value="">
 
             <div class="form-group">
-                <label for="montant_paiement"><i class="fas fa-coins"></i> Montant du paiement (Ar)</label>
+                <label for="montant_paiement">
+                    <i class="fas fa-coins" style="color:#377d49;"></i>&nbsp; Montant du versement (Ar)
+                </label>
                 <input type="number" name="montant_paiement" id="montant_paiement"
-                       class="dash-input" min="1" placeholder="Ex: 500000" required>
-            </div>
-            <div class="form-group">
-                <label for="date_paiement"><i class="fas fa-calendar-alt"></i> Date du paiement</label>
-                <input type="date" name="date_paiement" id="date_paiement"
-                       class="dash-input" value="<?= date('Y-m-d') ?>" required>
+                       min="1" placeholder="Ex : 500 000" required>
             </div>
 
-            <div style="display:flex;gap:10px;margin-top:20px;">
-                <button type="submit" class="btn-dash btn-dash-primary" style="flex:1;">
+            <div class="form-group">
+                <label for="date_paiement">
+                    <i class="fas fa-calendar-alt" style="color:#377d49;"></i>&nbsp; Date du versement
+                </label>
+                <input type="date" name="date_paiement" id="date_paiement"
+                       value="<?= date('Y-m-d') ?>" required>
+            </div>
+
+            <div style="display:flex;gap:10px;margin-top:22px;">
+                <button type="submit" class="modal-btn-submit">
                     <i class="fas fa-save"></i> Enregistrer
                 </button>
-                <button type="button" class="btn-dash btn-dash-outline" onclick="closePayModal()" style="flex:1;">
+                <button type="button" class="modal-btn-cancel" onclick="closePayModal()">
                     Annuler
                 </button>
             </div>
