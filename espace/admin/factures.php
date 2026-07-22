@@ -185,14 +185,14 @@ $factures = $stmt->fetchAll();
                     </div>
                     <div class="dash-card-body">
                         <!-- BARRE DE RECHERCHE -->
-                        <form method="GET" action="" style="display:flex;gap:8px;margin-bottom:16px;">
-                            <div class="dash-search-bar" style="margin:0;flex:1;">
+                        <form method="GET" action="" class="dash-search-form">
+                            <div class="dash-search-bar dash-search-bar-fullwidth">
                                 <i class="fas fa-search"></i>
                                 <input type="text" name="q" value="<?= htmlspecialchars($search) ?>" placeholder="Rechercher par n° de facture ou client...">
                             </div>
-                            <button type="submit" class="btn-dash btn-dash-primary" style="padding:10px 14px;"><i class="fas fa-search"></i> Filtrer</button>
+                            <button type="submit" class="btn-dash btn-dash-primary dash-search-btn"><i class="fas fa-search"></i> Filtrer</button>
                             <?php if ($search !== ''): ?>
-                                <a href="factures.php" class="btn-dash btn-dash-outline" style="padding:10px 14px;text-decoration:none;"><i class="fas fa-times"></i> Ràz</a>
+                                <a href="factures.php" class="btn-dash btn-dash-outline dash-clear-btn"><i class="fas fa-times"></i> Ràz</a>
                             <?php endif; ?>
                         </form>
 
@@ -233,7 +233,7 @@ $factures = $stmt->fetchAll();
                                             </form>
                                         </td>
                                         <td>
-                                            <div style="display:inline-flex;gap:6px;">
+                                            <div style="display:inline-flex;gap:3px;">
                                                 <a href="../client/generer_facture_pdf.php?id_facture=<?= (int)$f['ID_FACTURE'] ?>" class="btn-dash btn-dash-outline btn-dash-sm" title="Télécharger le PDF">
                                                     <i class="fas fa-file-pdf"></i>
                                                 </a>

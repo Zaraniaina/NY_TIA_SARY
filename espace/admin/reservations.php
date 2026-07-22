@@ -116,7 +116,7 @@ $selectedResaId = (int) ($_GET['id'] ?? 0);
 
             <!-- FILTRES & RECHERCHE -->
             <div class="dash-action-row">
-                <form method="GET" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+                <form method="GET" style="display:flex;gap:15px;flex-wrap:wrap;align-items:center;">
                     <div class="dash-search-bar">
                         <i class="fas fa-search"></i>
                         <input type="text" name="q" value="<?= htmlspecialchars($search) ?>" placeholder="Client, prestation...">
@@ -126,13 +126,13 @@ $selectedResaId = (int) ($_GET['id'] ?? 0);
                             <option value="<?= $s ?>" <?= $filterStatut === $s ? 'selected' : '' ?>><?= $s ?></option>
                         <?php endforeach; ?>
                     </select>
-                    <button type="submit" class="btn-dash btn-dash-primary"><i class="fas fa-search"></i> Filtrer</button>
+                    <button type="submit" class="btn-dash btn-dash-primary" style="margin-left:10px;"><i class="fas fa-search"></i> Filtrer</button>
                 </form>
                 <span style="font-size:0.85rem;color:#888;"><?= count($reservations) ?> résultat(s)</span>
             </div>
 
             <div class="dash-card">
-                <div class="dash-card-body">
+                 <div class="dash-card-body">
                     <?php if (empty($reservations)): ?>
                         <div class="empty-state"><i class="fas fa-calendar-times"></i><p>Aucune réservation trouvée.</p></div>
                     <?php else: ?>

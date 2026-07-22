@@ -172,8 +172,8 @@ $reservations = $stmtResas->fetchAll();
                 <?php endif; ?>
 
                 <!-- FORMULAIRE NOUVELLE RÉSERVATION -->
-                <div class="dash-card" style="margin-bottom:28px;">
-                    <div class="dash-card-header">
+                <div class="dash-card reservation-card" style="margin-bottom:28px;">
+                    <div class="dash-card-header reservation-card-header">
                         <h3><i class="fas fa-plus-circle" style="color:var(--primary-green);margin-right:8px;"></i> Nouvelle réservation</h3>
                         <button class="btn-dash btn-dash-outline btn-dash-sm" id="toggleForm">
                             <i class="fas fa-chevron-down" id="toggleIcon"></i> Ouvrir le formulaire
@@ -229,11 +229,11 @@ $reservations = $stmtResas->fetchAll();
                 </div>
 
                 <!-- LISTE DES RÉSERVATIONS -->
-                <div class="dash-card">
-                    <div class="dash-card-header">
+                <div class="dash-card reservation-history-card">
+                    <div class="dash-card-header reservation-history-header">
                         <h3><i class="fas fa-list" style="color:var(--primary-green);margin-right:8px;"></i> Historique</h3>
                         <!-- Filtres statut -->
-                        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <div class="reservation-filters" style="display:flex;gap:8px;flex-wrap:wrap;">
                             <?php foreach (['TOUS', 'EN ATTENTE', 'CONFIRMEE', 'ANNULEE', 'TERMINEE'] as $s): ?>
                                 <a href="?statut=<?= urlencode($s) ?>"
                                     class="btn-dash btn-dash-sm <?= $filter === $s ? 'btn-dash-primary' : 'btn-dash-outline' ?>">
@@ -249,8 +249,8 @@ $reservations = $stmtResas->fetchAll();
                                 <p>Aucune réservation trouvée pour ce filtre.</p>
                             </div>
                         <?php else: ?>
-                            <div class="table-responsive">
-                                <table class="dash-table">
+                            <div class="table-responsive reservation-table-responsive">
+                                <table class="dash-table reservation-table">
                                     <thead>
                                         <tr>
                                             <th>#</th>

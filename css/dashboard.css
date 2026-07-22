@@ -465,6 +465,118 @@ body {
     font-weight: 600;
 }
 
+/* Action row: spacing for search & filters */
+.dash-action-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 16px; /* prevent controls from touching container edges */
+    margin-bottom: 18px;
+}
+
+.dash-filter-form {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    align-items: center;
+    width: 100%;
+}
+
+.dash-search-bar {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border: 1.5px solid var(--input-border);
+    border-radius: 8px;
+    background: var(--white);
+}
+
+.dash-search-bar input {
+    border: none;
+    outline: none;
+    font-size: 0.95rem;
+    min-width: 220px;
+}
+
+.dash-search-form {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 16px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.95);
+}
+
+.dash-search-bar-fullwidth {
+    flex: 1;
+    min-width: 0;
+}
+
+.dash-search-btn,
+.dash-clear-btn {
+    padding: 10px 14px;
+}
+
+.dash-select-inline {
+    width: auto;
+    min-width: 160px;
+}
+
+.dash-filter-btn {
+    margin-left: 8px;
+}
+
+.dash-result-count {
+    font-size: 0.85rem;
+    color: #888;
+}
+
+@media (max-width: 720px) {
+    .dash-search-bar input { min-width: 140px; }
+    .dash-action-row { padding: 10px; }
+}
+
+/* ACTION ROW: espacement autour de la recherche et des filtres */
+.dash-action-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 16px; /* évite que les éléments collent au bord */
+    background: transparent;
+    border-radius: 8px;
+    margin-bottom: 18px;
+}
+
+.dash-action-row form {
+    width: 100%;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* Barre de recherche interne */
+.dash-search-bar {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border: 1.5px solid var(--input-border);
+    border-radius: 8px;
+    background: var(--white);
+}
+
+.dash-search-bar input {
+    border: none;
+    outline: none;
+    font-size: 0.95rem;
+    min-width: 220px;
+}
+
 .dash-breadcrumb a {
     color: var(--primary-green);
     text-decoration: none;
@@ -1110,6 +1222,82 @@ body {
         width: 270px;
         z-index: 1100;
     }
+
+    .reservation-card-header,
+    .reservation-history-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .reservation-filters {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .reservation-filters .btn-dash {
+        flex: 1 1 calc(50% - 8px);
+        justify-content: center;
+    }
+
+    .reservation-table-responsive {
+        overflow-x: auto;
+    }
+
+    .reservation-table thead {
+        display: none;
+    }
+
+    .reservation-table,
+    .reservation-table tbody,
+    .reservation-table tr,
+    .reservation-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .reservation-table tr {
+        margin-bottom: 14px;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 10px 0;
+        background: var(--white);
+        box-shadow: var(--shadow-subtle);
+    }
+
+    .reservation-table td {
+        border: none;
+        padding: 10px 16px;
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: flex-start;
+    }
+
+    .reservation-table td::before {
+        content: attr(data-label);
+        font-weight: 700;
+        color: #666;
+        flex: 0 0 42%;
+        font-size: 0.8rem;
+    }
+
+    .reservation-table td:last-child {
+        justify-content: flex-end;
+    }
+
+    .reservation-table td form {
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .reservation-table td .btn-dash {
+        width: 100%;
+        justify-content: center;
+    }
+
 
     .dashboard-sidebar.open {
         transform: translateX(0);

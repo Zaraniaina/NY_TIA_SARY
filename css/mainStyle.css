@@ -139,6 +139,19 @@
             color: var(--white);
         }
 
+        /* Connexion button specifically red */
+        .btn-connexion {
+            border-color: var(--primary-red);
+            color: var(--primary-red);
+        }
+
+        .btn-connexion:hover {
+            background-color: var(--primary-red);
+            color: var(--white);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
         /* ============================================================
            2. HEADER & MENU (The Dynamic Entry)
            ============================================================ */
