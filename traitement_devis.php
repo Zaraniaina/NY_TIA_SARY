@@ -104,6 +104,8 @@ if ($dateSouhaitee !== '') {
     $d = DateTime::createFromFormat('Y-m-d', $dateSouhaitee);
     if (!$d || $d->format('Y-m-d') !== $dateSouhaitee) {
         $errors[] = "La date souhaitée est invalide.";
+    } elseif ($dateSouhaitee < date('Y-m-d')) {
+        $errors[] = "La date souhaitée doit être supérieure ou égale à la date d'aujourd'hui.";
     }
 }
 

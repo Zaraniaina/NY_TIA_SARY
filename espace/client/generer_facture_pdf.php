@@ -24,7 +24,7 @@ if (!$idFacture) {
     die('Facture non spécifiée.');
 }
 
-// Récupérer les informations de la facture
+// ── Récupérer les informations de la facture ──────────────────
 $sql = 'SELECT f.*, ct.DATE_CONTRAT, r.ID_RESERVATION, r.DATE_RESERVATION, r.LIEU_RESERVATION, r.HEURE_RESERVATION,
             p.LIB_PRESTATION, c.NOM_CLIENT, c.PRENOM_CLIENT, c.TEL_CLIENT, a.EMAIL_AUTH
      FROM FACTURE f
@@ -49,7 +49,7 @@ if (!$facture) {
     die('Facture introuvable ou non autorisée.');
 }
 
-// Récupérer les lignes de catégories (détails des prix)
+// ── Récupérer les lignes de catégories (détails des prix) ─────
 $stmtDetails = $pdo->prepare(
     'SELECT cat.LIB_CATEGORIE, rc.PRIX
      FROM RESERVATION_CATEGORIE rc
@@ -59,7 +59,42 @@ $stmtDetails = $pdo->prepare(
 $stmtDetails->execute([$facture['ID_RESERVATION']]);
 $details = $stmtDetails->fetchAll();
 
-// Génération du contenu HTML pour le PDF
+// ── Récupérer les paiements de cette facture ──────────────────
+$stmtPay = $pdo->prepare(
+    'SELECT DATE_PAIEMENT, MONTANT_PAIEMENT
+     FROM PAIEMENT
+     WHERE ID_FACTURE = ?
+     ORDER BY DATE_PAIEMENT ASC'
+);
+$stmtPay->execute([$idFacture]);
+$paiements = $stmtPay->fetchAll();
+
+$montantTotal = (int)$facture['MONTANT_FACTURE'];
+$totalPaye    = (int)array_sum(array_column($paiements, 'MONTANT_PAIEMENT'));
+$resteAPayer  = $montantTotal - $totalPaye;
+
+// ── Déterminer le statut réel à 3 états ───────────────────────
+if ($totalPaye >= $montantTotal && $montantTotal > 0) {
+    $statutLabel = 'PAYÉE';
+    $badgeColor  = '#377d49';
+    $badgeBg     = '#e8f5ed';
+    $badgeBorder = '#b8ddc4';
+} elseif ($totalPaye > 0) {
+    $statutLabel = 'PARTIELLEMENT PAYÉE';
+    $badgeColor  = '#b45309';
+    $badgeBg     = '#fff7ed';
+    $badgeBorder = '#fbbf24';
+} else {
+    $statutLabel = 'NON PAYÉE';
+    $badgeColor  = '#c0392b';
+    $badgeBg     = '#fef2f2';
+    $badgeBorder = '#fca5a5';
+}
+
+$pct = $montantTotal > 0 ? min(100, round($totalPaye / $montantTotal * 100)) : 0;
+$pctFill = $pct . '%';
+
+// ── Génération du HTML pour le PDF ────────────────────────────
 $html = '
 <!DOCTYPE html>
 <html lang="fr">
@@ -67,229 +102,226 @@ $html = '
     <meta charset="UTF-8">
     <title>Facture ' . htmlspecialchars($facture['NUM_FACTURE']) . '</title>
     <style>
+        * { box-sizing: border-box; }
         body {
             font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-            color: #333;
-            margin: 0;
-            padding: 20px;
-            font-size: 14px;
-            line-height: 1.5;
+            color: #2d2d2d; margin: 0; padding: 24px 28px;
+            font-size: 13px; line-height: 1.55;
         }
+
+        /* ── En-tête ── */
         .header {
-            margin-bottom: 40px;
-            border-bottom: 2px solid #377d49;
-            padding-bottom: 20px;
+            margin-bottom: 28px;
+            padding-bottom: 18px;
+            border-bottom: 3px solid #377d49;
         }
-        .logo {
-            font-size: 28px;
-            font-weight: bold;
-            color: #377d49;
-            text-transform: uppercase;
-        }
-        .logo-sub {
-            font-size: 12px;
-            color: #666;
-            margin-top: -5px;
-        }
-        .invoice-title {
-            text-align: right;
-            font-size: 24px;
-            color: #333;
-            font-weight: bold;
-            margin-top: -45px;
-        }
-        .company-details, .client-details {
-            width: 50%;
-            float: left;
-            margin-bottom: 30px;
-        }
-        .client-details {
-            text-align: right;
-            float: right;
-        }
-        .clear {
-            clear: both;
-        }
+        .logo { font-size: 26px; font-weight: bold; color: #377d49; text-transform: uppercase; letter-spacing: 1px; }
+        .logo-sub { font-size: 11px; color: #777; margin-top: -4px; }
+        .invoice-title { text-align: right; font-size: 22px; color: #1a1a1a; font-weight: bold; margin-top: -44px; }
+
+        /* ── Infos société / client ── */
+        .two-col { width: 100%; margin-bottom: 24px; }
+        .two-col td { vertical-align: top; padding: 0; width: 50%; }
+        .company-block { font-size: 12.5px; color: #444; line-height: 1.7; }
+        .company-block strong { color: #1a1a1a; display: block; margin-bottom: 4px; font-size: 13px; }
+        .client-block { font-size: 12.5px; color: #444; text-align: right; line-height: 1.7; }
+        .client-block strong { color: #1a1a1a; display: block; margin-bottom: 4px; font-size: 13px; }
+
+        /* ── Bandeau infos facture ── */
         .invoice-info {
-            background-color: #f9f9f9;
-            border: 1px solid #eee;
-            padding: 15px;
-            margin-bottom: 30px;
-            border-radius: 5px;
+            background-color: #f7f9f7; border: 1px solid #d8ead8;
+            padding: 14px 16px; margin-bottom: 26px; border-radius: 6px;
         }
-        .invoice-info table {
-            width: 100%;
+        .invoice-info table { width: 100%; }
+        .invoice-info td { padding: 5px 4px; font-size: 12.5px; }
+        .badge-status {
+            display: inline-block; padding: 3px 10px; border-radius: 20px;
+            font-size: 11px; font-weight: bold; letter-spacing: .3px;
+            background-color: ' . $badgeBg . ';
+            color: ' . $badgeColor . ';
+            border: 1px solid ' . $badgeBorder . ';
         }
-        .invoice-info td {
-            padding: 5px 0;
-        }
-        .table-items {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 35px;
-        }
+
+        /* ── Tableau des formules ── */
+        .table-items { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
         .table-items th {
-            background-color: #377d49;
-            color: #fff;
-            padding: 12px;
-            text-align: left;
-            font-weight: bold;
+            background-color: #377d49; color: #fff;
+            padding: 10px 12px; text-align: left; font-size: 12px; font-weight: bold;
         }
-        .table-items td {
-            padding: 12px;
-            border-bottom: 1px solid #eee;
+        .table-items td { padding: 10px 12px; border-bottom: 1px solid #ebebeb; font-size: 12.5px; }
+        .table-items tr:last-child td { border-bottom: none; }
+        .text-right { text-align: right; }
+
+        /* ── Section totaux ── */
+        .totals-table { width: 44%; float: right; border-collapse: collapse; margin-bottom: 10px; }
+        .totals-table td { padding: 8px 12px; font-size: 13px; }
+        .totals-table .row-sep td { border-top: 1px solid #e0e0e0; }
+        .totals-table .row-total td {
+            background-color: #377d49; color: #fff; font-weight: bold; font-size: 14px;
         }
-        .text-right {
-            text-align: right;
+        .totals-table .row-paye td { background-color: #f0faf4; color: #377d49; font-weight: 600; }
+        .totals-table .row-reste td {
+            background-color: ' . ($resteAPayer > 0 ? '#fff8f0' : '#f0faf4') . ';
+            color: ' . ($resteAPayer > 0 ? '#b45309' : '#377d49') . ';
+            font-weight: 700;
         }
-        .total-section {
-            float: right;
-            width: 40%;
-            margin-top: 10px;
+        .clear { clear: both; }
+
+        /* ── Section historique paiements ── */
+        .pay-section {
+            margin-top: 22px; padding-top: 18px; border-top: 1px solid #ddd;
         }
-        .total-table {
-            width: 100%;
-            border-collapse: collapse;
+        .pay-section-title {
+            font-size: 13px; font-weight: bold; color: #377d49;
+            margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
         }
-        .total-table td {
-            padding: 10px;
-            font-size: 16px;
+        .pay-table { width: 100%; border-collapse: collapse; }
+        .pay-table th {
+            background: #f0faf4; color: #2d6b3a; font-size: 11.5px;
+            padding: 7px 12px; text-align: left; border-bottom: 1.5px solid #b8ddc4;
         }
-        .total-table .grand-total {
-            background-color: #377d49;
-            color: #fff;
-            font-weight: bold;
+        .pay-table td { padding: 8px 12px; font-size: 12.5px; border-bottom: 1px solid #f0f0f0; }
+        .pay-table tr:last-child td { border-bottom: none; }
+
+        /* ── Barre de progression ── */
+        .progress-wrap {
+            background: #e8e8e8; border-radius: 4px; height: 7px;
+            margin: 6px 0 2px; overflow: hidden; width: 100%;
         }
+        .progress-fill {
+            background: linear-gradient(90deg, #377d49, #4ea865);
+            height: 100%; border-radius: 4px; width: ' . $pctFill . ';
+        }
+        .progress-pct { font-size: 10.5px; color: #666; text-align: right; }
+
+        /* ── Pied de page ── */
         .footer {
-            margin-top: 120px;
-            text-align: center;
-            font-size: 11px;
-            color: #888;
-            border-top: 1px solid #eee;
-            padding-top: 15px;
+            margin-top: 36px; text-align: center; font-size: 11px;
+            color: #999; border-top: 1px solid #e0e0e0; padding-top: 14px;
         }
-        .badge {
-            background-color: #377d49;
-            color: #fff;
-            padding: 4px 8px;
-            border-radius: 3px;
-            font-size: 12px;
-            font-weight: bold;
-            display: inline-block;
-        }
+        .no-pay-msg { color: #888; font-style: italic; font-size: 12px; padding: 8px 0; }
     </style>
 </head>
 <body>
 
+    <!-- EN-TÊTE -->
     <div class="header">
         <div class="logo">NY TIA SARY</div>
-        <div class="logo-sub">Studio Photo & Vidéo Professionnel</div>
+        <div class="logo-sub">Studio Photo &amp; Vidéo Professionnel</div>
         <div class="invoice-title">FACTURE</div>
     </div>
 
-    <div>
-        <div class="company-details">
-            <strong>NY TIA SARY Production</strong><br>
-            Mangarano, Toamasina<br>
-            Madagascar<br>
-            Tél: +261 34 12 345 67<br>
-            Email: contact@nytiasary.mg
-        </div>
-        <div class="client-details">
-            <strong>Facturé à :</strong><br>
-            ' . htmlspecialchars($facture['PRENOM_CLIENT'] . ' ' . $facture['NOM_CLIENT']) . '<br>
-            Tél: ' . htmlspecialchars($facture['TEL_CLIENT']) . '<br>
-            Email: ' . htmlspecialchars($facture['EMAIL_AUTH']) . '
-        </div>
-        <div class="clear"></div>
-    </div>
+    <!-- SOCIÉTÉ & CLIENT -->
+    <table class="two-col">
+        <tr>
+            <td>
+                <div class="company-block">
+                    <strong>NY TIA SARY Production</strong>
+                    Mangarano, Toamasina<br>
+                    Madagascar<br>
+                    Tél : +261 34 12 345 67<br>
+                    Email : contact@nytiasary.mg
+                </div>
+            </td>
+            <td>
+                <div class="client-block">
+                    <strong>Facturé à :</strong>
+                    ' . htmlspecialchars($facture['PRENOM_CLIENT'] . ' ' . $facture['NOM_CLIENT']) . '<br>
+                    Tél : ' . htmlspecialchars($facture['TEL_CLIENT']) . '<br>
+                    Email : ' . htmlspecialchars($facture['EMAIL_AUTH']) . '
+                </div>
+            </td>
+        </tr>
+    </table>
 
-    ';
-    $sf = strtoupper(trim($facture['STATUS_FACTURE']));
-    $statutLabel = ($sf === 'PAYEE' || $sf === 'PAYÉE' || $sf === 'REGLÉE') ? 'PAYÉE' : 'NON PAYÉE';
-    $badgeStyle = ($sf === 'PAYEE' || $sf === 'PAYÉE' || $sf === 'REGLÉE') ? 'background-color: #377d49;' : 'background-color: #d93d3d;';
-    $html .= '
+    <!-- INFOS FACTURE -->
     <div class="invoice-info">
         <table>
             <tr>
-                <td><strong>N° de Facture :</strong> ' . htmlspecialchars($facture['NUM_FACTURE']) . '</td>
-                <td class="text-right"><strong>Date de Facturation :</strong> ' . date('d/m/Y', strtotime($facture['DATE_FACTURE'])) . '</td>
+                <td><strong>N° Facture :</strong> ' . htmlspecialchars($facture['NUM_FACTURE']) . '</td>
+                <td class="text-right"><strong>Date de facturation :</strong> ' . date('d/m/Y', strtotime($facture['DATE_FACTURE'])) . '</td>
             </tr>
             <tr>
                 <td><strong>Prestation :</strong> ' . htmlspecialchars($facture['LIB_PRESTATION']) . '</td>
-                <td class="text-right"><strong>Statut :</strong> <span class="badge" style="' . $badgeStyle . '">' . $statutLabel . '</span></td>
+                <td class="text-right"><strong>Statut :</strong> <span class="badge-status">' . $statutLabel . '</span></td>
             </tr>
             <tr>
-                <td><strong>Date Prestation :</strong> ' . date('d/m/Y', strtotime($facture['DATE_RESERVATION'])) . ' à ' . substr($facture['HEURE_RESERVATION'], 0, 5) . '</td>
+                <td><strong>Date prestation :</strong> ' . date('d/m/Y', strtotime($facture['DATE_RESERVATION'])) . ' à ' . substr($facture['HEURE_RESERVATION'], 0, 5) . '</td>
                 <td class="text-right"><strong>Lieu :</strong> ' . htmlspecialchars($facture['LIEU_RESERVATION']) . '</td>
             </tr>
         </table>
     </div>
 
+    <!-- TABLEAU DES FORMULES -->
     <table class="table-items">
         <thead>
             <tr>
                 <th>Désignation / Formule</th>
-                <th class="text-right" style="width: 150px;">Prix Unitaire</th>
+                <th class="text-right" style="width:150px;">Prix unitaire</th>
             </tr>
         </thead>
         <tbody>';
 
-        foreach ($details as $row) {
-            $html .= '
+foreach ($details as $row) {
+    $html .= '
             <tr>
                 <td>' . htmlspecialchars($row['LIB_CATEGORIE']) . '</td>
                 <td class="text-right">' . number_format((int)$row['PRIX'], 0, ',', ' ') . ' Ar</td>
             </tr>';
-        }
+}
 
-        if (empty($details)) {
-            $html .= '
+if (empty($details)) {
+    $html .= '
             <tr>
-                <td>Formule générale - ' . htmlspecialchars($facture['LIB_PRESTATION']) . '</td>
-                <td class="text-right">' . number_format((int)$facture['MONTANT_FACTURE'], 0, ',', ' ') . ' Ar</td>
+                <td>Formule générale — ' . htmlspecialchars($facture['LIB_PRESTATION']) . '</td>
+                <td class="text-right">' . number_format($montantTotal, 0, ',', ' ') . ' Ar</td>
             </tr>';
-        }
+}
 
 $html .= '
         </tbody>
     </table>
 
-    <div class="total-section">
-        <table class="total-table">
-            <tr class="grand-total">
-                <td>Total Net à payer</td>
-                <td class="text-right">' . number_format((int)$facture['MONTANT_FACTURE'], 0, ',', ' ') . ' Ar</td>
-            </tr>
-        </table>
-    </div>
-    <div class="clear"></div>
+    <!-- BLOC TOTAUX -->
+    <table class="totals-table">
+        <tr class="row-total">
+            <td>Montant total</td>
+            <td class="text-right">' . number_format($montantTotal, 0, ',', ' ') . ' Ar</td>
+        </tr>
+        <tr class="row-sep row-paye">
+            <td>Total versé</td>
+            <td class="text-right">' . number_format($totalPaye, 0, ',', ' ') . ' Ar</td>
+        </tr>
+        <tr class="row-reste">
+            <td>Reste à payer</td>
+            <td class="text-right">' . number_format($resteAPayer, 0, ',', ' ') . ' Ar</td>
+        </tr>
+    </table>
+    <div class="clear"></div>';
 
+$html .= '
+    </div>
+
+    <!-- PIED DE PAGE -->
     <div class="footer">
         Merci pour votre confiance et pour votre collaboration avec NY TIA SARY.<br>
         <em>Ce document est une facture officielle certifiée conforme.</em>
     </div>
 
 </body>
-</html>
-';
+</html>';
 
-// Initialiser Dompdf
+// ── Initialiser Dompdf ─────────────────────────────────────────
 $options = new Options();
 $options->set('isHtml5ParserEnabled', true);
 $options->set('isRemoteEnabled', true);
 
 $dompdf = new Dompdf($options);
 $dompdf->loadHtml($html);
-
-// (Optionnel) Configurer le format du papier
 $dompdf->setPaper('A4', 'portrait');
-
-// Rendre le HTML en PDF
 $dompdf->render();
 
-// Envoyer le PDF généré au navigateur
 $dompdf->stream('Facture_' . $facture['NUM_FACTURE'] . '.pdf', [
-    'Attachment' => true // true = force le téléchargement, false = ouvre dans le navigateur
+    'Attachment' => true
 ]);
 exit();

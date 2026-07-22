@@ -24,9 +24,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!$idPrestation || empty($idCategories) || !$dateResa || !$heureResa || !$lieuResa) {
             prg_set_message('error', 'Veuillez remplir tous les champs obligatoires et choisir au moins une formule.');
+        } elseif ($dateResa < date('Y-m-d')) {
+            prg_set_message('error', 'La date de réservation doit être supérieure ou égale à la date d\'aujourd\'hui.');
         } else {
-            try {
-                $pdo->beginTransaction();
+            // Vérifier si la date est déjà réservée
+            $stmtCheck = $pdo->prepare('SELECT COUNT(*) FROM RESERVATION WHERE DATE_RESERVATION = ? AND STATUS_RESERVATION != "ANNULEE"');
+            $stmtCheck->execute([$dateResa]);
+            if ($stmtCheck->fetchColumn() > 0) {
+                prg_set_message('error', 'Cette date est déjà réservée. Veuillez choisir une autre date.');
+            } else {
+                try {
+                    $pdo->beginTransaction();
 
                 $stmt = $pdo->prepare(
                     'INSERT INTO RESERVATION (ID_PRESTATION, ID_CLIENT, DATE_RESERVATION, HEURE_RESERVATION, LIEU_RESERVATION, COMME_RESERVATION, STATUS_RESERVATION)
@@ -101,6 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 prg_set_message('error', 'Une erreur est survenue lors de la création de votre réservation.');
             }
         }
+    }
         prg_redirect();
     }
     
