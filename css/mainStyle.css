@@ -1757,6 +1757,27 @@ body.lightbox-open {
             margin-top: 4px;
         }
 
+        .google-maps-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 8px;
+            color: var(--text-body);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .google-maps-link:hover {
+            color: var(--primary-green);
+        }
+
+        .google-maps-link i {
+            color: var(--primary-green);
+            font-size: 1rem;
+            margin: 0;
+        }
+
         .footer-bottom {
             text-align: center;
             border-top: 1px solid rgba(0, 0, 0, 0.05);
@@ -1915,20 +1936,50 @@ body.lightbox-open {
             .footer-grid {
                 grid-template-columns: 1fr;
                 text-align: center;
-                gap: 40px;
+                gap: 18px;
                 justify-items: center;
+                align-items: stretch;
+            }
+
+            .footer-logo-box,
+            .footer-col {
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                margin: 0;
+                padding: 0;
             }
 
             .footer-links,
             .footer-contact {
+                width: 100%;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
+                gap: 8px;
+                margin: 0;
+                padding: 0;
+            }
+
+            .footer-links li,
+            .footer-contact li {
+                margin-bottom: 0;
+            }
+
+            .footer-col h4 {
+                margin-bottom: 10px;
             }
 
             .footer-col h4::after {
                 left: 50%;
                 transform: translateX(-50%);
+            }
+
+            .google-maps-link {
+                justify-content: center;
+                margin-top: 6px;
             }
 
             .lightbox {

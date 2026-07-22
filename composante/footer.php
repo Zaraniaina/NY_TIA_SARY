@@ -33,6 +33,10 @@
                     <li><i class="fas fa-envelope"></i> contact@nytiasary.mg</li>
                     <li><i class="fas fa-clock"></i> Lun - Sam: 8h00 - 18h00</li>
                 </ul>
+                <a href="https://maps.google.com/maps?q=TIA+INFO+Toamasina+Madagascar" target="_blank" rel="noopener noreferrer" class="google-maps-link" title="Voir Tia Info sur Google Maps">
+                    <i class="fab fa-google"></i>
+                    <span>Google Maps</span>
+                </a>
             </div>
         </div>
 
