@@ -500,4 +500,49 @@ class MailService
 
         return $this->send($adminEmail, $subject, $body, true);
     }
+
+    /**
+     * Envoyer une notification de réponse de devis à un client avec compte
+     */
+    public function sendDevisResponseToClient(string $email, string $clientName, string $link): bool
+    {
+        $body = '<div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px;">
+            <h2 style="color: #2c3e50; border-bottom: 2px solid #3aaa6e; padding-bottom: 10px;">Réponse à votre demande de devis</h2>
+            <p>Bonjour ' . htmlspecialchars($clientName) . ',</p>
+            <p>Nous avons traité votre demande de devis. Vous pouvez dès à présent le consulter et le télécharger depuis votre espace client.</p>
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="' . htmlspecialchars($link) . '" style="background-color: #3aaa6e; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">Voir mon devis</a>
+            </div>
+            <p>Si vous avez des questions, n\'hésitez pas à nous contacter.</p>
+            <p>Cordialement,<br>L\'équipe NY TIA SARY</p>
+        </div>';
+
+        return $this->send($email, 'Votre devis est prêt - NY TIA SARY', $body, true);
+    }
+
+    /**
+     * Envoyer un devis en pièce jointe à un internaute sans compte
+     */
+    public function sendDevisResponseWithAttachment(string $email, string $clientName, string $filePath): bool
+    {
+        $body = '<div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px;">
+            <h2 style="color: #2c3e50; border-bottom: 2px solid #3aaa6e; padding-bottom: 10px;">Votre demande de devis</h2>
+            <p>Bonjour ' . htmlspecialchars($clientName) . ',</p>
+            <p>Suite à votre demande, veuillez trouver ci-joint notre proposition de devis détaillée.</p>
+            <p>Si vous avez des questions ou souhaitez ajuster cette proposition, n\'hésitez pas à nous répondre directement à ce mail.</p>
+            <p>Cordialement,<br>L\'équipe NY TIA SARY</p>
+        </div>';
+
+        $attachments = [];
+        if (file_exists($filePath)) {
+            $attachments[] = $filePath;
+        }
+
+        if (!empty($attachments)) {
+            return $this->sendWithAttachments($email, 'Votre devis - NY TIA SARY', $body, $attachments, true);
+        }
+
+        // Fallback si le fichier n'est pas trouvé
+        return $this->send($email, 'Votre devis - NY TIA SARY', $body, true);
+    }
 }

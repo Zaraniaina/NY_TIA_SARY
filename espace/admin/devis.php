@@ -35,6 +35,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             prg_set_message('error', "Erreur lors de la suppression du devis.");
         }
         prg_redirect();
+    } elseif ($action === 'envoyer_reponse' && $idDevis) {
+        $uploadDir = __DIR__ . '/../../assets/uploads/devis_reponses/';
+        if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+
+        if (!empty($_FILES['fichier_reponse']) && $_FILES['fichier_reponse']['error'] === UPLOAD_ERR_OK) {
+            $fichier = $_FILES['fichier_reponse'];
+            $extension = strtolower(pathinfo($fichier['name'], PATHINFO_EXTENSION));
+            $nomUnique = 'devis_' . $idDevis . '_' . bin2hex(random_bytes(8)) . '.' . $extension;
+            $cheminFinal = $uploadDir . $nomUnique;
+            $cheminPublic = 'assets/uploads/devis_reponses/' . $nomUnique;
+
+            if (move_uploaded_file($fichier['tmp_name'], $cheminFinal)) {
+                // Update DEVIS table
+                $stmt = $pdo->prepare('UPDATE DEVIS SET FICHIER_REPONSE = ? WHERE ID = ?');
+                $stmt->execute([$cheminPublic, $idDevis]);
+
+                // Fetch devis details
+                $stmt = $pdo->prepare('SELECT NOM, PRENOMS, EMAIL FROM DEVIS WHERE ID = ?');
+                $stmt->execute([$idDevis]);
+                $devisInfo = $stmt->fetch();
+
+                if ($devisInfo) {
+                    require_once __DIR__ . '/../../util/mailService.php';
+                    $mailService = new MailService();
+                    $clientName = $devisInfo['PRENOMS'] . ' ' . $devisInfo['NOM'];
+
+                    // Check if client has account
+                    $stmtAuth = $pdo->prepare('SELECT ID_AUTH FROM AUTHENTIFICATION WHERE EMAIL_AUTH = ?');
+                    $stmtAuth->execute([$devisInfo['EMAIL']]);
+                    if ($stmtAuth->fetch()) {
+                        // Link to client space (adjust path as necessary)
+                        $link = 'http://' . $_SERVER['HTTP_HOST'] . '/NY_TIA_SARY/espace/client/devis.php';
+                        $mailService->sendDevisResponseToClient($devisInfo['EMAIL'], $clientName, $link);
+                    } else {
+                        // Internaute: send with attachment
+                        $mailService->sendDevisResponseWithAttachment($devisInfo['EMAIL'], $clientName, $cheminFinal);
+                    }
+                    prg_set_message('success', "Le devis a été envoyé avec succès au client.");
+                }
+            } else {
+                prg_set_message('error', "Erreur lors de l'enregistrement du fichier.");
+            }
+        } else {
+            prg_set_message('error', "Aucun fichier valide n'a été fourni.");
+        }
+        prg_redirect();
     }
 }
 
@@ -249,6 +295,22 @@ $selectedDevisId = (int) ($_GET['id'] ?? 0);
                                             </div>
                                         </div>
                                     <?php endif; ?>
+
+                                    <!-- Formulaire pour envoyer le devis au client -->
+                                    <div style="margin-top:20px; border-top: 1px solid var(--border-color); padding-top: 16px;">
+                                        <strong style="color:var(--logo-black);font-size:0.9rem;display:block;margin-bottom:8px;"><i class="fas fa-paper-plane" style="color:var(--primary-green);"></i> Envoyer un devis au client :</strong>
+                                        <?php if (!empty($d['FICHIER_REPONSE'])): ?>
+                                            <div style="margin-bottom:10px; color:#555; font-size:0.85rem;">
+                                                <i class="fas fa-check-circle" style="color:var(--primary-green);"></i> Un devis a déjà été envoyé. <a href="<?= htmlspecialchars('../../' . $d['FICHIER_REPONSE']) ?>" target="_blank" style="color:var(--primary-green);">Voir le fichier</a>.
+                                            </div>
+                                        <?php endif; ?>
+                                        <form method="POST" enctype="multipart/form-data" style="display:flex; align-items:center; gap:10px;">
+                                            <input type="hidden" name="action" value="envoyer_reponse">
+                                            <input type="hidden" name="id" value="<?= (int)$d['ID'] ?>">
+                                            <input type="file" name="fichier_reponse" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp" required style="font-size:0.85rem; padding: 5px; border: 1px solid var(--border-color); border-radius: 4px;">
+                                            <button type="submit" class="btn-dash btn-dash-sm btn-dash-primary"><i class="fas fa-paper-plane"></i> Envoyer</button>
+                                        </form>
+                                    </div>
                                 </div>
                             </td>
                         </tr>

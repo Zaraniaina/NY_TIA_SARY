@@ -24,6 +24,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!$idPrestation || empty($idCategories) || !$dateResa || !$heureResa || !$lieuResa) {
             prg_set_message('error', 'Veuillez remplir tous les champs obligatoires et choisir au moins une formule.');
+        } elseif (!preg_match('/^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/', $heureResa)) {
+            prg_set_message('error', 'L\'heure doit être au format 24h (HH:MM), entre 00:00 et 23:59.');
         } elseif ($dateResa < date('Y-m-d')) {
             prg_set_message('error', 'La date de réservation doit être supérieure ou égale à la date d\'aujourd\'hui.');
         } else {
@@ -195,6 +197,7 @@ $reservations = $stmtResas->fetchAll();
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="../../css/dashboard.css">
 </head>
 
@@ -259,7 +262,7 @@ $reservations = $stmtResas->fetchAll();
                                 </div>
                                 <div class="dash-form-group">
                                     <label for="heure_reservation">Heure <span class="required">*</span></label>
-                                    <input type="time" name="heure_reservation" id="heure_reservation" class="dash-input" required>
+                                    <input type="text" name="heure_reservation" id="heure_reservation" class="dash-input" placeholder="Sélectionner l'heure" required>
                                 </div>
                             </div>
                             <div class="dash-form-group">
@@ -529,6 +532,17 @@ $reservations = $stmtResas->fetchAll();
     });
     </script>
     <?php endif; ?>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            flatpickr("#heure_reservation", {
+                enableTime: true,
+                noCalendar: true,
+                dateFormat: "H:i",
+                time_24hr: true
+            });
+        });
+    </script>
 </body>
 
 </html>

@@ -295,7 +295,7 @@ if ($filterFac > 0 && !empty($paiements)) {
                 <i class="fas fa-info-circle" style="color:#2980b9;margin-top:2px;"></i>
                 <div style="font-size:.83rem;color:var(--text-muted);">
                     <strong style="color:var(--text-primary);">Comment fonctionnent les paiements ?</strong><br>
-                    Les paiements sont enregistrés manuellement par l'administrateur (virement bancaire, espèces, etc.).
+                    Les paiements sont enregistrés manuellement par l'administrateur (espèces, etc.).
                     Si vous avez effectué un versement qui n'apparaît pas encore ici, veuillez contacter le studio.
                 </div>
             </div>
