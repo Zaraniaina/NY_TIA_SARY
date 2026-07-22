@@ -68,6 +68,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         // Link to client space (adjust path as necessary)
                         $link = 'http://' . $_SERVER['HTTP_HOST'] . '/NY_TIA_SARY/espace/client/devis.php';
                         $mailService->sendDevisResponseToClient($devisInfo['EMAIL'], $clientName, $link);
+                        
+                        // --- Notification Client ---
+                        $stmtCli = $pdo->prepare('SELECT ID_CLIENT FROM CLIENT WHERE EMAIL = ?');
+                        $stmtCli->execute([$devisInfo['EMAIL']]);
+                        $cliRow = $stmtCli->fetch();
+                        if ($cliRow) {
+                            $pdo->prepare("
+                                INSERT INTO notification (TYPE_NOTIF, ID_REF_NOTIF, TITRE_NOTIF, MESS_NOTIF, LU_NOTIF, SUP_NOTIF, ID_CLIENT) 
+                                VALUES ('client_devis', ?, 'Réponse à votre devis', 'Le studio a répondu à votre demande de devis.', 0, 0, ?)
+                            ")->execute([$idDevis, $cliRow['ID_CLIENT']]);
+                        }
+                        
                     } else {
                         // Internaute: send with attachment
                         $mailService->sendDevisResponseWithAttachment($devisInfo['EMAIL'], $clientName, $cheminFinal);

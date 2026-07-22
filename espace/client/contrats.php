@@ -7,6 +7,12 @@ requireClient();
 require_once __DIR__ . '/composante/tolbarDto.php';
 $titre = "Mes Contrats";
 
+if (isset($_GET['mark_notif']) && (int)$_GET['mark_notif'] > 0) {
+    $idNotif = (int)$_GET['mark_notif'];
+    $pdo->prepare('UPDATE notification SET LU_NOTIF = 1 WHERE ID_NOTIF = ? AND ID_CLIENT = ?')->execute([$idNotif, $clientId]);
+    echo "<script>if (window.history.replaceState) { const url = new URL(window.location); url.searchParams.delete('mark_notif'); window.history.replaceState(null, null, url); }</script>";
+}
+
 // ── TRAITEMENT POST (PRG Pattern) ─────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $idContrat = (int) ($_POST['id_contrat'] ?? 0);
@@ -50,6 +56,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                          VALUES (?, ?, ?, ?, CURDATE())'
                     );
                     $stmtFact->execute([$idContrat, $numFac, 'NON PAYEE', $montant]);
+                    $idFactureInsert = $pdo->lastInsertId();
+
+                    // --- Notification Client ---
+                    $pdo->prepare("
+                        INSERT INTO notification (TYPE_NOTIF, ID_REF_NOTIF, TITRE_NOTIF, MESS_NOTIF, LU_NOTIF, SUP_NOTIF, ID_CLIENT) 
+                        VALUES ('client_facture', ?, 'Facture générée', 'Votre contrat a été validé et votre facture est disponible.', 0, 0, ?)
+                    ")->execute([$idFactureInsert, $clientId]);
 
                     $pdo->commit();
                     prg_set_message('success', 'Contrat accepté avec succès ! Votre facture a été générée.');
