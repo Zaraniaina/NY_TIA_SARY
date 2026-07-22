@@ -33,6 +33,10 @@ $root    = '../../';
            class="<?= $current === 'factures.php' ? 'active' : '' ?>">
             <i class="fas fa-file-invoice-dollar"></i> Mes Factures
         </a>
+        <a href="<?= $root ?>espace/client/paiements.php"
+           class="<?= $current === 'paiements.php' ? 'active' : '' ?>" style="padding-left:2.2rem;font-size:0.88rem;">
+            <i class="fas fa-coins"></i> Mes Paiements
+        </a>
         <div class="sidebar-section-label">Media</div>
         <a href="<?= $root ?>espace/client/mes_photos.php"
            class="<?= $current === 'mes_photos.php' ? 'active' : '' ?>">
