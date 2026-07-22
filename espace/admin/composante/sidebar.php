@@ -30,6 +30,10 @@ $root    = '../../';
            class="<?= $current === 'factures.php' ? 'active' : '' ?>" style="padding-left:2.2rem;font-size:0.88rem;">
             <i class="fas fa-file-invoice"></i> Factures
         </a>
+        <a href="<?= $root ?>espace/admin/paiements.php"
+           class="<?= $current === 'paiements.php' ? 'active' : '' ?>" style="padding-left:2.2rem;font-size:0.88rem;">
+            <i class="fas fa-coins"></i> Paiements
+        </a>
         <a href="<?= $root ?>espace/admin/clients.php"
            class="<?= $current === 'clients.php' ? 'active' : '' ?>">
             <i class="fas fa-users"></i> Clients
