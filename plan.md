@@ -1,5 +1,10 @@
-### suite de ce que nous avons fait:
- * modale de paiment n'est pas tres visibles utiliser un background blanc et les couleur qui se marie avec ;
- * concernant le pdf adapter le facture avec les information sur le paiment que nous venant de faire et status du paiment; 
+# lire le projet sans dompdf, phpmailer, dossier assets
+# objectif : gestion d'eureur : 
+ * pour system de reservation : date reservation client  unique  (deux client ne peut  pas reserver le meme jours), date doit etre superieur ou egal a la date du jour;
+ * pour system de devis : date doit etre superieur ou egal a la date du jour ;
+ *  creation compte email unique , numero telephone unique
+ * parametre changement des info: email unique, numero telephone unique
+ * paiment facutre: montant doit etre superieur ou egal 1;
 
- # ton plan d'action stp
+ # ton plan d'attaque!
+ 

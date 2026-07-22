@@ -66,6 +66,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $stmtUpdateAuth = $pdo->prepare("UPDATE AUTHENTIFICATION SET EMAIL_AUTH = ? WHERE ID_AUTH = ?");
                 $stmtUpdateAuth->execute([$email, $authId]);
 
+                // Check for TEL uniqueness in CLIENT
+                $stmtCheckTel = $pdo->prepare("SELECT ID_CLIENT FROM CLIENT WHERE TEL_CLIENT = ? AND ID_CLIENT != ?");
+                $stmtCheckTel->execute([$tel, $adminId]);
+                if ($stmtCheckTel->fetch()) {
+                    throw new Exception("Ce numéro de téléphone est déjà utilisé.");
+                }
+
                 $stmtUpdateClient = $pdo->prepare("UPDATE CLIENT SET NOM_CLIENT = ?, PRENOM_CLIENT = ?, TEL_CLIENT = ? WHERE ID_CLIENT = ?");
                 $stmtUpdateClient->execute([$nom, $prenom, $tel, $adminId]);
 

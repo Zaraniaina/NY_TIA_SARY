@@ -48,6 +48,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             throw new Exception("Cette adresse e-mail est déjà associée à un compte.");
         }
 
+        // Vérifier si le numéro de téléphone existe déjà dans la base de données
+        $stmtCheckTel = $pdo->prepare('SELECT COUNT(*) FROM CLIENT WHERE TEL_CLIENT = :tel');
+        $stmtCheckTel->execute(['tel' => $tel_client]);
+        if ($stmtCheckTel->fetchColumn() > 0) {
+            throw new Exception("Ce numéro de téléphone est déjà utilisé.");
+        }
+
         // Hachage sécurisé du mot de passe
         $hashedMdp = password_hash($mdp_client, PASSWORD_BCRYPT);
         // Insertion de l'authentification

@@ -52,8 +52,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $montantP = (int) ($_POST['montant_paiement'] ?? 0);
         $dateP    = trim($_POST['date_paiement'] ?? date('Y-m-d'));
 
-        if (!$idFac || $montantP <= 0) {
-            prg_set_message('error', 'Montant invalide.');
+        if (!$idFac || $montantP < 1) {
+            prg_set_message('error', 'Le montant du paiement doit être supérieur ou égal à 1.');
         } else {
             // Récupérer le montant total de la facture
             $stmtFac = $pdo->prepare('SELECT MONTANT_FACTURE FROM FACTURE WHERE ID_FACTURE = ?');
