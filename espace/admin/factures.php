@@ -240,6 +240,7 @@ if ($viewFacId) {
             gap: 16px;
             margin-bottom: 24px;
         }
+
         .stat-card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -249,137 +250,325 @@ if ($viewFacId) {
             align-items: center;
             gap: 14px;
         }
+
         .stat-icon {
-            width: 46px; height: 46px;
+            width: 46px;
+            height: 46px;
             border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.2rem; flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
         }
-        .stat-icon.green  { background: rgba(55,125,73,.15); color: var(--primary-green); }
-        .stat-icon.blue   { background: rgba(41,128,185,.15); color: #2980b9; }
-        .stat-icon.orange { background: rgba(243,156,18,.15); color: #f39c12; }
-        .stat-icon.red    { background: rgba(217,61,61,.15);  color: #d93d3d; }
-        .stat-label { font-size: .78rem; color: var(--text-muted); margin-bottom: 2px; }
-        .stat-value { font-size: 1.05rem; font-weight: 700; color: var(--text-primary); }
+
+        .stat-icon.green {
+            background: rgba(55, 125, 73, .15);
+            color: var(--primary-green);
+        }
+
+        .stat-icon.blue {
+            background: rgba(41, 128, 185, .15);
+            color: #2980b9;
+        }
+
+        .stat-icon.orange {
+            background: rgba(243, 156, 18, .15);
+            color: #f39c12;
+        }
+
+        .stat-icon.red {
+            background: rgba(217, 61, 61, .15);
+            color: #d93d3d;
+        }
+
+        .stat-label {
+            font-size: .78rem;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+        }
+
+        .stat-value {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
 
         /* ── Statut badge ── */
         .badge-partial {
-            display: inline-flex; align-items: center; gap: 5px;
-            padding: 3px 10px; border-radius: 50px; font-size: .72rem; font-weight: 700;
-            background: rgba(243,156,18,.15); color: #f39c12;
-            border: 1px solid rgba(243,156,18,.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 10px;
+            border-radius: 50px;
+            font-size: .72rem;
+            font-weight: 700;
+            background: rgba(243, 156, 18, .15);
+            color: #f39c12;
+            border: 1px solid rgba(243, 156, 18, .3);
         }
-        .badge-confirm { display: inline-flex; align-items: center; gap: 5px; }
-        .badge-cancel  { display: inline-flex; align-items: center; gap: 5px; }
+
+        .badge-confirm {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .badge-cancel {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
 
         /* ── Progress bar paiement ── */
-        .payment-progress { margin-top: 4px; }
-        .progress-bar-wrap {
-            background: rgba(255,255,255,.08);
-            border-radius: 4px; height: 6px; overflow: hidden; margin-top: 3px;
+        .payment-progress {
+            margin-top: 4px;
         }
+
+        .progress-bar-wrap {
+            background: rgba(255, 255, 255, .08);
+            border-radius: 4px;
+            height: 6px;
+            overflow: hidden;
+            margin-top: 3px;
+        }
+
         .progress-bar-fill {
-            height: 100%; border-radius: 4px;
+            height: 100%;
+            border-radius: 4px;
             background: linear-gradient(90deg, #377d49, #56b870);
             transition: width .4s ease;
         }
-        .progress-label { font-size: .72rem; color: var(--text-muted); margin-top: 2px; }
+
+        .progress-label {
+            font-size: .72rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
 
         /* ── Modal paiement ── */
         .modal-overlay {
-            display: none; position: fixed; inset: 0;
-            background: rgba(0,0,0,.65); backdrop-filter: blur(4px);
-            z-index: 1000; align-items: center; justify-content: center;
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .65);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
         }
-        .modal-overlay.open { display: flex; }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
         .modal-box {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
-            border-radius: 16px; padding: 28px;
-            width: 100%; max-width: 440px;
-            box-shadow: 0 20px 60px rgba(0,0,0,.4);
+            border-radius: 16px;
+            padding: 28px;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .4);
             animation: modalIn .25s ease;
         }
+
         @keyframes modalIn {
-            from { opacity:0; transform: scale(.95) translateY(10px); }
-            to   { opacity:1; transform: scale(1) translateY(0); }
+            from {
+                opacity: 0;
+                transform: scale(.95) translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
         }
+
         .modal-title {
-            font-size: 1.05rem; font-weight: 700; color: var(--text-primary);
-            margin-bottom: 4px; display: flex; align-items: center; gap: 8px;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
-        .modal-subtitle { font-size: .82rem; color: var(--text-muted); margin-bottom: 20px; }
+
+        .modal-subtitle {
+            font-size: .82rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
         .modal-close {
-            float: right; background: none; border: none; cursor: pointer;
-            color: var(--text-muted); font-size: 1.1rem; margin-top: -2px;
+            float: right;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin-top: -2px;
         }
-        .modal-close:hover { color: var(--text-primary); }
-        .form-group { margin-bottom: 14px; }
-        .form-group label { display: block; font-size: .82rem; color: var(--text-muted); margin-bottom: 5px; font-weight: 600; }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: .82rem;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
         .modal-info-row {
-            display: flex; justify-content: space-between; align-items: center;
-            background: rgba(255,255,255,.04); border-radius: 8px;
-            padding: 10px 12px; margin-bottom: 16px; font-size: .85rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, .04);
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 16px;
+            font-size: .85rem;
         }
-        .modal-info-row .label { color: var(--text-muted); }
-        .modal-info-row .value { font-weight: 700; color: var(--primary-green); }
+
+        .modal-info-row .label {
+            color: var(--text-muted);
+        }
+
+        .modal-info-row .value {
+            font-weight: 700;
+            color: var(--primary-green);
+        }
 
         /* ── Historique paiements d'une facture ── */
         .pay-hist-item {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 10px 14px; border-radius: 8px;
-            background: rgba(255,255,255,.03);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, .03);
             border: 1px solid var(--border-color);
             margin-bottom: 8px;
         }
-        .pay-hist-item:hover { background: rgba(255,255,255,.06); }
-        .pay-date { font-size: .8rem; color: var(--text-muted); }
-        .pay-amount { font-weight: 700; color: var(--primary-green); font-size: .95rem; }
-        .pay-delete-btn {
-            background: none; border: none; cursor: pointer;
-            color: #d93d3d; opacity: .6; font-size: .85rem; padding: 4px 6px;
-            border-radius: 4px; transition: opacity .2s, background .2s;
+
+        .pay-hist-item:hover {
+            background: rgba(255, 255, 255, .06);
         }
-        .pay-delete-btn:hover { opacity: 1; background: rgba(217,61,61,.1); }
+
+        .pay-date {
+            font-size: .8rem;
+            color: var(--text-muted);
+        }
+
+        .pay-amount {
+            font-weight: 700;
+            color: var(--primary-green);
+            font-size: .95rem;
+        }
+
+        .pay-delete-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #d93d3d;
+            opacity: .6;
+            font-size: .85rem;
+            padding: 4px 6px;
+            border-radius: 4px;
+            transition: opacity .2s, background .2s;
+        }
+
+        .pay-delete-btn:hover {
+            opacity: 1;
+            background: rgba(217, 61, 61, .1);
+        }
 
         /* ── Table améliorée ── */
-        .amount-col { white-space: nowrap; }
+        .amount-col {
+            white-space: nowrap;
+        }
+
         .action-btn-pay {
-            display: inline-flex; align-items: center; gap: 5px;
-            padding: 5px 10px; border-radius: 6px; font-size: .75rem;
-            font-weight: 600; cursor: pointer; border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: .75rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
             background: linear-gradient(135deg, #377d49, #2a5c3a);
-            color: #fff; transition: opacity .2s;
+            color: #fff;
+            transition: opacity .2s;
         }
-        .action-btn-pay:hover { opacity: .85; }
+
+        .action-btn-pay:hover {
+            opacity: .85;
+        }
+
         .action-btn-view {
-            display: inline-flex; align-items: center; gap: 5px;
-            padding: 5px 10px; border-radius: 6px; font-size: .75rem;
-            font-weight: 600; cursor: pointer; border: 1px solid var(--border-color);
-            background: rgba(255,255,255,.05); color: var(--text-primary);
-            text-decoration: none; transition: background .2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: .75rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, .05);
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: background .2s;
         }
-        .action-btn-view:hover { background: rgba(255,255,255,.1); }
+
+        .action-btn-view:hover {
+            background: rgba(255, 255, 255, .1);
+        }
 
         /* ── Panel détails paiements ── */
         .pay-panel {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
-            border-radius: 12px; padding: 24px;
+            border-radius: 12px;
+            padding: 24px;
             margin-bottom: 24px;
         }
+
         .pay-panel-header {
-            display: flex; justify-content: space-between; align-items: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 16px;
         }
+
         .pay-panel-title {
-            font-size: 1rem; font-weight: 700; color: var(--text-primary);
-            display: flex; align-items: center; gap: 8px;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
+
         .pay-panel-close {
-            color: var(--text-muted); text-decoration: none; font-size: .82rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: .82rem;
         }
-        .pay-panel-close:hover { color: var(--text-primary); }
+
+        .pay-panel-close:hover {
+            color: var(--text-primary);
+        }
     </style>
 </head>
 
@@ -391,243 +580,138 @@ if ($viewFacId) {
         <div class="dashboard-main">
             <?php include __DIR__ . '/composante/tolbar.php'; ?>
 
+            <div class="dashboard-content">
+                <nav class="dash-breadcrumb">
+                    <a href="home.php">Dashboard</a>
+                    <i class="fas fa-chevron-right" style="font-size:.65rem;"></i>
+                    <a href="contrats.php">Contrats</a>
+                    <i class="fas fa-chevron-right" style="font-size:.65rem;"></i>
+                    <span>Factures</span>
+                </nav>
 
-        <div class="dashboard-content">
-            <nav class="dash-breadcrumb">
-                <a href="home.php">Dashboard</a>
-                <i class="fas fa-chevron-right" style="font-size:.65rem;"></i>
-                <a href="contrats.php">Contrats</a>
-                <i class="fas fa-chevron-right" style="font-size:.65rem;"></i>
-                <span>Factures</span>
-            </nav>
-
-            <!-- STATS -->
-            <div class="stats-row">
-                <div class="stat-card">
-                    <div class="stat-icon blue"><i class="fas fa-file-invoice"></i></div>
-                    <div>
-                        <div class="stat-label">Total factures</div>
-                        <div class="stat-value"><?= (int)($stats['nb_total'] ?? 0) ?></div>
+                <!-- STATS -->
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-icon blue"><i class="fas fa-file-invoice"></i></div>
+                        <div>
+                            <div class="stat-label">Total factures</div>
+                            <div class="stat-value"><?= (int)($stats['nb_total'] ?? 0) ?></div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green"><i class="fas fa-coins"></i></div>
+                        <div>
+                            <div class="stat-label">Total facturé</div>
+                            <div class="stat-value"><?= number_format($totalFacture, 0, ',', ' ') ?> Ar</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+                        <div>
+                            <div class="stat-label">Total encaissé</div>
+                            <div class="stat-value"><?= number_format($totalPaye, 0, ',', ' ') ?> Ar</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon orange"><i class="fas fa-hourglass-half"></i></div>
+                        <div>
+                            <div class="stat-label">Reste à encaisser</div>
+                            <div class="stat-value"><?= number_format($totalRestant, 0, ',', ' ') ?> Ar</div>
+                        </div>
                     </div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-icon green"><i class="fas fa-coins"></i></div>
-                    <div>
-                        <div class="stat-label">Total facturé</div>
-                        <div class="stat-value"><?= number_format($totalFacture, 0, ',', ' ') ?> Ar</div>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
-                    <div>
-                        <div class="stat-label">Total encaissé</div>
-                        <div class="stat-value"><?= number_format($totalPaye, 0, ',', ' ') ?> Ar</div>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon orange"><i class="fas fa-hourglass-half"></i></div>
-                    <div>
-                        <div class="stat-label">Reste à encaisser</div>
-                        <div class="stat-value"><?= number_format($totalRestant, 0, ',', ' ') ?> Ar</div>
-                    </div>
-                </div>
-            </div>
-
 
                 <div style="width:100%;">
 
-
-                <!-- PANEL HISTORIQUE D'UNE FACTURE -->
-                <?php if ($facSelected): 
-                    $sumPaye = array_sum(array_column($paiementsFac, 'MONTANT_PAIEMENT'));
-                    $reste   = $facSelected['MONTANT_FACTURE'] - $sumPaye;
-                    $pct     = $facSelected['MONTANT_FACTURE'] > 0 ? min(100, round($sumPaye / $facSelected['MONTANT_FACTURE'] * 100)) : 0;
-                ?>
-                <div class="pay-panel">
-                    <div class="pay-panel-header">
-                        <div class="pay-panel-title">
-                            <i class="fas fa-history" style="color:var(--primary-green);"></i>
-                            Historique des paiements — <?= htmlspecialchars($facSelected['NUM_FACTURE']) ?>
-                            <small style="font-weight:400;color:var(--text-muted);">
-                                (<?= htmlspecialchars($facSelected['PRENOM_CLIENT'].' '.$facSelected['NOM_CLIENT']) ?>)
-                            </small>
-                        </div>
-                        <a href="factures.php<?= $search ? '?q='.urlencode($search) : '' ?>" class="pay-panel-close">
-                            <i class="fas fa-times"></i> Fermer
-                        </a>
-                    </div>
-
-                    <!-- Résumé solde -->
-                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px;">
-                        <div style="background:rgba(255,255,255,.04);border-radius:8px;padding:12px 14px;">
-                            <div style="font-size:.76rem;color:var(--text-muted);margin-bottom:3px;">Montant total</div>
-                            <div style="font-weight:700;font-size:1rem;"><?= number_format((int)$facSelected['MONTANT_FACTURE'], 0, ',', ' ') ?> Ar</div>
-                        </div>
-                        <div style="background:rgba(55,125,73,.12);border-radius:8px;padding:12px 14px;">
-                            <div style="font-size:.76rem;color:var(--text-muted);margin-bottom:3px;">Déjà payé</div>
-                            <div style="font-weight:700;font-size:1rem;color:var(--primary-green);"><?= number_format($sumPaye, 0, ',', ' ') ?> Ar</div>
-                        </div>
-                        <div style="background:rgba(243,156,18,.1);border-radius:8px;padding:12px 14px;">
-                            <div style="font-size:.76rem;color:var(--text-muted);margin-bottom:3px;">Reste à payer</div>
-                            <div style="font-weight:700;font-size:1rem;color:#f39c12;"><?= number_format($reste, 0, ',', ' ') ?> Ar</div>
-                        </div>
-                    </div>
-
-                    <!-- Barre progression -->
-                    <div class="progress-bar-wrap" style="height:10px;margin-bottom:6px;">
-                        <div class="progress-bar-fill" style="width:<?= $pct ?>%;"></div>
-                    </div>
-                    <div class="progress-label" style="text-align:right;"><?= $pct ?>% payé</div>
-
-                    <!-- Liste des paiements -->
-                    <div style="margin-top:16px;">
-                        <?php if (empty($paiementsFac)): ?>
-                            <div class="empty-state" style="padding:20px 0;">
-                                <i class="fas fa-receipt"></i>
-                                <p>Aucun paiement enregistré pour cette facture.</p>
-                            </div>
-                        <?php else: ?>
-                            <?php foreach ($paiementsFac as $pay): ?>
-                            <div class="pay-hist-item">
-                                <div>
-                                    <div class="pay-amount"><i class="fas fa-coins" style="font-size:.8rem;"></i> <?= number_format((int)$pay['MONTANT_PAIEMENT'], 0, ',', ' ') ?> Ar</div>
-                                    <div class="pay-date"><i class="fas fa-calendar-alt" style="font-size:.72rem;"></i> <?= date('d/m/Y', strtotime($pay['DATE_PAIEMENT'])) ?></div>
+                    <!-- PANEL HISTORIQUE D'UNE FACTURE -->
+                    <?php if ($facSelected):
+                        $sumPaye = array_sum(array_column($paiementsFac, 'MONTANT_PAIEMENT'));
+                        $reste   = $facSelected['MONTANT_FACTURE'] - $sumPaye;
+                        $pct     = $facSelected['MONTANT_FACTURE'] > 0 ? min(100, round($sumPaye / $facSelected['MONTANT_FACTURE'] * 100)) : 0;
+                    ?>
+                        <div class="pay-panel">
+                            <div class="pay-panel-header">
+                                <div class="pay-panel-title">
+                                    <i class="fas fa-history" style="color:var(--primary-green);"></i>
+                                    Historique des paiements — <?= htmlspecialchars($facSelected['NUM_FACTURE']) ?>
+                                    <small style="font-weight:400;color:var(--text-muted);">
+                                        (<?= htmlspecialchars($facSelected['PRENOM_CLIENT'] . ' ' . $facSelected['NOM_CLIENT']) ?>)
+                                    </small>
                                 </div>
-                                <form method="POST" style="margin:0;" onsubmit="return confirm('Supprimer ce paiement ?');">
-                                    <input type="hidden" name="action" value="delete_payment">
-                                    <input type="hidden" name="id_paiement" value="<?= (int)$pay['ID_PAIEMENT'] ?>">
-                                    <input type="hidden" name="id_facture" value="<?= (int)$facSelected['ID_FACTURE'] ?>">
-                                    <button type="submit" class="pay-delete-btn" title="Supprimer ce paiement">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
+                                <a href="factures.php<?= $search ? '?q=' . urlencode($search) : '' ?>" class="pay-panel-close">
+                                    <i class="fas fa-times"></i> Fermer
+                                </a>
                             </div>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </div>
 
-                    <?php if ($reste > 0): ?>
-                    <div style="margin-top:16px;text-align:right;">
-                        <button class="action-btn-pay" onclick="openPayModal(<?= (int)$facSelected['ID_FACTURE'] ?>, '<?= htmlspecialchars($facSelected['NUM_FACTURE']) ?>', <?= (int)$facSelected['MONTANT_FACTURE'] ?>, <?= $sumPaye ?>)">
-                            <i class="fas fa-plus"></i> Enregistrer un paiement
-                        </button>
-                    </div>
-                    <?php endif; ?>
-                </div>
-                <?php endif; ?>
-
-                <!-- LISTE DES FACTURES -->
-                <div class="dash-card">
-                    <div class="dash-card-header">
-                        <h3><i class="fas fa-list" style="color:var(--primary-green);margin-right:8px;"></i> Toutes les factures</h3>
-                        <div style="display:flex;align-items:center;gap:8px;">
-                            <span class="badge badge-confirm"><?= count($factures) ?></span>
-                            <a href="paiements.php" class="action-btn-view" style="padding:6px 12px;">
-                                <i class="fas fa-history"></i> Tous les paiements
-                            </a>
-                        </div>
-                    </div>
-                    <div class="dash-card-body">
-                        <!-- BARRE DE RECHERCHE -->
-                        <form method="GET" action="" style="display:flex;gap:8px;margin-bottom:16px;">
-                            <div class="dash-search-bar" style="margin:0;flex:1;">
-                                <i class="fas fa-search"></i>
-                                <input type="text" name="q" value="<?= htmlspecialchars($search) ?>" placeholder="Rechercher par n° de facture ou client...">
+                            <!-- Résumé solde -->
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px;">
+                                <div style="background:rgba(255,255,255,.04);border-radius:8px;padding:12px 14px;">
+                                    <div style="font-size:.76rem;color:var(--text-muted);margin-bottom:3px;">Montant total</div>
+                                    <div style="font-weight:700;font-size:1rem;"><?= number_format((int)$facSelected['MONTANT_FACTURE'], 0, ',', ' ') ?> Ar</div>
+                                </div>
+                                <div style="background:rgba(55,125,73,.12);border-radius:8px;padding:12px 14px;">
+                                    <div style="font-size:.76rem;color:var(--text-muted);margin-bottom:3px;">Déjà payé</div>
+                                    <div style="font-weight:700;font-size:1rem;color:var(--primary-green);"><?= number_format($sumPaye, 0, ',', ' ') ?> Ar</div>
+                                </div>
+                                <div style="background:rgba(243,156,18,.1);border-radius:8px;padding:12px 14px;">
+                                    <div style="font-size:.76rem;color:var(--text-muted);margin-bottom:3px;">Reste à payer</div>
+                                    <div style="font-weight:700;font-size:1rem;color:#f39c12;"><?= number_format($reste, 0, ',', ' ') ?> Ar</div>
+                                </div>
                             </div>
-                            <button type="submit" class="btn-dash btn-dash-primary" style="padding:10px 14px;"><i class="fas fa-search"></i> Filtrer</button>
-                            <?php if ($search !== ''): ?>
-                                <a href="factures.php" class="btn-dash btn-dash-outline" style="padding:10px 14px;text-decoration:none;"><i class="fas fa-times"></i> Ràz</a>
-                            <?php endif; ?>
-                        </form>
 
-                        <?php if (empty($factures)): ?>
-                            <div class="empty-state"><i class="fas fa-file-invoice"></i><p>Aucune facture trouvée.</p></div>
-                        <?php else: ?>
-                        <div class="table-responsive">
-                            <table class="dash-table">
-                                <thead>
-                                    <tr>
-                                        <th>N° Facture</th>
-                                        <th>Client</th>
-                                        <th>Prestation</th>
-                                        <th>Date</th>
-                                        <th class="amount-col">Montant total</th>
-                                        <th class="amount-col">Payé</th>
-                                        <th class="amount-col">Reste</th>
-                                        <th>Statut</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                <?php foreach ($factures as $f):
-                                    $montantTotal = (int)$f['MONTANT_FACTURE'];
-                                    $montantPaye  = (int)$f['MONTANT_PAYE'];
-                                    $resteAPayer  = (int)$f['RESTE_A_PAYER'];
-                                    $pct          = $montantTotal > 0 ? min(100, round($montantPaye / $montantTotal * 100)) : 0;
-                                    $sf           = strtoupper(trim($f['STATUS_FACTURE']));
-                                ?>
-                                    <tr>
-                                        <td>
-                                            <strong style="color:var(--primary-green);">
-                                                <i class="fas fa-file-invoice"></i> <?= htmlspecialchars($f['NUM_FACTURE']) ?>
-                                            </strong>
-                                        </td>
-                                        <td><strong><?= htmlspecialchars($f['PRENOM_CLIENT'].' '.$f['NOM_CLIENT']) ?></strong></td>
-                                        <td><?= htmlspecialchars($f['LIB_PRESTATION']) ?></td>
-                                        <td><?= date('d/m/Y', strtotime($f['DATE_RESERVATION'])) ?></td>
-                                        <td class="amount-col">
-                                            <strong><?= number_format($montantTotal, 0, ',', ' ') ?> Ar</strong>
-                                        </td>
-                                        <td class="amount-col" style="color:var(--primary-green);">
-                                            <?= number_format($montantPaye, 0, ',', ' ') ?> Ar
-                                            <div class="payment-progress">
-                                                <div class="progress-bar-wrap">
-                                                    <div class="progress-bar-fill" style="width:<?= $pct ?>%;"></div>
-                                                </div>
-                                                <div class="progress-label"><?= $pct ?>%</div>
+                            <!-- Barre progression -->
+                            <div class="progress-bar-wrap" style="height:10px;margin-bottom:6px;">
+                                <div class="progress-bar-fill" style="width:<?= $pct ?>%;"></div>
+                            </div>
+                            <div class="progress-label" style="text-align:right;"><?= $pct ?>% payé</div>
+
+                            <!-- Liste des paiements -->
+                            <div style="margin-top:16px;">
+                                <?php if (empty($paiementsFac)): ?>
+                                    <div class="empty-state" style="padding:20px 0;">
+                                        <i class="fas fa-receipt"></i>
+                                        <p>Aucun paiement enregistré pour cette facture.</p>
+                                    </div>
+                                <?php else: ?>
+                                    <?php foreach ($paiementsFac as $pay): ?>
+                                        <div class="pay-hist-item">
+                                            <div>
+                                                <div class="pay-amount"><i class="fas fa-coins" style="font-size:.8rem;"></i> <?= number_format((int)$pay['MONTANT_PAIEMENT'], 0, ',', ' ') ?> Ar</div>
+                                                <div class="pay-date"><i class="fas fa-calendar-alt" style="font-size:.72rem;"></i> <?= date('d/m/Y', strtotime($pay['DATE_PAIEMENT'])) ?></div>
                                             </div>
-                                        </td>
-                                        <td class="amount-col" style="color:<?= $resteAPayer > 0 ? '#f39c12' : 'var(--primary-green)' ?>; font-weight:600;">
-                                            <?= number_format($resteAPayer, 0, ',', ' ') ?> Ar
-                                        </td>
-                                        <td>
-                                            <?php if ($sf === 'PAYEE' || $sf === 'PAYÉE'): ?>
-                                                <span class="badge badge-confirm"><i class="fas fa-check-circle"></i> PAYÉE</span>
-                                            <?php elseif ($sf === 'PARTIELLEMENT PAYEE' || $sf === 'PARTIELLEMENT PAYÉE'): ?>
-                                                <span class="badge-partial"><i class="fas fa-adjust"></i> PARTIELLE</span>
-                                            <?php else: ?>
-                                                <span class="badge badge-cancel"><i class="fas fa-times-circle"></i> NON PAYÉE</span>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td>
-                                            <div style="display:inline-flex;gap:6px;flex-wrap:wrap;">
-                                                <?php if ($resteAPayer > 0): ?>
-                                                <button class="action-btn-pay"
-                                                    onclick="openPayModal(<?= (int)$f['ID_FACTURE'] ?>, '<?= htmlspecialchars($f['NUM_FACTURE']) ?>', <?= $montantTotal ?>, <?= $montantPaye ?>)"
-                                                    title="Enregistrer un paiement">
-                                                    <i class="fas fa-plus"></i> Paiement
+                                            <form method="POST" style="margin:0;" onsubmit="return confirm('Supprimer ce paiement ?');">
+                                                <input type="hidden" name="action" value="delete_payment">
+                                                <input type="hidden" name="id_paiement" value="<?= (int)$pay['ID_PAIEMENT'] ?>">
+                                                <input type="hidden" name="id_facture" value="<?= (int)$facSelected['ID_FACTURE'] ?>">
+                                                <button type="submit" class="pay-delete-btn" title="Supprimer ce paiement">
+                                                    <i class="fas fa-trash"></i>
                                                 </button>
-                                                <?php endif; ?>
-                                                <a href="factures.php?view_payments=<?= (int)$f['ID_FACTURE'] ?><?= $search ? '&q='.urlencode($search) : '' ?>"
-                                                   class="action-btn-view" title="Voir l'historique">
-                                                    <i class="fas fa-history"></i>
-                                                </a>
-                                                <a href="../client/generer_facture_pdf.php?id_facture=<?= (int)$f['ID_FACTURE'] ?>"
-                                                   class="btn-dash btn-dash-outline btn-dash-sm" title="Télécharger le PDF">
-                                                    <i class="fas fa-file-pdf"></i>
-                                                </a>
-                                                <form method="POST" style="display:inline;margin:0;" onsubmit="return confirm('Supprimer cette facture et tous ses paiements ?');">
-                                                    <input type="hidden" name="action" value="delete">
-                                                    <input type="hidden" name="id_facture" value="<?= (int)$f['ID_FACTURE'] ?>">
-                                                    <button class="btn-dash btn-dash-danger btn-dash-sm"><i class="fas fa-trash"></i></button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                                </tbody>
-                            </table>
+                                            </form>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </div>
 
+                            <?php if ($reste > 0): ?>
+                                <div style="margin-top:16px;text-align:right;">
+                                    <button class="action-btn-pay" onclick="openPayModal(<?= (int)$facSelected['ID_FACTURE'] ?>, '<?= htmlspecialchars($facSelected['NUM_FACTURE']) ?>', <?= (int)$facSelected['MONTANT_FACTURE'] ?>, <?= $sumPaye ?>)">
+                                        <i class="fas fa-plus"></i> Enregistrer un paiement
+                                    </button>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- LISTE DES FACTURES -->
+                    <div class="dash-card">
+                        <div class="dash-card-header">
+                            <h3><i class="fas fa-list" style="color:var(--primary-green);margin-right:8px;"></i> Toutes les factures</h3>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <span class="badge badge-confirm"><?= count($factures) ?></span>
+                                <a href="paiements.php" class="action-btn-view" style="padding:6px 12px;">
+                                    <i class="fas fa-history"></i> Tous les paiements
+                                </a>
+                            </div>
                         </div>
                         <div class="dash-card-body">
                             <!-- BARRE DE RECHERCHE -->
@@ -654,13 +738,22 @@ if ($viewFacId) {
                                                 <th>N° Facture</th>
                                                 <th>Client</th>
                                                 <th>Prestation</th>
-                                                <th>Date prestation</th>
+                                                <th>Date</th>
+                                                <th class="amount-col">Montant total</th>
+                                                <th class="amount-col">Payé</th>
+                                                <th class="amount-col">Reste</th>
                                                 <th>Statut</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <?php foreach ($factures as $f): ?>
+                                            <?php foreach ($factures as $f):
+                                                $montantTotal = (int)$f['MONTANT_FACTURE'];
+                                                $montantPaye  = (int)$f['MONTANT_PAYE'];
+                                                $resteAPayer  = (int)$f['RESTE_A_PAYER'];
+                                                $pct          = $montantTotal > 0 ? min(100, round($montantPaye / $montantTotal * 100)) : 0;
+                                                $sf           = strtoupper(trim($f['STATUS_FACTURE']));
+                                            ?>
                                                 <tr>
                                                     <td>
                                                         <strong style="color:var(--primary-green);">
@@ -670,22 +763,48 @@ if ($viewFacId) {
                                                     <td><strong><?= htmlspecialchars($f['PRENOM_CLIENT'] . ' ' . $f['NOM_CLIENT']) ?></strong></td>
                                                     <td><?= htmlspecialchars($f['LIB_PRESTATION']) ?></td>
                                                     <td><?= date('d/m/Y', strtotime($f['DATE_RESERVATION'])) ?></td>
-                                                    <td>
-                                                        <form method="POST" action="" style="display:inline-flex;margin:0;">
-                                                            <input type="hidden" name="action" value="update_status">
-                                                            <input type="hidden" name="id_facture" value="<?= (int)$f['ID_FACTURE'] ?>">
-                                                            <select name="status" class="dash-select" style="padding:4px 8px;font-size:0.75rem;width:auto;margin:0;" onchange="this.form.submit()">
-                                                                <option value="NON PAYEE" <?= $f['STATUS_FACTURE'] === 'NON PAYEE' ? 'selected' : '' ?>>NON PAYÉE</option>
-                                                                <option value="PAYEE" <?= $f['STATUS_FACTURE'] === 'PAYEE' ? 'selected' : '' ?>>PAYÉE</option>
-                                                            </select>
-                                                        </form>
+                                                    <td class="amount-col">
+                                                        <strong><?= number_format($montantTotal, 0, ',', ' ') ?> Ar</strong>
+                                                    </td>
+                                                    <td class="amount-col" style="color:var(--primary-green);">
+                                                        <?= number_format($montantPaye, 0, ',', ' ') ?> Ar
+                                                        <div class="payment-progress">
+                                                            <div class="progress-bar-wrap">
+                                                                <div class="progress-bar-fill" style="width:<?= $pct ?>%;"></div>
+                                                            </div>
+                                                            <div class="progress-label"><?= $pct ?>%</div>
+                                                        </div>
+                                                    </td>
+                                                    <td class="amount-col" style="color:<?= $resteAPayer > 0 ? '#f39c12' : 'var(--primary-green)' ?>; font-weight:600;">
+                                                        <?= number_format($resteAPayer, 0, ',', ' ') ?> Ar
                                                     </td>
                                                     <td>
-                                                        <div style="display:inline-flex;gap:6px;">
-                                                            <a href="../client/generer_facture_pdf.php?id_facture=<?= (int)$f['ID_FACTURE'] ?>" class="btn-dash btn-dash-outline btn-dash-sm" title="Télécharger le PDF">
+                                                        <?php if ($sf === 'PAYEE' || $sf === 'PAYÉE'): ?>
+                                                            <span class="badge badge-confirm"><i class="fas fa-check-circle"></i> PAYÉE</span>
+                                                        <?php elseif ($sf === 'PARTIELLEMENT PAYEE' || $sf === 'PARTIELLEMENT PAYÉE'): ?>
+                                                            <span class="badge-partial"><i class="fas fa-adjust"></i> PARTIELLE</span>
+                                                        <?php else: ?>
+                                                            <span class="badge badge-cancel"><i class="fas fa-times-circle"></i> NON PAYÉE</span>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <td>
+                                                        <div style="display:inline-flex;gap:6px;flex-wrap:wrap;">
+                                                            <?php if ($resteAPayer > 0): ?>
+                                                                <button class="action-btn-pay"
+                                                                    onclick="openPayModal(<?= (int)$f['ID_FACTURE'] ?>, '<?= htmlspecialchars($f['NUM_FACTURE']) ?>', <?= $montantTotal ?>, <?= $montantPaye ?>)"
+                                                                    title="Enregistrer un paiement">
+                                                                    <i class="fas fa-plus"></i> Paiement
+                                                                </button>
+                                                            <?php endif; ?>
+                                                            <a href="factures.php?view_payments=<?= (int)$f['ID_FACTURE'] ?><?= $search ? '&q=' . urlencode($search) : '' ?>"
+                                                                class="action-btn-view" title="Voir l'historique">
+                                                                <i class="fas fa-history"></i>
+                                                            </a>
+                                                            <a href="../client/generer_facture_pdf.php?id_facture=<?= (int)$f['ID_FACTURE'] ?>"
+                                                                class="btn-dash btn-dash-outline btn-dash-sm" title="Télécharger le PDF">
                                                                 <i class="fas fa-file-pdf"></i>
                                                             </a>
-                                                            <form method="POST" style="display:inline;margin:0;" onsubmit="return confirm('Supprimer cette facture ?');">
+                                                            <form method="POST" style="display:inline;margin:0;" onsubmit="return confirm('Supprimer cette facture et tous ses paiements ?');">
                                                                 <input type="hidden" name="action" value="delete">
                                                                 <input type="hidden" name="id_facture" value="<?= (int)$f['ID_FACTURE'] ?>">
                                                                 <button class="btn-dash btn-dash-danger btn-dash-sm"><i class="fas fa-trash"></i></button>
@@ -706,83 +825,91 @@ if ($viewFacId) {
         </div>
     </div>
 
-<!-- ── MODAL PAIEMENT ───────────────────────────────────────────── -->
-<div class="modal-overlay" id="payModal">
-    <div class="modal-box">
-        <button class="modal-close" onclick="closePayModal()"><i class="fas fa-times"></i></button>
-        <div class="modal-title"><i class="fas fa-coins" style="color:var(--primary-green);"></i> Enregistrer un paiement</div>
-        <div class="modal-subtitle" id="modalSubtitle">Facture —</div>
+    <!-- ── MODAL PAIEMENT ───────────────────────────────────────────── -->
+    <div class="modal-overlay" id="payModal">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closePayModal()"><i class="fas fa-times"></i></button>
+            <div class="modal-title"><i class="fas fa-coins" style="color:var(--primary-green);"></i> Enregistrer un paiement</div>
+            <div class="modal-subtitle" id="modalSubtitle">Facture —</div>
 
-        <div class="modal-info-row">
-            <span class="label"><i class="fas fa-money-bill-wave"></i> Reste à payer</span>
-            <span class="value" id="modalReste">0 Ar</span>
+            <div class="modal-info-row">
+                <span class="label"><i class="fas fa-money-bill-wave"></i> Reste à payer</span>
+                <span class="value" id="modalReste">0 Ar</span>
+            </div>
+
+            <form method="POST" action="" id="payForm">
+                <input type="hidden" name="action" value="add_payment">
+                <input type="hidden" name="id_facture" id="modalIdFac" value="">
+
+                <div class="form-group">
+                    <label for="montant_paiement"><i class="fas fa-coins"></i> Montant du paiement (Ar)</label>
+                    <input type="number" name="montant_paiement" id="montant_paiement"
+                        class="dash-input" min="1" placeholder="Ex: 500000" required>
+                </div>
+                <div class="form-group">
+                    <label for="date_paiement"><i class="fas fa-calendar-alt"></i> Date du paiement</label>
+                    <input type="date" name="date_paiement" id="date_paiement"
+                        class="dash-input" value="<?= date('Y-m-d') ?>" required>
+                </div>
+
+                <div style="display:flex;gap:10px;margin-top:20px;">
+                    <button type="submit" class="btn-dash btn-dash-primary" style="flex:1;">
+                        <i class="fas fa-save"></i> Enregistrer
+                    </button>
+                    <button type="button" class="btn-dash btn-dash-outline" onclick="closePayModal()" style="flex:1;">
+                        Annuler
+                    </button>
+                </div>
+            </form>
         </div>
-
-        <form method="POST" action="" id="payForm">
-            <input type="hidden" name="action" value="add_payment">
-            <input type="hidden" name="id_facture" id="modalIdFac" value="">
-
-            <div class="form-group">
-                <label for="montant_paiement"><i class="fas fa-coins"></i> Montant du paiement (Ar)</label>
-                <input type="number" name="montant_paiement" id="montant_paiement"
-                       class="dash-input" min="1" placeholder="Ex: 500000" required>
-            </div>
-            <div class="form-group">
-                <label for="date_paiement"><i class="fas fa-calendar-alt"></i> Date du paiement</label>
-                <input type="date" name="date_paiement" id="date_paiement"
-                       class="dash-input" value="<?= date('Y-m-d') ?>" required>
-            </div>
-
-            <div style="display:flex;gap:10px;margin-top:20px;">
-                <button type="submit" class="btn-dash btn-dash-primary" style="flex:1;">
-                    <i class="fas fa-save"></i> Enregistrer
-                </button>
-                <button type="button" class="btn-dash btn-dash-outline" onclick="closePayModal()" style="flex:1;">
-                    Annuler
-                </button>
-            </div>
-        </form>
     </div>
-</div>
 
-<script>
-const toggle  = document.getElementById('sidebarToggle');
-const sidebar = document.getElementById('sidebar');
-const overlay = document.getElementById('sidebarOverlay');
-toggle?.addEventListener('click', () => { sidebar.classList.toggle('open'); overlay.classList.toggle('open'); });
-overlay?.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('open'); });
+    <script>
+        const toggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        toggle?.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        });
+        overlay?.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+        });
 
-// ── Modal paiement ──
-function openPayModal(idFac, numFac, total, paye) {
-    const reste = total - paye;
-    document.getElementById('modalIdFac').value = idFac;
-    document.getElementById('modalSubtitle').textContent = 'Facture ' + numFac;
-    document.getElementById('modalReste').textContent = new Intl.NumberFormat('fr-FR').format(reste) + ' Ar';
-    document.getElementById('montant_paiement').max = reste;
-    document.getElementById('montant_paiement').value = '';
-    document.getElementById('payModal').classList.add('open');
-}
-function closePayModal() {
-    document.getElementById('payModal').classList.remove('open');
-}
-document.getElementById('payModal').addEventListener('click', function(e) {
-    if (e.target === this) closePayModal();
-});
-</script>
+        // ── Modal paiement ──
+        function openPayModal(idFac, numFac, total, paye) {
+            const reste = total - paye;
+            document.getElementById('modalIdFac').value = idFac;
+            document.getElementById('modalSubtitle').textContent = 'Facture ' + numFac;
+            document.getElementById('modalReste').textContent = new Intl.NumberFormat('fr-FR').format(reste) + ' Ar';
+            document.getElementById('montant_paiement').max = reste;
+            document.getElementById('montant_paiement').value = '';
+            document.getElementById('payModal').classList.add('open');
+        }
 
-<!-- Toastify pour messages PRG -->
-<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-<?php if (!empty($prgMessages)): ?>
-<script>
-window.addEventListener('DOMContentLoaded', () => {
-    <?= prg_render_toasts($prgMessages) ?>
-    const url = new URL(window.location);
-    url.searchParams.delete('q');
-    url.searchParams.delete('id_contrat');
-    window.history.replaceState({}, '', url);
-});
-</script>
-<?php endif; ?>
+        function closePayModal() {
+            document.getElementById('payModal').classList.remove('open');
+        }
+        document.getElementById('payModal').addEventListener('click', function(e) {
+            if (e.target === this) closePayModal();
+        });
+    </script>
+
+    <!-- Toastify pour messages PRG -->
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <?php if (!empty($prgMessages)): ?>
+        <script>
+            window.addEventListener('DOMContentLoaded', () => {
+                <?= prg_render_toasts($prgMessages) ?>
+                // Nettoyer l'URL
+                const url = new URL(window.location);
+                url.searchParams.delete('q');
+                url.searchParams.delete('id_contrat');
+                window.history.replaceState({}, '', url);
+            });
+        </script>
+    <?php endif; ?>
 
 </body>
 
