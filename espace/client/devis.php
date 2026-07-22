@@ -33,6 +33,19 @@ $prestationsList = $pdo->query(
 )->fetchAll(PDO::FETCH_ASSOC);
 
 /* ============================================================
+   HISTORIQUE DES DEVIS DU CLIENT
+   ============================================================ */
+$stmtHistory = $pdo->prepare(
+    "SELECT d.*, p.LIB_PRESTATION
+     FROM devis d
+     JOIN prestations p ON d.ID_PRESTATION = p.ID_PRESTATION
+     WHERE d.EMAIL = ?
+     ORDER BY d.DATE_SOUHAITE DESC"
+);
+$stmtHistory->execute([$cfEmail]);
+$devisHistory = $stmtHistory->fetchAll(PDO::FETCH_ASSOC);
+
+/* ============================================================
    STATUT TOAST (paramètres GET après redirection)
    ============================================================ */
 $devisStatus  = $_GET['devis']   ?? null;
@@ -470,6 +483,53 @@ if ($cfType !== '' && !in_array($cfType, $typesVisiteur, true)) {
                 </div>
 
             </div><!-- /grid -->
+
+            <!-- ═══════════════════ HISTORIQUE DES DEVIS ═══════════════════ -->
+            <div class="dash-card" style="margin-top:20px;">
+                <div class="dash-card-header">
+                    <h3><i class="fas fa-history" style="color:var(--primary-green);margin-right:8px;"></i> Historique de vos devis</h3>
+                </div>
+                <div class="dash-card-body">
+                    <?php if (empty($devisHistory)): ?>
+                        <div class="empty-state" style="padding:30px;text-align:center;color:#888;">
+                            <i class="fas fa-file-invoice" style="font-size:2rem;margin-bottom:10px;color:#ccc;"></i>
+                            <p>Vous n'avez fait aucune demande de devis pour le moment.</p>
+                        </div>
+                    <?php else: ?>
+                        <div class="table-responsive">
+                            <table class="dash-table">
+                                <thead>
+                                    <tr>
+                                        <th>Prestation</th>
+                                        <th>Date souhaitée</th>
+                                        <th>Budget estimatif</th>
+                                        <th>Devis final (Réponse)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($devisHistory as $dh): ?>
+                                    <tr>
+                                        <td><?= htmlspecialchars($dh['LIB_PRESTATION']) ?></td>
+                                        <td><?= date('d/m/Y', strtotime($dh['DATE_SOUHAITE'])) ?></td>
+                                        <td><?= htmlspecialchars($dh['BUGET_ESTIMATIF']) ?> AR</td>
+                                        <td>
+                                            <?php if (!empty($dh['FICHIER_REPONSE'])): ?>
+                                                <a href="<?= htmlspecialchars('../../' . $dh['FICHIER_REPONSE']) ?>" target="_blank" class="btn-dash btn-dash-sm btn-dash-outline" style="padding:6px 12px;font-size:0.8rem;color:var(--primary-green);border-color:var(--primary-green);">
+                                                    <i class="fas fa-file-download"></i> Télécharger
+                                                </a>
+                                            <?php else: ?>
+                                                <span class="badge badge-waiting" style="font-size:0.75rem;">En attente de traitement</span>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+
         </div><!-- /dashboard-content -->
     </div><!-- /dashboard-main -->
 </div><!-- /dashboard-wrapper -->
