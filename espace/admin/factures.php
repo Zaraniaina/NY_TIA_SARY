@@ -1,16 +1,17 @@
 <?php
+
 declare(strict_types=1);
 require_once __DIR__ . '/../../util/auth_guard.php';
 require_once __DIR__ . '/../../util/prg_helper.php';
 requireAdmin();
 
-require_once __DIR__.'/composante/tolbarDto.php';
+require_once __DIR__ . '/composante/tolbarDto.php';
 $titre = "Gestion des factures";
 
 // ── TRAITEMENT POST (PRG Pattern) ──────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
-    
+
     // ── Création d'une facture ────────────────────────────────────
     if ($action === 'create') {
         $idContrat = (int) ($_POST['id_contrat'] ?? 0);
@@ -119,6 +120,7 @@ $factures = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -132,128 +134,138 @@ $factures = $stmt->fetchAll();
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 
 </head>
+
 <body>
-<div class="dashboard-wrapper">
-    <?php include __DIR__ . '/composante/sidebar.php'; ?>
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="dashboard-wrapper">
+        <?php include __DIR__ . '/composante/sidebar.php'; ?>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <div class="dashboard-main">
-        <?php include __DIR__ . '/composante/tolbar.php'; ?>
+        <div class="dashboard-main">
+            <?php include __DIR__ . '/composante/tolbar.php'; ?>
 
-        <div class="dashboard-content">
-            <nav class="dash-breadcrumb">
-                <a href="home.php">Dashboard</a>
-                <i class="fas fa-chevron-right" style="font-size:.65rem;"></i>
-                <a href="contrats.php">Contrats</a>
-                <i class="fas fa-chevron-right" style="font-size:.65rem;"></i>
-                <span>Factures</span>
-            </nav>  
+            <div class="dashboard-content">
+                <nav class="dash-breadcrumb">
+                    <a href="home.php">Dashboard</a>
+                    <i class="fas fa-chevron-right" style="font-size:.65rem;"></i>
+                    <a href="contrats.php">Contrats</a>
+                    <i class="fas fa-chevron-right" style="font-size:.65rem;"></i>
+                    <span>Factures</span>
+                </nav>
 
-            <div style="width:100%;">
+                <div style="width:100%;">
 
-                <!-- LISTE DES FACTURES -->
-                <div class="dash-card">
-                    <div class="dash-card-header">
-                        <h3><i class="fas fa-list" style="color:var(--primary-green);margin-right:8px;"></i> Toutes les factures</h3>
-                        <span class="badge badge-confirm"><?= count($factures) ?></span>
-                    </div>
-                    <div class="dash-card-body">
-                        <!-- BARRE DE RECHERCHE -->
-                        <form method="GET" action="" style="display:flex;gap:8px;margin-bottom:16px;">
-                            <div class="dash-search-bar" style="margin:0;flex:1;">
-                                <i class="fas fa-search"></i>
-                                <input type="text" name="q" value="<?= htmlspecialchars($search) ?>" placeholder="Rechercher par n° de facture ou client...">
-                            </div>
-                            <button type="submit" class="btn-dash btn-dash-primary" style="padding:10px 14px;"><i class="fas fa-search"></i> Filtrer</button>
-                            <?php if ($search !== ''): ?>
-                                <a href="factures.php" class="btn-dash btn-dash-outline" style="padding:10px 14px;text-decoration:none;"><i class="fas fa-times"></i> Ràz</a>
-                            <?php endif; ?>
-                        </form>
-
-                        <?php if (empty($factures)): ?>
-                            <div class="empty-state"><i class="fas fa-file-invoice"></i><p>Aucune facture trouvée.</p></div>
-                        <?php else: ?>
-                        <div class="table-responsive">
-                            <table class="dash-table">
-                                <thead>
-                                    <tr>
-                                        <th>N° Facture</th>
-                                        <th>Client</th>
-                                        <th>Prestation</th>
-                                        <th>Date prestation</th>
-                                        <th>Statut</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                <?php foreach ($factures as $f): ?>
-                                    <tr>
-                                        <td>
-                                            <strong style="color:var(--primary-green);">
-                                                <i class="fas fa-file-invoice"></i> <?= htmlspecialchars($f['NUM_FACTURE']) ?>
-                                            </strong>
-                                        </td>
-                                        <td><strong><?= htmlspecialchars($f['PRENOM_CLIENT'].' '.$f['NOM_CLIENT']) ?></strong></td>
-                                        <td><?= htmlspecialchars($f['LIB_PRESTATION']) ?></td>
-                                        <td><?= date('d/m/Y', strtotime($f['DATE_RESERVATION'])) ?></td>
-                                        <td>
-                                            <form method="POST" action="" style="display:inline-flex;margin:0;">
-                                                <input type="hidden" name="action" value="update_status">
-                                                <input type="hidden" name="id_facture" value="<?= (int)$f['ID_FACTURE'] ?>">
-                                                <select name="status" class="dash-select" style="padding:4px 8px;font-size:0.75rem;width:auto;margin:0;" onchange="this.form.submit()">
-                                                    <option value="NON PAYEE" <?= $f['STATUS_FACTURE'] === 'NON PAYEE' ? 'selected' : '' ?>>NON PAYÉE</option>
-                                                    <option value="PAYEE" <?= $f['STATUS_FACTURE'] === 'PAYEE' ? 'selected' : '' ?>>PAYÉE</option>
-                                                </select>
-                                            </form>
-                                        </td>
-                                        <td>
-                                            <div style="display:inline-flex;gap:6px;">
-                                                <a href="../client/generer_facture_pdf.php?id_facture=<?= (int)$f['ID_FACTURE'] ?>" class="btn-dash btn-dash-outline btn-dash-sm" title="Télécharger le PDF">
-                                                    <i class="fas fa-file-pdf"></i>
-                                                </a>
-                                                <form method="POST" style="display:inline;margin:0;" onsubmit="return confirm('Supprimer cette facture ?');">
-                                                    <input type="hidden" name="action" value="delete">
-                                                    <input type="hidden" name="id_facture" value="<?= (int)$f['ID_FACTURE'] ?>">
-                                                    <button class="btn-dash btn-dash-danger btn-dash-sm"><i class="fas fa-trash"></i></button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                                </tbody>
-                            </table>
+                    <!-- LISTE DES FACTURES -->
+                    <div class="dash-card">
+                        <div class="dash-card-header">
+                            <h3><i class="fas fa-list" style="color:var(--primary-green);margin-right:8px;"></i> Toutes les factures</h3>
+                            <span class="badge badge-confirm"><?= count($factures) ?></span>
                         </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
+                        <div class="dash-card-body">
+                            <!-- BARRE DE RECHERCHE -->
+                            <form method="GET" action="" style="display:flex;gap:8px;margin-bottom:16px;">
+                                <div class="dash-search-bar" style="margin:0;flex:1;">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" name="q" value="<?= htmlspecialchars($search) ?>" placeholder="Rechercher par n° de facture ou client...">
+                                </div>
+                                <button type="submit" class="btn-dash btn-dash-primary" style="padding:10px 14px;"><i class="fas fa-search"></i> Filtrer</button>
+                                <?php if ($search !== ''): ?>
+                                    <a href="factures.php" class="btn-dash btn-dash-outline" style="padding:10px 14px;text-decoration:none;"><i class="fas fa-times"></i> Ràz</a>
+                                <?php endif; ?>
+                            </form>
 
+                            <?php if (empty($factures)): ?>
+                                <div class="empty-state"><i class="fas fa-file-invoice"></i>
+                                    <p>Aucune facture trouvée.</p>
+                                </div>
+                            <?php else: ?>
+                                <div class="table-responsive">
+                                    <table class="dash-table">
+                                        <thead>
+                                            <tr>
+                                                <th>N° Facture</th>
+                                                <th>Client</th>
+                                                <th>Prestation</th>
+                                                <th>Date prestation</th>
+                                                <th>Statut</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($factures as $f): ?>
+                                                <tr>
+                                                    <td>
+                                                        <strong style="color:var(--primary-green);">
+                                                            <i class="fas fa-file-invoice"></i> <?= htmlspecialchars($f['NUM_FACTURE']) ?>
+                                                        </strong>
+                                                    </td>
+                                                    <td><strong><?= htmlspecialchars($f['PRENOM_CLIENT'] . ' ' . $f['NOM_CLIENT']) ?></strong></td>
+                                                    <td><?= htmlspecialchars($f['LIB_PRESTATION']) ?></td>
+                                                    <td><?= date('d/m/Y', strtotime($f['DATE_RESERVATION'])) ?></td>
+                                                    <td>
+                                                        <form method="POST" action="" style="display:inline-flex;margin:0;">
+                                                            <input type="hidden" name="action" value="update_status">
+                                                            <input type="hidden" name="id_facture" value="<?= (int)$f['ID_FACTURE'] ?>">
+                                                            <select name="status" class="dash-select" style="padding:4px 8px;font-size:0.75rem;width:auto;margin:0;" onchange="this.form.submit()">
+                                                                <option value="NON PAYEE" <?= $f['STATUS_FACTURE'] === 'NON PAYEE' ? 'selected' : '' ?>>NON PAYÉE</option>
+                                                                <option value="PAYEE" <?= $f['STATUS_FACTURE'] === 'PAYEE' ? 'selected' : '' ?>>PAYÉE</option>
+                                                            </select>
+                                                        </form>
+                                                    </td>
+                                                    <td>
+                                                        <div style="display:inline-flex;gap:6px;">
+                                                            <a href="../client/generer_facture_pdf.php?id_facture=<?= (int)$f['ID_FACTURE'] ?>" class="btn-dash btn-dash-outline btn-dash-sm" title="Télécharger le PDF">
+                                                                <i class="fas fa-file-pdf"></i>
+                                                            </a>
+                                                            <form method="POST" style="display:inline;margin:0;" onsubmit="return confirm('Supprimer cette facture ?');">
+                                                                <input type="hidden" name="action" value="delete">
+                                                                <input type="hidden" name="id_facture" value="<?= (int)$f['ID_FACTURE'] ?>">
+                                                                <button class="btn-dash btn-dash-danger btn-dash-sm"><i class="fas fa-trash"></i></button>
+                                                            </form>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-const toggle  = document.getElementById('sidebarToggle');
-const sidebar = document.getElementById('sidebar');
-const overlay = document.getElementById('sidebarOverlay');
-toggle?.addEventListener('click', () => { sidebar.classList.toggle('open'); overlay.classList.toggle('open'); });
-overlay?.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('open'); });
-</script>
+    <script>
+        const toggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        toggle?.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        });
+        overlay?.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+        });
+    </script>
 
-<!-- Toastify pour messages PRG -->
-<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-<?php if (!empty($prgMessages)): ?>
-<script>
-window.addEventListener('DOMContentLoaded', () => {
-    <?= prg_render_toasts($prgMessages) ?>
-    // Nettoyer l'URL
-    const url = new URL(window.location);
-    url.searchParams.delete('q');
-    url.searchParams.delete('id_contrat');
-    window.history.replaceState({}, '', url);
-});
-</script>
-<?php endif; ?>
+    <!-- Toastify pour messages PRG -->
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <?php if (!empty($prgMessages)): ?>
+        <script>
+            window.addEventListener('DOMContentLoaded', () => {
+                <?= prg_render_toasts($prgMessages) ?>
+                // Nettoyer l'URL
+                const url = new URL(window.location);
+                url.searchParams.delete('q');
+                url.searchParams.delete('id_contrat');
+                window.history.replaceState({}, '', url);
+            });
+        </script>
+    <?php endif; ?>
 
 </body>
+
 </html>
