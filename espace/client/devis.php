@@ -40,7 +40,7 @@ $stmtHistory = $pdo->prepare(
      FROM devis d
      JOIN prestations p ON d.ID_PRESTATION = p.ID_PRESTATION
      WHERE d.EMAIL = ?
-     ORDER BY d.DATE_SOUHAITE DESC"
+     ORDER BY d.ID DESC"
 );
 $stmtHistory->execute([$cfEmail]);
 $devisHistory = $stmtHistory->fetchAll(PDO::FETCH_ASSOC);

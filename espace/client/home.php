@@ -14,9 +14,12 @@ $stmtDevis = $pdo->prepare('SELECT COUNT(*) FROM DEVIS WHERE NOM = ? OR PRENOMS 
 $stmtDevis->execute([$clientNom, $clientPrenom]);
 $nbDevis = (int) $stmtDevis->fetchColumn();
 
-$stmtPhotos = $pdo->prepare('SELECT COUNT(*) FROM MEDIA m JOIN RESERVATION r ON m.ID_RESERVATION = r.ID_RESERVATION WHERE r.ID_CLIENT = ?');
-$stmtPhotos->execute([$clientId]);
+$stmtPhotos = $pdo->prepare('SELECT COUNT(*) FROM MEDIA m JOIN RESERVATION r ON m.ID_RESERVATION = r.ID_RESERVATION WHERE r.ID_CLIENT = ? and m.TYPE_MEDIA = ?');
+$stmtPhotos->execute([$clientId,"IMAGE"]);
 $nbPhotos = (int) $stmtPhotos->fetchColumn();
+$stmtPhotos = $pdo->prepare('SELECT COUNT(*) FROM MEDIA m JOIN RESERVATION r ON m.ID_RESERVATION = r.ID_RESERVATION WHERE r.ID_CLIENT = ? and m.TYPE_MEDIA = ?');
+$stmtPhotos->execute([$clientId,"VIDEO"]);
+$nbVideos = (int) $stmtPhotos->fetchColumn();
 
 // 5 dernières réservations
 $stmtLast = $pdo->prepare(
@@ -81,6 +84,13 @@ $lastResas = $stmtLast->fetchAll();
                         <div class="stat-label">Photos livrées</div>
                     </div>
                 </div>
+                <div class="stat-card">
+                    <div class="stat-icon blue"><i class="fas fa-video"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-number"><?= $nbVideos ?></div>
+                        <div class="stat-label">Vidéos livrées</div>
+                    </div>
+                </div>
             </div>
 
             <!-- ACTIONS RAPIDES -->
@@ -97,6 +107,9 @@ $lastResas = $stmtLast->fetchAll();
                     </a>
                     <a href="mes_photos.php" class="btn-dash btn-dash-outline">
                         <i class="fas fa-images"></i> Voir mes photos
+                    </a>
+                    <a href="mes_videos.php" class="btn-dash btn-dash-outline">
+                        <i class="fas fa-video"></i> Voir mes vidéos
                     </a>
                 </div>
             </div>
