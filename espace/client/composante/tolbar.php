@@ -1,7 +1,6 @@
 <?php
 require_once __DIR__.'/tolbarDto.php';
-$pdo = getPDO();
-$clientId = (int)($_SESSION['CLIENT_ID'] ?? 0);
+// $pdo et $clientId sont fournis par tolbarDto.php (session 'client_id')
 $notifCount = 0;
 if ($clientId > 0) {
     $stmtNotif = $pdo->prepare('SELECT COUNT(*) FROM notification WHERE ID_CLIENT = ? AND SUP_NOTIF = 0 AND LU_NOTIF = 0');

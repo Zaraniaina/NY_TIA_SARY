@@ -1,8 +1,6 @@
 <?php
 // notificationDropdown.php — Composant Notification Dropdown pour le client
-require_once __DIR__ . '/../../../config/database.php';
-$pdo = getPDO();
-$clientId = (int)($_SESSION['CLIENT_ID'] ?? 0);
+// $pdo et $clientId sont fournis par tolbarDto.php via tolbar.php
 
 // Récupérer les notifications du client
 $notifications = [];
