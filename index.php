@@ -337,8 +337,14 @@ try {
             <div class="partenaires-slider">
                 <div class="partenaires-track">
                     <?php 
-                    // Duplicate for infinite scroll effect
-                    $sliderItems = array_merge($partenaires, $partenaires);
+                    // Make sure we have enough items to fill the screen (at least ~8 items)
+                    $multiplier = ceil(8 / (count($partenaires) ?: 1));
+                    $baseItems = [];
+                    for ($i = 0; $i < $multiplier; $i++) {
+                        $baseItems = array_merge($baseItems, $partenaires);
+                    }
+                    // Duplicate exactly once for infinite scroll effect (50% translation)
+                    $sliderItems = array_merge($baseItems, $baseItems);
                     foreach ($sliderItems as $partenaire): 
                     ?>
                         <div class="partenaire-slide">

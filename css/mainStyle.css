@@ -2574,7 +2574,7 @@
 .partenaires-track {
     display: flex;
     align-items: center;
-    width: calc(200px * 14); /* Adjust based on expected number of items */
+    width: max-content;
     animation: scroll-partenaires 30s linear infinite;
 }
 
@@ -2605,7 +2605,7 @@
 
 @keyframes scroll-partenaires {
     0% { transform: translateX(0); }
-    100% { transform: translateX(calc(-200px * 7)); }
+    100% { transform: translateX(-50%); }
 }
 
 @media (max-width: 768px) {
@@ -2621,6 +2621,6 @@
     
     @keyframes scroll-partenaires {
         0% { transform: translateX(0); }
-        100% { transform: translateX(calc(-150px * 7)); }
+        100% { transform: translateX(-50%); }
     }
 }

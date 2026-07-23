@@ -621,7 +621,7 @@ $contact = $pdo->query('SELECT * FROM contact LIMIT 1')->fetch();
                                             <tr>
                                                 <td>
                                                     <?php if ($p['PATH_LOGO']): ?>
-                                                        <img src="../../../<?= htmlspecialchars($p['PATH_LOGO']) ?>" alt="Logo" style="max-height:38px;max-width:80px;object-fit:contain;border-radius:4px;">
+                                                        <img src="../../<?= htmlspecialchars($p['PATH_LOGO']) ?>" alt="Logo" style="max-height:38px;max-width:80px;object-fit:contain;border-radius:4px;">
                                                     <?php else: ?>
                                                         <span style="color:#ccc;"><i class="fas fa-image"></i></span>
                                                     <?php endif; ?>
