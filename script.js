@@ -1,7 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
     // 0. ScrollReveal - Animations d'entrée
-    // 0. ScrollReveal - Animations d'entrée
-    // 0. ScrollReveal - Animations d'entrée
     if (typeof ScrollReveal !== 'undefined') {
         const sr = ScrollReveal({
             duration: 900,
@@ -137,7 +135,30 @@ document.addEventListener('DOMContentLoaded', () => {
         window.addEventListener('scroll', handleScroll);
     }
 
-    // 3. Smooth scroll for banner scroll button
+    // 3. Smooth scroll for banner scroll button and blog anchors
+    const smoothScroll = (targetElement, duration = 400, offset = 80) => {
+        if (!targetElement) return;
+
+        const startY = window.scrollY || window.pageYOffset;
+        const targetY = Math.max(0, targetElement.getBoundingClientRect().top + startY - offset);
+        const distance = targetY - startY;
+        const startTime = performance.now();
+
+        const easeInOutQuad = (t) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+
+        const tick = (currentTime) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const nextY = startY + distance * easeInOutQuad(progress);
+            window.scrollTo(0, nextY);
+            if (elapsed < duration) {
+                requestAnimationFrame(tick);
+            }
+        };
+
+        requestAnimationFrame(tick);
+    };
+
     const scrollBtn = document.getElementById('scroll-to-hero');
     if (scrollBtn) {
         scrollBtn.addEventListener('click', (e) => {
@@ -145,12 +166,29 @@ document.addEventListener('DOMContentLoaded', () => {
             const targetId = scrollBtn.getAttribute('href');
             const targetElement = document.querySelector(targetId);
             if (targetElement) {
-                targetElement.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
+                smoothScroll(targetElement, 520, 100);
             }
         });
+    }
+
+    const blogAnchors = document.querySelectorAll('a[href^="#article-"]');
+    blogAnchors.forEach((anchor) => {
+        anchor.addEventListener('click', (e) => {
+            const targetId = anchor.getAttribute('href');
+            const targetElement = document.querySelector(targetId);
+            if (targetElement) {
+                e.preventDefault();
+                smoothScroll(targetElement, 380, 90);
+                history.replaceState(null, '', targetId);
+            }
+        });
+    });
+
+    if (window.location.hash && window.location.hash.startsWith('#article-')) {
+        const targetElement = document.querySelector(window.location.hash);
+        if (targetElement) {
+            setTimeout(() => smoothScroll(targetElement, 380, 90), 80);
+        }
     }
 
     // 4. Mobile Menu Toggle

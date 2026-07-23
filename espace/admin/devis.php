@@ -14,12 +14,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $idDevis = (int) ($_POST['id'] ?? 0);
 
     if ($action === 'valider' && $idDevis) {
-    // Vérifier qu'une réservation existe (on crée un contrat symbolique)
-    $stmt = $pdo->prepare('SELECT * FROM DEVIS WHERE ID = ?');
-    $stmt->execute([$idDevis]);
-    $devis = $stmt->fetch();
-    $success = "Devis #$idDevis marqué comme validé. Un contrat devra être associé à une réservation.";
-} elseif ($action === 'supprimer' && $idDevis) {
+        $stmt = $pdo->prepare('SELECT * FROM DEVIS WHERE ID = ?');
+        $stmt->execute([$idDevis]);
+        $devis = $stmt->fetch();
+
+        if ($devis) {
+            $stmtClient = $pdo->prepare('SELECT c.ID_CLIENT FROM CLIENT c JOIN authentification a ON c.ID_AUTH = a.ID_AUTH WHERE a.EMAIL_AUTH = ? LIMIT 1');
+            $stmtClient->execute([$devis['EMAIL']]);
+            $clientId = $stmtClient->fetchColumn();
+            if ($clientId) {
+                $stmtNotif = $pdo->prepare('INSERT INTO notification (TYPE_NOTIF, ID_REF_NOTIF, ID_CLIENT, TITRE_NOTIF, MESS_NOTIF, LU_NOTIF, SUP_NOTIF) VALUES (?, ?, ?, ?, ?, 0, 0)');
+                $stmtNotif->execute([
+                    'devis',
+                    $idDevis,
+                    $clientId,
+                    'Réponse à votre demande de devis',
+                    'Votre demande de devis a été validée par l\'administrateur.',
+                ]);
+            }
+        }
+
+        $success = "Devis #$idDevis marqué comme validé. Un contrat devra être associé à une réservation.";
+    } elseif ($action === 'supprimer' && $idDevis) {
     try {
         $pdo->beginTransaction();
 

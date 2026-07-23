@@ -8,7 +8,61 @@ require_once __DIR__.'/composante/tolbarDto.php';
 $titre="Gestion des Blog";
 $success = $error = '';
 
-// ── CRUD Blog ─────────────────────────────────────────────────
+function ensureNotificationClientColumn(PDO $pdo): void {
+    $stmt = $pdo->prepare(
+        "SELECT COUNT(*) FROM information_schema.columns
+         WHERE table_schema = DATABASE() AND table_name = 'notification' AND column_name = 'ID_CLIENT'"
+    );
+    $stmt->execute();
+    if ((int) $stmt->fetchColumn() === 0) {
+        $pdo->exec('ALTER TABLE notification ADD COLUMN ID_CLIENT int(11) DEFAULT NULL');
+    }
+}
+
+function notifyClientsAboutBlog(PDO $pdo, int $blogId, string $blogTitle): void {
+    try {
+        ensureNotificationClientColumn($pdo);
+    } catch (PDOException $e) {
+        // Si la colonne ne peut pas être ajoutée, on continue avec la meilleure option disponible.
+    }
+
+    $stmtClients = $pdo->query('SELECT ID_CLIENT FROM CLIENT');
+    $clientIds = $stmtClients->fetchAll(PDO::FETCH_COLUMN);
+
+    $stmtNotifWithClient = $pdo->prepare(
+        'INSERT INTO notification (TYPE_NOTIF, ID_REF_NOTIF, ID_CLIENT, TITRE_NOTIF, MESS_NOTIF, LU_NOTIF, SUP_NOTIF)
+         VALUES (?, ?, ?, ?, ?, 0, 0)'
+    );
+    $stmtNotifWithoutClient = $pdo->prepare(
+        'INSERT INTO notification (TYPE_NOTIF, ID_REF_NOTIF, TITRE_NOTIF, MESS_NOTIF, LU_NOTIF, SUP_NOTIF)
+         VALUES (?, ?, ?, ?, 0, 0)'
+    );
+
+    foreach ($clientIds as $clientId) {
+        try {
+            $stmtNotifWithClient->execute([
+                'blog',
+                $blogId,
+                $clientId,
+                'Nouvel article publié',
+                "Nouvel article : $blogTitle",
+            ]);
+        } catch (PDOException $e) {
+            if (str_contains($e->getMessage(), 'Unknown column') || str_contains($e->getMessage(), 'Colonne inconnue')) {
+                $stmtNotifWithoutClient->execute([
+                    'blog',
+                    $blogId,
+                    'Nouvel article publié',
+                    "Nouvel article : $blogTitle",
+                ]);
+            } else {
+                throw $e;
+            }
+        }
+    }
+}
+
+// CRUD Blog
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action  = $_POST['action'] ?? '';
     $idBlog  = (int) ($_POST['id_blog'] ?? 0);
@@ -23,42 +77,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$idCat || !$titre || !$contenu) {
             $error = 'Veuillez remplir tous les champs obligatoires.';
         } else {
-            // Upload image couverture si fournie
             if (!empty($_FILES['image_couverture']['name'])) {
                 $res = uploadFile($_FILES['image_couverture'], 'blog', 'image');
-                if ($res['success']) { $imgPath = $res['path']; }
-                else { $error = $res['error']; }
+                if ($res['success']) {
+                    $imgPath = $res['path'];
+                } else {
+                    $error = $res['error'];
+                }
             }
 
             if (!$error) {
                 if ($action === 'create') {
                     $stmt = $pdo->prepare('INSERT INTO BLOG (ID_TYPE_BLOG, TITRE_BLOG, CONTENU, IMAGE_COURVERTURE, STATUS_BLOG) VALUES (?,?,?,?,?)');
                     $stmt->execute([$idCat, $titre, $contenu, $imgPath, $status]);
-                    $success = "Article « $titre » créé avec succès.";
+                    $blogId = (int) $pdo->lastInsertId();
+                    if ($status === 'PUBLIER') {
+                        notifyClientsAboutBlog($pdo, $blogId, $titre);
+                    }
+                    $success = "Article cree avec succes.";
                 } else {
+                    $stmtOld = $pdo->prepare('SELECT STATUS_BLOG FROM BLOG WHERE ID_BLOG = ?');
+                    $stmtOld->execute([$idBlog]);
+                    $oldStatus = $stmtOld->fetchColumn();
+
                     $stmt = $pdo->prepare('UPDATE BLOG SET ID_TYPE_BLOG=?, TITRE_BLOG=?, CONTENU=?, IMAGE_COURVERTURE=?, DATE_MODIFICATION=CURDATE(), STATUS_BLOG=? WHERE ID_BLOG=?');
                     $stmt->execute([$idCat, $titre, $contenu, $imgPath, $status, $idBlog]);
-                    $success = "Article modifié avec succès.";
+                    if ($oldStatus !== 'PUBLIER' && $status === 'PUBLIER') {
+                        notifyClientsAboutBlog($pdo, $idBlog, $titre);
+                    }
+                    $success = "Article modifie avec succes.";
                 }
             }
         }
     } elseif ($action === 'publish' && $idBlog) {
+        $stmtTitle = $pdo->prepare('SELECT TITRE_BLOG FROM BLOG WHERE ID_BLOG = ?');
+        $stmtTitle->execute([$idBlog]);
+        $blogTitle = $stmtTitle->fetchColumn() ?: 'Nouvel article';
         $pdo->prepare('UPDATE BLOG SET STATUS_BLOG = "PUBLIER" WHERE ID_BLOG = ?')->execute([$idBlog]);
-        $success = "Article publié avec succès.";
+        notifyClientsAboutBlog($pdo, $idBlog, $blogTitle);
+        $success = "Article publie avec succes.";
     } elseif ($action === 'draft' && $idBlog) {
         $pdo->prepare('UPDATE BLOG SET STATUS_BLOG = "BROUILLON" WHERE ID_BLOG = ?')->execute([$idBlog]);
-        $success = "Article mis en brouillon avec succès.";
+        $success = "Article mis en brouillon avec succes.";
     } elseif ($action === 'delete' && $idBlog) {
         $pdo->prepare('DELETE FROM BLOG WHERE ID_BLOG = ?')->execute([$idBlog]);
-        $success = "Article supprimé.";
+        $success = "Article supprime.";
     }
 }
 
-// ── Données ───────────────────────────────────────────────────
 $articles   = $pdo->query('SELECT b.*, t.LIB_TYPE_BLOG, COALESCE(bs.views,0) AS VIEWS, COALESCE(bs.likes,0) AS LIKES, COALESCE(bs.dislikes,0) AS DISLIKES FROM BLOG b LEFT JOIN TYPE_BLOG t ON b.ID_TYPE_BLOG  = t.ID_TYPE_BLOG LEFT JOIN blog_stats bs ON b.ID_BLOG = bs.id_blog ORDER BY b.DATE_PUBLICATION DESC')->fetchAll();
 $categories = $pdo->query('SELECT ID_TYPE_BLOG, LIB_TYPE_BLOG FROM TYPE_BLOG ORDER BY LIB_TYPE_BLOG')->fetchAll();
 
-// Article à éditer ?
 $editArticle = null;
 if (isset($_GET['edit'])) {
     $stmt = $pdo->prepare('SELECT * FROM BLOG WHERE ID_BLOG = ?');
@@ -76,10 +145,7 @@ if (isset($_GET['edit'])) {
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="../../css/dashboard.css">
-
-    <!-- Toastify CSS -->
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-
 </head>
 <body>
 <div class="dashboard-wrapper">
@@ -96,10 +162,8 @@ if (isset($_GET['edit'])) {
                 <span>Blog</span>
             </nav>
 
-
             <div class="two-col-grid blog-stack">
 
-                <!-- FORMULAIRE -->
                 <div class="dash-card compact-card">
                     <div class="dash-card-header">
                         <h3><i class="fas fa-<?= $editArticle ? 'edit' : 'plus-circle' ?>" style="color:var(--primary-green);margin-right:8px;"></i>
@@ -164,7 +228,6 @@ if (isset($_GET['edit'])) {
                     </div>
                 </div>
 
-                <!-- LISTE ARTICLES -->
                 <div class="dash-card">
                     <div class="dash-card-header" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
                         <div style="display:flex;align-items:center;gap:10px;">
@@ -246,7 +309,6 @@ if (isset($_GET['edit'])) {
 </div>
 
 <script>
-// Sidebar toggle: add body lock and Esc shortcut for better UX on mobile
 const toggle  = document.getElementById('sidebarToggle');
 const sidebar = document.getElementById('sidebar');
 const overlay = document.getElementById('sidebarOverlay');
@@ -257,7 +319,6 @@ toggle?.addEventListener('click', () => { sidebar.classList.contains('open') ? c
 overlay?.addEventListener('click', closeSidebar);
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && sidebar.classList.contains('open')) { closeSidebar(); } });
 
-// Aperçu image
 document.getElementById('image_couverture')?.addEventListener('change', function() {
     const prev = document.getElementById('imgPreview');
     if (this.files[0]) {
@@ -268,7 +329,6 @@ document.getElementById('image_couverture')?.addEventListener('change', function
 </script>
 
 <script>
-// Admin: polling to refresh stats every 10s
 (() => {
     const rows = Array.from(document.querySelectorAll('tr[data-blog-id]'));
     if (!rows.length) return;
@@ -287,24 +347,20 @@ document.getElementById('image_couverture')?.addEventListener('change', function
                     if (likes) likes.textContent = '👍 ' + data.stats.likes;
                     if (dislikes) dislikes.textContent = '👎 ' + data.stats.dislikes;
                 }
-            } catch(e) {
-                // ignore
-            }
+            } catch(e) {}
         }));
     }
-    // initial refresh
     refresh();
     setInterval(refresh, 10000);
 })();
 </script>
 
-<!-- Toastify JS -->
 <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 <script>
 window.addEventListener('DOMContentLoaded', () => {
     const errorMsg = <?php echo json_encode($error ?? '', JSON_UNESCAPED_UNICODE); ?>;
     const successMsg = <?php echo json_encode($success ?? '', JSON_UNESCAPED_UNICODE); ?>;
-    
+
     if (errorMsg) {
         Toastify({
             text: errorMsg,
@@ -321,7 +377,7 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         }).showToast();
     }
-    
+
     if (successMsg) {
         Toastify({
             text: successMsg,

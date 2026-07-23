@@ -224,6 +224,7 @@ CREATE TABLE `notification` (
   `ID_NOTIF` int(11) NOT NULL,
   `TYPE_NOTIF` varchar(110) NOT NULL,
   `ID_REF_NOTIF` int(11) NOT NULL,
+  `ID_CLIENT` int(11) DEFAULT NULL,
   `TITRE_NOTIF` varchar(200) NOT NULL,
   `MESS_NOTIF` text NOT NULL,
   `LU_NOTIF` int(11) NOT NULL,

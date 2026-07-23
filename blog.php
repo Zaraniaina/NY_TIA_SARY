@@ -2,6 +2,12 @@
 require_once __DIR__ . '/config/database.php';
 $pdo = getPDO();
 
+// Vérifie si un client est connecté (pour afficher le bouton retour vers l'espace client)
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+$isClientConnecte = !empty($_SESSION['client_id']);
+
 // Récupérer les articles de blog publiés avec leur type
 $blogs = [];
 try {
@@ -36,6 +42,15 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blog | NY TIA SARY - Conseil Photo & Vidéo</title>
     <?php include 'composante/csslink.php'; ?>
+    <style>
+        .btn-back-espace {
+            background: #1877f2;
+            color: #fff;
+        }
+        .btn-back-espace:hover {
+            background: #145dbf;
+        }
+    </style>
 </head>
 
 <body>
@@ -79,7 +94,7 @@ try {
                     // Générer l'ID pour le lien "Lire la suite"
                     $articleId = $blog['ID_BLOG'];
                 ?>
-                <article class="blog-card" data-category="<?= htmlspecialchars($blog['TYPE_BLOG']) ?>">
+                <article id="article-<?= $articleId ?>" class="blog-card" data-category="<?= htmlspecialchars($blog['TYPE_BLOG']) ?>">
                     <div class="blog-card-image">
                         <?php if (!empty($blog['IMAGE_COURVERTURE']) && $blog['IMAGE_COURVERTURE'] != 'aucune_image'): ?>
                             <img src="<?= htmlspecialchars($blog['IMAGE_COURVERTURE']) ?>" 
@@ -125,7 +140,7 @@ try {
                 <?php endforeach; ?>
             </div>
 
-            <!-- LOADER/SIÈGE POUR LADE -->
+            <!-- LOADER/SIÈGE POUR LADE -->
             <div class="blog-loading" id="blog-loading" style="display: none;">
                 <div class="loading-spinner"></div>
             </div>
@@ -323,6 +338,11 @@ try {
     </script>
         <!-- Boutons Flottants -->
     <div class="floating-buttons">
+    <?php if ($isClientConnecte): ?>
+    <a href="espace/client/home.php" class="btn-float btn-back-espace" title="Retour à mon espace">
+        <i class="fas fa-arrow-left"></i> <span>Mon espace</span>
+    </a>
+    <?php endif; ?>
     <button class="btn-float btn-devis" id="btn-open-devis-float" title="Demander un Devis">
         <i class="fas fa-file-invoice-dollar"></i> <span>Demander devis</span>
     </button>

@@ -45,7 +45,7 @@ try {
         LEFT JOIN RESERVATION r ON n.TYPE_NOTIF = 'Reservation' AND n.ID_REF_NOTIF = r.ID_RESERVATION
         LEFT JOIN CLIENT c ON c.ID_CLIENT = r.ID_CLIENT
         LEFT JOIN BLOG b ON n.TYPE_NOTIF = 'reaction' AND n.ID_REF_NOTIF = b.ID_BLOG
-        WHERE n.SUP_NOTIF = 0
+        WHERE n.SUP_NOTIF = 0 AND n.TYPE_NOTIF != 'blog'
         ORDER BY n.DATE_NOTIF DESC
         LIMIT 20
     ");

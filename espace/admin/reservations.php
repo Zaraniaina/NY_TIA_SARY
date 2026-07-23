@@ -26,7 +26,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_statut'])) {
                     ->execute([$id]);
             }
         }
-        
+
+        try {
+            $stmtResa = $pdo->prepare('SELECT ID_CLIENT, DATE_RESERVATION, HEURE_RESERVATION FROM RESERVATION WHERE ID_RESERVATION = ?');
+            $stmtResa->execute([$id]);
+            $resa = $stmtResa->fetch(PDO::FETCH_ASSOC);
+            if ($resa && (int) $resa['ID_CLIENT'] > 0) {
+                $dateResa = date('d/m/Y', strtotime($resa['DATE_RESERVATION']));
+                $heureResa = substr($resa['HEURE_RESERVATION'], 0, 5);
+                $message = match ($statut) {
+                    'CONFIRMEE' => "Votre réservation du $dateResa à $heureResa a été confirmée.",
+                    'ANNULEE'   => "Votre réservation du $dateResa à $heureResa a été annulée.",
+                    'TERMINEE'  => "Votre réservation du $dateResa à $heureResa a été terminée.",
+                    default     => "Le statut de votre réservation a été mis à jour.",
+                };
+                $stmtNotif = $pdo->prepare('INSERT INTO notification (TYPE_NOTIF, ID_REF_NOTIF, ID_CLIENT, TITRE_NOTIF, MESS_NOTIF, LU_NOTIF, SUP_NOTIF) VALUES (?, ?, ?, ?, ?, 0, 0)');
+                $stmtNotif->execute(['Reservation', $id, $resa['ID_CLIENT'], 'Mise à jour de réservation', $message]);
+            }
+        } catch (PDOException $e) {
+            // ignore silently if notification insert fails
+        }
+
         echo json_encode(['ok' => true]);
     } else {
         echo json_encode(['ok' => false]);
