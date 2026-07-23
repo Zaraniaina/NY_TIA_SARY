@@ -12,12 +12,12 @@
     <?php include "composante/header.php" ?>
 
     <!-- SECTION SERVICES DÉTAILLÉES (Grand Plan Alterné) -->
-    <section id="services-detail" class="services-detail-section" style="margin-top: 100px;">
+    <section id="services-detail" class="services-detail-section" style="margin-top: 5px;">
         <div class="container">
             <h2 class="section-title">Nos <span>Prestations</span> Détaillées</h2>
-            
+
             <div class="services-detail-container">
-                
+
                 <!-- 1. Photographie Corporate -->
                 <div class="service-detail-row" id="corporate">
                     <div class="service-detail-image-box">
@@ -27,7 +27,7 @@
                         <span class="service-detail-tag">IDENTITÉ PROFESSIONNELLE</span>
                         <h2>Photographie <span>Corporate</span></h2>
                         <p>Valorisez le capital humain et l'image de marque de votre entreprise. Nous créons des portraits et reportages professionnels qui renforcent votre crédibilité et votre communication corporate.</p>
-                        
+
                         <div class="sub-services-grid">
                             <div class="sub-service-card">
                                 <h4><i class="fas fa-user-tie"></i> Portrait professionnel</h4>
@@ -46,7 +46,7 @@
                                 <p>Des clichés commerciaux à fort impact visuel pour vos campagnes marketing et relations presse.</p>
                             </div>
                         </div>
-                        
+
                     </div>
                 </div>
 
@@ -59,7 +59,7 @@
                         <span class="service-detail-tag">COUVERTURE ÉVÉNEMENTIELLE</span>
                         <h2>Photographie <span>Événementielle</span></h2>
                         <p>Ne laissez aucun moment fort s'échapper. Nous couvrons vos événements professionnels et privés en capturant l'atmosphère, les émotions et les moments clés de manière spontanée et esthétique.</p>
-                        
+
                         <div class="sub-services-grid">
                             <div class="sub-service-card">
                                 <h4><i class="fas fa-microphone"></i> Conférences</h4>
@@ -78,7 +78,7 @@
                                 <p>Des souvenirs mémorables de vos fêtes de famille et célébrations importantes.</p>
                             </div>
                         </div>
-                       
+
                     </div>
                 </div>
 
@@ -91,7 +91,7 @@
                         <span class="service-detail-tag">HISTOIRE D'AMOUR</span>
                         <h2>Prestations de <span>Mariage</span></h2>
                         <p>Le plus beau jour de votre vie mérite une couverture exceptionnelle. De la complicité des préparatifs à la magie de la fête, nous créons des images intemporelles de votre amour.</p>
-                        
+
                         <div class="sub-services-grid">
                             <div class="sub-service-card">
                                 <h4><i class="fas fa-heart"></i> Pre-mariage</h4>
@@ -110,7 +110,7 @@
                                 <p>Création d'albums physiques premium haut de gamme et galeries en ligne sécurisées.</p>
                             </div>
                         </div>
-                        
+
                     </div>
                 </div>
 
@@ -123,7 +123,7 @@
                         <span class="service-detail-tag">ESTHÉTIQUE & HAUTE COUTURE</span>
                         <h2>Photographie de <span>Mode</span></h2>
                         <p>Sublimez vos collections et vos créations de mode. Grâce à des jeux de lumière créatifs et une direction artistique pointue, nous mettons en scène le vêtement et l'expression du mannequin.</p>
-                        
+
                         <div class="sub-services-grid">
                             <div class="sub-service-card">
                                 <h4><i class="fas fa-lightbulb"></i> Shooting studio</h4>
@@ -142,7 +142,7 @@
                                 <p>Captation sur le vif de la magie et du mouvement lors des présentations sur podium.</p>
                             </div>
                         </div>
-                       
+
                     </div>
                 </div>
 
@@ -155,7 +155,7 @@
                         <span class="service-detail-tag">PACKSHOT & PUBLICITÉ</span>
                         <h2>Photographie de <span>Produits</span></h2>
                         <p>Démarquez-vous de la concurrence. Nous réalisons des clichés précis et esthétiques de vos produits (packshot sur fond blanc, mises en scène lifestyle) pour booster vos ventes e-commerce.</p>
-                        
+
                         <div class="sub-services-grid">
                             <div class="sub-service-card">
                                 <h4><i class="fas fa-shopping-cart"></i> E-commerce</h4>
@@ -174,7 +174,7 @@
                                 <p>Gros plans sur les textures, finitions et spécificités de vos produits d'exception.</p>
                             </div>
                         </div>
-                        
+
                     </div>
                 </div>
 
@@ -187,7 +187,7 @@
                         <span class="service-detail-tag">STORYTELLING EN MOUVEMENT</span>
                         <h2>Production <span>Vidéo</span></h2>
                         <p>Donnez vie à vos histoires. De l'écriture du script au montage final en passant par la captation et l'étalonnage, nous créons des contenus vidéo percutants, rythmés et cinématiques.</p>
-                        
+
                         <div class="sub-services-grid">
                             <div class="sub-service-card">
                                 <h4><i class="fas fa-tv"></i> Spot publicitaire</h4>
@@ -206,7 +206,7 @@
                                 <p>Mise en images créative et esthétique de l'univers d'artistes et musiciens.</p>
                             </div>
                         </div>
-                        
+
                     </div>
                 </div>
 
@@ -219,7 +219,7 @@
                         <span class="service-detail-tag">PERSPECTIVE AÉRIENNE</span>
                         <h2>Prestations par <span>Drone</span></h2>
                         <p>Offrez une nouvelle perspective à vos projets. Agréés pour les vols techniques et artistiques, nous capturons des images aériennes spectaculaires pour documenter ou sublimer vos réalisations.</p>
-                        
+
                         <div class="sub-services-grid">
                             <div class="sub-service-card">
                                 <h4><i class="fas fa-image"></i> Photos aériennes</h4>
@@ -238,7 +238,7 @@
                                 <p>Suivi de l'évolution de grands chantiers et inspection visuelle de zones difficiles d'accès.</p>
                             </div>
                         </div>
-                        
+
                     </div>
                 </div>
 
@@ -246,16 +246,16 @@
         </div>
     </section>
     <!-- Boutons Flottants -->
-<div class="floating-buttons">
-    <button class="btn-float btn-devis" id="btn-open-devis-float" title="Demander un Devis">
-        <i class="fas fa-file-invoice-dollar"></i> Demander devis
-    </button>
-    <a href="login/login.php" class="btn-float btn-reserver" title="Réserver">
-        <i class="far fa-calendar-check"></i> Réserver
-    </a>
-</div>
+    <div class="floating-buttons">
+        <button class="btn-float btn-devis" id="btn-open-devis-float" title="Demander un Devis">
+            <i class="fas fa-file-invoice-dollar"></i> Demander devis
+        </button>
+        <a href="login/login.php" class="btn-float btn-reserver" title="Réserver">
+            <i class="far fa-calendar-check"></i> Réserver
+        </a>
+    </div>
     <?php include "composante/footer.php" ?>
-    <?php include "composante/devis_visiteur.php"?> 
+    <?php include "composante/devis_visiteur.php" ?>
 </body>
 
 </html>
