@@ -41,7 +41,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     notificationToggle?.addEventListener('click', function(e) {
         e.stopPropagation();
-        notificationDropdown?.classList.toggle('open');
+        // Check if mobile or tablet (width <= 1024px)
+        if (window.innerWidth <= 1024) {
+            // Redirect to notifications page
+            window.location.href = 'notifications.php';
+        } else {
+            notificationDropdown?.classList.toggle('open');
+        }
     });
 
     notificationDropdownClose?.addEventListener('click', function(e) {

@@ -1,6 +1,11 @@
-# objectif: rendre responce page:
- * lire espace/admin/home.php
- * lire css/dashboard.css
- * rendre cette pages totalement responsive , en mobile tout en 1 bloc les composatante
+# objectif: sytem de notification pour le mobile ou tablette:
+
+ * on affiche plus le notification dropdown mais directement la page notification lorque on est mobile ou tablette
+
+ * a lire notificationDropdown.php
+ * a lire tolbar.php
+ * a lire tolbarDto.php
+
+ # admin ou client 
 
  # donne ton plan pour le faire , 
