@@ -47,8 +47,8 @@ if (!isset($_SESSION['email_admin_contact'])) {
                 <li class="nav-item"><a href="portfolio.php" class="nav-link <?php echo ($current_page == 'portfolio.php') ? 'active' : ''; ?>"><i class="fas fa-images"></i> Portfolio</a></li>
                 <li class="nav-item"><a href="blog.php" class="nav-link <?php echo ($current_page == 'blog.php') ? 'active' : ''; ?>"><i class="fas fa-newspaper"></i> Blog</a></li>
                 <li class="nav-item"><a href="contact.php" class="nav-link <?php echo ($current_page == 'contact.php') ? 'active' : ''; ?>"><i class="fas fa-phone"></i> Contact</a></li>
-                <li class="nav-item"><a href="login/login.php" class="btn btn-outline btn-sm"><i
-                            class="fas fa-sign-in-alt"></i>&nbsp; Se connecter</a></li>
+                <li class="nav-item"><a href="login/login.php" class="btn-login"><i
+                            class="fas fa-sign-in-alt"></i> Se connecter</a></li>
             </ul>
         </div>
     </header>
