@@ -46,6 +46,14 @@ $prestationsList = $pdo->query(
 
 $devisStatus  = $_GET['devis'] ?? null;
 $devisMessage = $_GET['message'] ?? null;
+
+// Fetch partenaires
+$partenaires = [];
+try {
+    $partenaires = $pdo->query("SELECT * FROM partenaire")->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    // Graceful fallback
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -320,6 +328,36 @@ $devisMessage = $_GET['message'] ?? null;
         </div>
     </section>
     
+
+    <!-- SECTION PARTENAIRES -->
+    <?php if (!empty($partenaires)): ?>
+    <section id="partenaires" class="partenaires-section" style="padding: 60px 0; background: #fff; overflow: hidden;">
+        <div class="container">
+            <h2 class="section-title" style="text-align: center; margin-bottom: 40px;">Nos <span>Partenaires</span></h2>
+            <div class="partenaires-slider">
+                <div class="partenaires-track">
+                    <?php 
+                    // Duplicate for infinite scroll effect
+                    $sliderItems = array_merge($partenaires, $partenaires);
+                    foreach ($sliderItems as $partenaire): 
+                    ?>
+                        <div class="partenaire-slide">
+                            <?php if (!empty($partenaire['LIEN_PARTENAIRE'])): ?>
+                                <a href="<?= htmlspecialchars($partenaire['LIEN_PARTENAIRE']) ?>" target="_blank" rel="noopener noreferrer">
+                            <?php endif; ?>
+                            
+                            <img src="<?= htmlspecialchars($partenaire['PATH_LOGO']) ?>" alt="Logo partenaire" title="<?= htmlspecialchars($partenaire['DESCRIPTIONS'] ?? '') ?>">
+                            
+                            <?php if (!empty($partenaire['LIEN_PARTENAIRE'])): ?>
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+    </section>
+    <?php endif; ?>
 
     <!-- Footer page -->
     <?php include "composante/footer.php"?>
