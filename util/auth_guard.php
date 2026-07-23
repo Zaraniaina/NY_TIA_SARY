@@ -6,16 +6,21 @@ declare(strict_types=1);
  */
 
 /**
- * Calcule dynamiquement l'URL de la page de login
- * en fonction de la profondeur du script appelant.
+ * Retourne l'URL absolue de la page de login.
+ * RFC 7231 exige des URI absolus dans les headers Location.
  */
 function getLoginUrl(): string
 {
-    $scriptDir  = dirname($_SERVER['SCRIPT_FILENAME']);
+    // Construire le baseUrl à partir de la requête courante
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host   = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    // Chemin absolu vers login.php depuis la racine du projet
     $projectDir = realpath(__DIR__ . '/..');
-    $relative   = str_replace('\\', '/', str_replace($projectDir, '', $scriptDir));
-    $depth      = count(array_filter(explode('/', trim($relative, '/'))));
-    return str_repeat('../', $depth) . 'login/login.php';
+    $loginPath  = str_replace('\\', '/', str_replace($projectDir, '', realpath(__DIR__ . '/../login'))) . '/login.php';
+    // Retrouver le chemin web (REQUEST_URI moins le script)
+    $docRoot = realpath($_SERVER['DOCUMENT_ROOT'] ?? '');
+    $webBase = $docRoot ? str_replace('\\', '/', str_replace($docRoot, '', $projectDir)) : '';
+    return $scheme . '://' . $host . $webBase . $loginPath;
 }
 
 /**
@@ -28,7 +33,11 @@ function requireAdmin(): void
         session_start();
     }
     if (empty($_SESSION['admin_id'])) {
-        header('Location: ' . getLoginUrl());
+        // Stocker l'URL cible pour redirection post-login
+        $_SESSION['redirect_url'] = $_SERVER['REQUEST_URI'];
+        // Passer aussi en paramètre GET pour robustesse (si session non démarrée côté login)
+        $loginUrl = getLoginUrl() . '?redirect=' . urlencode($_SERVER['REQUEST_URI']);
+        header('Location: ' . $loginUrl);
         exit();
     }
 }
@@ -43,7 +52,11 @@ function requireClient(): void
         session_start();
     }
     if (empty($_SESSION['client_id'])) {
-        header('Location: ' . getLoginUrl());
+        // Stocker l'URL cible pour redirection post-login
+        $_SESSION['redirect_url'] = $_SERVER['REQUEST_URI'];
+        // Passer aussi en paramètre GET pour robustesse
+        $loginUrl = getLoginUrl() . '?redirect=' . urlencode($_SERVER['REQUEST_URI']);
+        header('Location: ' . $loginUrl);
         exit();
     }
 }

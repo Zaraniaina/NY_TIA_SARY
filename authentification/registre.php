@@ -12,15 +12,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nom_client = trim($_POST['nom_client'] ?? '');
     $prenom_client = trim($_POST['prenom_client'] ?? '');
     $tel_client = trim($_POST['tel_client'] ?? '');
+    $type_client = trim($_POST['type_client'] ?? '');
     $email_client = trim($_POST['email_client'] ?? '');
     $mdp_client = $_POST['mdp_client'] ?? '';
     $question = $_POST['question'] ?? '';
     $reponse = trim($_POST['reponse'] ?? '');
 
     // Validation basique des champs requis
-    if (empty($nom_client) || empty($prenom_client) || empty($tel_client) || empty($email_client) || empty($mdp_client) || empty($question) || empty($reponse)) {
+    if (empty($nom_client) || empty($prenom_client) || empty($tel_client) || empty($type_client) || empty($email_client) || empty($mdp_client) || empty($question) || empty($reponse)) {
         $_SESSION['register_error'] = "Veuillez remplir tous les champs du formulaire.";
         redirectionClient("../login/register.php");
+    }
+
+    // Formatage du numéro de téléphone (ajout de l'indicatif +261 si non présent)
+    if (!str_starts_with($tel_client, '+261')) {
+        $tel_client = '+261' . ltrim($tel_client, '0'); // On enlève le 0 initial s'il y en a un
     }
 
     // Validation du format de l'e-mail
@@ -42,6 +48,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             throw new Exception("Cette adresse e-mail est déjà associée à un compte.");
         }
 
+        // Vérifier si le numéro de téléphone existe déjà dans la base de données
+        $stmtCheckTel = $pdo->prepare('SELECT COUNT(*) FROM CLIENT WHERE TEL_CLIENT = :tel');
+        $stmtCheckTel->execute(['tel' => $tel_client]);
+        if ($stmtCheckTel->fetchColumn() > 0) {
+            throw new Exception("Ce numéro de téléphone est déjà utilisé.");
+        }
+
         // Hachage sécurisé du mot de passe
         $hashedMdp = password_hash($mdp_client, PASSWORD_BCRYPT);
         // Insertion de l'authentification
@@ -61,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'nom'    => $nom_client,
             'prenom' => $prenom_client,
             'tel'    => $tel_client,
-            'type'   => 'Particulier', // Valeur par défaut pour un nouveau compte client
+            'type'   => $type_client, // Valeur sélectionnée par l'utilisateur
         ]);
 
 

@@ -106,14 +106,15 @@ function uploadMultipleFiles(array $files, string $subDir = 'general', string $c
 
 /**
  * Supprime un fichier uploadé à partir de son chemin relatif.
+ * Délègue à delete_file.php pour centraliser la logique de suppression sécurisée.
  */
 function deleteUploadedFile(string $relativePath): bool
 {
-    $fullPath = realpath(__DIR__ . '/../') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativePath);
-    if (file_exists($fullPath)) {
-        return unlink($fullPath);
+    // Chargement paresseux de delete_file.php si pas encore inclus
+    if (!function_exists('deleteFile')) {
+        require_once __DIR__ . '/delete_file.php';
     }
-    return false;
+    return deleteFile($relativePath);
 }
 
 // ─── Fonctions internes ────────────────────────────────────────────────────

@@ -2,19 +2,8 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../../util/auth_guard.php';
 requireClient();
-require_once __DIR__ . '/../../config/database.php';
-
-
-$clientId    = (int) $_SESSION['client_id'];
-$clientNom   = $_SESSION['client_nom']   ?? 'Client';
-$clientPrenom= $_SESSION['client_prenom']?? '';
-$initiales   = getInitiales($clientNom, $clientPrenom);
-$pdo         = getPDO();
-
-$stmtPhoto = $pdo->prepare('SELECT PHOTO_CLIENT FROM CLIENT WHERE ID_CLIENT = ?');
-$stmtPhoto->execute([$clientId]);
-$photoClient = $stmtPhoto->fetchColumn() ?: 'assets/images/avatar.png';
-$isDefaultPhoto = ($photoClient === 'assets/images/avatar.png');
+require_once __DIR__ . '/composante/tolbarDto.php';
+$titre = "Mon Espace Client";
 
 // KPIs
 $stmtNb  = $pdo->prepare('SELECT COUNT(*) FROM RESERVATION WHERE ID_CLIENT = ?');
@@ -25,9 +14,12 @@ $stmtDevis = $pdo->prepare('SELECT COUNT(*) FROM DEVIS WHERE NOM = ? OR PRENOMS 
 $stmtDevis->execute([$clientNom, $clientPrenom]);
 $nbDevis = (int) $stmtDevis->fetchColumn();
 
-$stmtPhotos = $pdo->prepare('SELECT COUNT(*) FROM MEDIA m JOIN RESERVATION r ON m.ID_RESERVATION = r.ID_RESERVATION WHERE r.ID_CLIENT = ?');
-$stmtPhotos->execute([$clientId]);
+$stmtPhotos = $pdo->prepare('SELECT COUNT(*) FROM MEDIA m JOIN RESERVATION r ON m.ID_RESERVATION = r.ID_RESERVATION WHERE r.ID_CLIENT = ? and m.TYPE_MEDIA = ?');
+$stmtPhotos->execute([$clientId,"IMAGE"]);
 $nbPhotos = (int) $stmtPhotos->fetchColumn();
+$stmtPhotos = $pdo->prepare('SELECT COUNT(*) FROM MEDIA m JOIN RESERVATION r ON m.ID_RESERVATION = r.ID_RESERVATION WHERE r.ID_CLIENT = ? and m.TYPE_MEDIA = ?');
+$stmtPhotos->execute([$clientId,"VIDEO"]);
+$nbVideos = (int) $stmtPhotos->fetchColumn();
 
 // 5 dernières réservations
 $stmtLast = $pdo->prepare(
@@ -60,20 +52,7 @@ $lastResas = $stmtLast->fetchAll();
 
     <div class="dashboard-main">
         <!-- TOPBAR -->
-        <div class="dashboard-topbar">
-            <div style="display:flex;align-items:center;gap:14px;">
-                <button class="sidebar-toggle" id="sidebarToggle" aria-label="Menu">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <span class="topbar-title">Mon Espace Client</span>
-            </div>
-            <div class="topbar-user">
-                <div class="topbar-user-info">
-                    <span class="topbar-user-name"><?= htmlspecialchars($clientPrenom . ' ' . $clientNom) ?></span>
-                    <span class="topbar-user-role">Client</span>
-                </div>
-                <img src="../../<?= htmlspecialchars($photoClient) ?>" alt="Avatar" class="topbar-avatar" style="object-fit: cover;">            </div>
-        </div>
+       <?php include __DIR__.'/composante/tolbar.php';?>
 
         <!-- CONTENU -->
         <div class="dashboard-content">
@@ -105,6 +84,13 @@ $lastResas = $stmtLast->fetchAll();
                         <div class="stat-label">Photos livrées</div>
                     </div>
                 </div>
+                <div class="stat-card">
+                    <div class="stat-icon blue"><i class="fas fa-video"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-number"><?= $nbVideos ?></div>
+                        <div class="stat-label">Vidéos livrées</div>
+                    </div>
+                </div>
             </div>
 
             <!-- ACTIONS RAPIDES -->
@@ -121,6 +107,9 @@ $lastResas = $stmtLast->fetchAll();
                     </a>
                     <a href="mes_photos.php" class="btn-dash btn-dash-outline">
                         <i class="fas fa-images"></i> Voir mes photos
+                    </a>
+                    <a href="mes_videos.php" class="btn-dash btn-dash-outline">
+                        <i class="fas fa-video"></i> Voir mes vidéos
                     </a>
                 </div>
             </div>

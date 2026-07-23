@@ -2,27 +2,87 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../../util/auth_guard.php';
 requireAdmin();
-require_once __DIR__ . '/../../config/database.php';
-
-$adminEmail = $_SESSION['admin_email'] ?? 'Admin';
-$adminId    = (int) ($_SESSION['admin_id'] ?? 0);
-$pdo        = getPDO();
-// Fetch admin photo from CLIENT table (admin is stored as a client with role ADMIN)
-$stmtPhoto = $pdo->prepare('SELECT PHOTO_CLIENT FROM CLIENT WHERE ID_AUTH = ?');
-$stmtPhoto->execute([$adminId]);
-$photoAdmin = $stmtPhoto->fetchColumn() ?: 'assets/images/avatar.png';
-$isDefaultPhoto = ($photoAdmin === 'assets/images/avatar.png');
+require_once __DIR__ . '/../../util/mailService.php';
+require_once __DIR__.'/composante/tolbarDto.php';
+//on changer le titre
+$titre="Gestion des réservations";
 $success = $error = '';
 
-// ── Changement de statut via AJAX ─────────────────────────────
+// ── Changement de statut via AJAX 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_statut'])) {
     header('Content-Type: application/json');
     $id     = (int) ($_POST['id'] ?? 0);
     $statut = trim($_POST['statut'] ?? '');
-    $allowed = ['EN ATTENTE', 'CONFIRMÉ', 'ANNULÉ', 'TERMINÉ'];
+    $allowed = ['EN ATTENTE', 'CONFIRMEE', 'ANNULEE', 'TERMINEE'];
     if ($id && in_array($statut, $allowed, true)) {
         $stmt = $pdo->prepare('UPDATE RESERVATION SET STATUS_RESERVATION = ? WHERE ID_RESERVATION = ?');
         $stmt->execute([$statut, $id]);
+        
+        // Récupérer les informations de la réservation pour l'email
+        $stmtResa = $pdo->prepare('SELECT r.*, c.PRENOM_CLIENT, c.NOM_CLIENT, a.EMAIL_AUTH, p.LIB_PRESTATION, r.LIEU_RESERVATION
+                                    FROM RESERVATION r
+                                    JOIN CLIENT c ON r.ID_CLIENT = c.ID_CLIENT
+                                    JOIN AUTHENTIFICATION a ON c.ID_AUTH = a.ID_AUTH
+                                    JOIN PRESTATIONS p ON r.ID_PRESTATION = p.ID_PRESTATION
+                                    WHERE r.ID_RESERVATION = ?');
+        $stmtResa->execute([$id]);
+        $resaInfo = $stmtResa->fetch(PDO::FETCH_ASSOC);
+
+        // Si la réservation est CONFIRMEE, envoyer un email au client
+        if ($statut === 'CONFIRMEE' && $resaInfo) {
+            // S'assurer qu'un contrat est généré
+            $chk = $pdo->prepare('SELECT COUNT(*) FROM CONTRAT WHERE ID_RESERVATION = ?');
+            $chk->execute([$id]);
+            if ((int)$chk->fetchColumn() === 0) {
+                $pdo->prepare("INSERT INTO CONTRAT (ID_RESERVATION, STATUS_CONTRAT, DATE_CONTRAT) VALUES (?, 'EN ATTENTE', CURDATE())")
+                    ->execute([$id]);
+            }
+
+            // Récupérer les catégories de la réservation
+            $stmtCats = $pdo->prepare('SELECT c.LIB_CATEGORIE FROM CATEGORIE c JOIN RESERVATION_CATEGORIE rc ON c.ID_CATEGORIE = rc.ID_CATEGORIE WHERE rc.ID_RESERVATION = ?');
+            $stmtCats->execute([$id]);
+            $categoriesLib = $stmtCats->fetchAll(PDO::FETCH_COLUMN);
+
+            // Calculer le total
+            $stmtTotal = $pdo->prepare('SELECT SUM(PRIX) FROM RESERVATION_CATEGORIE WHERE ID_RESERVATION = ?');
+            $stmtTotal->execute([$id]);
+            $totalPrix = (int) $stmtTotal->fetchColumn();
+
+            $clientNom = $resaInfo['NOM_CLIENT'] ?? 'Inconnu';
+            $clientPrenom = $resaInfo['PRENOM_CLIENT'] ?? '';
+            $clientEmail = $resaInfo['EMAIL_AUTH'] ?? '';
+            $prestationLib = $resaInfo['LIB_PRESTATION'] ?? 'Non spécifiée';
+            $lieuResa = $resaInfo['LIEU_RESERVATION'] ?? 'Non défini';
+            $dateResa = $resaInfo['DATE_RESERVATION'];
+            $heureResa = $resaInfo['HEURE_RESERVATION'];
+
+            // Formater la date et l'heure
+            $dateFormatee = date('d/m/Y', strtotime($dateResa));
+            $heureFormatee = substr($heureResa, 0, 5);
+
+            // Récupérer le ID du contrat
+            $stmtContrat = $pdo->prepare('SELECT ID_CONTRAT FROM CONTRAT WHERE ID_RESERVATION = ?');
+            $stmtContrat->execute([$id]);
+            $idContrat = $stmtContrat->fetchColumn();
+
+            if ($clientEmail) {
+                $mailService = new MailService();
+                $reservationData = [
+                    'client_nom' => $clientNom,
+                    'client_prenom' => $clientPrenom,
+                    'prestation' => $prestationLib,
+                    'date_reservation' => $dateFormatee,
+                    'heure_reservation' => $heureFormatee,
+                    'lieu_reservation' => $lieuResa,
+                    'categories' => $categoriesLib,
+                    'total_prix' => $totalPrix,
+                    'id_reservation' => $id,
+                    'id_contrat' => $idContrat
+                ];
+                $mailService->sendReservationConfirmed($clientEmail, $reservationData);
+            }
+        }
+        
         echo json_encode(['ok' => true]);
     } else {
         echo json_encode(['ok' => false]);
@@ -34,10 +94,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_statut'])) {
 $filterStatut = $_GET['statut'] ?? 'TOUS';
 $search       = trim($_GET['q'] ?? '');
 
-$sql = 'SELECT r.*, p.LIB_PRESTATION, c.NOM_CLIENT, c.PRENOM_CLIENT
+$sql = 'SELECT r.*, p.LIB_PRESTATION, c.NOM_CLIENT, c.PRENOM_CLIENT,
+               ct.ID_CONTRAT, 
+               SUM(rc.PRIX) AS TOTAL_PRIX, 
+               GROUP_CONCAT(cat.LIB_CATEGORIE SEPARATOR \'<br>\') AS LIBS_CATEGORIES
         FROM RESERVATION r
         JOIN PRESTATIONS p ON r.ID_PRESTATION = p.ID_PRESTATION
         JOIN CLIENT c ON r.ID_CLIENT = c.ID_CLIENT
+        LEFT JOIN CONTRAT ct ON ct.ID_RESERVATION = r.ID_RESERVATION
+        LEFT JOIN RESERVATION_CATEGORIE rc ON rc.ID_RESERVATION = r.ID_RESERVATION
+        LEFT JOIN CATEGORIE cat ON cat.ID_CATEGORIE = rc.ID_CATEGORIE
         WHERE 1=1';
 $params = [];
 if ($filterStatut !== 'TOUS') { 
@@ -49,11 +115,28 @@ if ($search) {
     $like = "%$search%"; 
     $params = array_merge($params, [$like, $like, $like]); 
 }
-$sql .= ' ORDER BY r.DATE_RESERVATION DESC, r.HEURE_RESERVATION DESC';
+$sql .= ' GROUP BY r.ID_RESERVATION ORDER BY r.DATE_RESERVATION DESC, r.HEURE_RESERVATION DESC';
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $reservations = $stmt->fetchAll();
+// ── Marquer la notification comme lue puis nettoyer l'URL ─────
+if (isset($_GET['mark_notif']) && (int) $_GET['mark_notif'] > 0) {
+    $idNotif      = (int) $_GET['mark_notif'];
+    $idResaSelect = (int) ($_GET['id'] ?? 0);
+
+    try {
+        $stmtMark = $pdo->prepare('UPDATE notification SET LU_NOTIF = 1 WHERE ID_NOTIF = ?');
+        $stmtMark->execute([$idNotif]);
+    } catch (PDOException $e) {
+        // on ignore silencieusement, la redirection se fait quand même
+    }
+
+    header('Location: reservations.php' . ($idResaSelect > 0 ? '?id=' . $idResaSelect : ''));
+    exit;
+}
+
+$selectedResaId = (int) ($_GET['id'] ?? 0);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -65,6 +148,10 @@ $reservations = $stmt->fetchAll();
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="../../css/dashboard.css">
+
+    <!-- Toastify CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+
 </head>
 <body>
 <div class="dashboard-wrapper">
@@ -72,23 +159,7 @@ $reservations = $stmt->fetchAll();
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <div class="dashboard-main">
-        <div class="dashboard-topbar">
-            <div style="display:flex;align-items:center;gap:14px;">
-                <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
-                <span class="topbar-title">Gestion des Réservations</span>
-            </div>
-<div class="topbar-user">
-                <div class="topbar-user-info">
-                    <span class="topbar-user-name"><?= htmlspecialchars($adminEmail) ?></span>
-                    <span class="topbar-user-role" style="color:var(--primary-red);">Administrateur</span>
-                </div>
-                <?php if ($isDefaultPhoto): ?>
-                    <div class="topbar-avatar admin-avatar"><i class="fas fa-shield-alt" style="font-size:.85rem;"></i></div>
-                <?php else: ?>
-                    <img src="../../<?= htmlspecialchars($photoAdmin) ?>" alt="Avatar" class="topbar-avatar" style="object-fit: cover;">
-                <?php endif; ?>
-            </div>
-        </div>
+        <?php include __DIR__ . '/composante/tolbar.php'; ?>
 
         <div class="dashboard-content">
             <nav class="dash-breadcrumb">
@@ -107,7 +178,7 @@ $reservations = $stmt->fetchAll();
                         <input type="text" name="q" value="<?= htmlspecialchars($search) ?>" placeholder="Client, prestation...">
                     </div>
                     <select name="statut" class="dash-select" style="width:auto;min-width:160px;" onchange="this.form.submit()">
-                        <?php foreach (['TOUS', 'EN ATTENTE', 'CONFIRMÉ', 'ANNULÉ', 'TERMINÉ'] as $s): ?>
+                        <?php foreach (['TOUS', 'EN ATTENTE', 'CONFIRMEE', 'ANNULEE', 'TERMINEE'] as $s): ?>
                             <option value="<?= $s ?>" <?= $filterStatut === $s ? 'selected' : '' ?>><?= $s ?></option>
                         <?php endforeach; ?>
                     </select>
@@ -124,30 +195,54 @@ $reservations = $stmt->fetchAll();
                     <div class="table-responsive">
                         <table class="dash-table">
                             <thead>
-                                <tr><th>#</th><th>Client</th><th>Prestation</th><th>Date</th><th>Heure</th><th>Lieu</th><th>Statut</th><th>Modifier statut</th></tr>
+                                <tr><th>#</th><th>Client</th><th>Prestation & Formule</th><th>Tarif</th><th>Date</th><th>Heure</th><th>Lieu</th><th>Statut</th><th>Contrat</th><th>Modifier statut</th></tr>
                             </thead>
                             <tbody>
                             <?php foreach ($reservations as $r): ?>
                                 <?php
                                 $bc = match(strtoupper($r['STATUS_RESERVATION'])) {
-                                    'CONFIRMÉ','CONFIRME' => 'badge-confirm',
-                                    'ANNULÉ','ANNULE'     => 'badge-cancel',
-                                    'TERMINÉ','TERMINE'   => 'badge-done',
-                                    default               => 'badge-waiting',
+                                    'CONFIRMEE' => 'badge-confirm',
+                                    'ANNULEE'   => 'badge-cancel',
+                                    'TERMINEE'  => 'badge-done',
+                                    default     => 'badge-waiting',
                                 };
                                 ?>
-                                <tr id="row-<?= (int)$r['ID_RESERVATION'] ?>">
-                                    <td>#<?= (int)$r['ID_RESERVATION'] ?></td>
+                                <?php $isSelected = $selectedResaId > 0 && (int)$r['ID_RESERVATION'] === $selectedResaId; ?>
+<tr id="row-<?= (int)$r['ID_RESERVATION'] ?>"<?= $isSelected ? ' class="row-highlighted"' : '' ?>>
+                                    <td>#<?= (int) $r['ID_RESERVATION'] ?></td>
                                     <td><strong><?= htmlspecialchars($r['PRENOM_CLIENT'] . ' ' . $r['NOM_CLIENT']) ?></strong></td>
-                                    <td><?= htmlspecialchars($r['LIB_PRESTATION']) ?></td>
+                                    <td>
+                                        <strong><?= htmlspecialchars($r['LIB_PRESTATION']) ?></strong><br>
+                                        <span style="font-size:0.8rem;color:#aaa;"><?= $r['LIBS_CATEGORIES'] ? $r['LIBS_CATEGORIES'] : 'Formule non spécifiée' ?></span>
+                                    </td>
+                                    <td>
+                                        <?php if ($r['TOTAL_PRIX']): ?>
+                                            <span style="color:var(--primary-green);font-weight:600;"><?= number_format((int)$r['TOTAL_PRIX'], 0, ',', ' ') ?> Ar</span>
+                                        <?php else: ?>
+                                            <span style="color:#777;">—</span>
+                                        <?php endif; ?>
+                                    </td>
                                     <td><?= date('d/m/Y', strtotime($r['DATE_RESERVATION'])) ?></td>
                                     <td><?= substr($r['HEURE_RESERVATION'], 0, 5) ?></td>
                                     <td><?= htmlspecialchars($r['LIEU_RESERVATION']) ?></td>
                                     <td><span class="badge <?= $bc ?>" id="badge-<?= (int)$r['ID_RESERVATION'] ?>"><?= htmlspecialchars($r['STATUS_RESERVATION']) ?></span></td>
                                     <td>
+                                        <?php if ($r['ID_CONTRAT']): ?>
+                                            <a href="contrats.php" title="Voir le contrat" style="color:var(--primary-green);">
+                                                <i class="fas fa-file-signature"></i>
+                                            </a>
+                                        <?php elseif ($r['STATUS_RESERVATION'] === 'CONFIRMEE'): ?>
+                                            <a href="contrats.php?id_resa=<?= (int)$r['ID_RESERVATION'] ?>" title="Créer un contrat" class="btn-dash btn-dash-outline btn-dash-sm" style="font-size:0.75rem;padding:3px 8px;">
+                                                <i class="fas fa-plus"></i> Contrat
+                                            </a>
+                                        <?php else: ?>
+                                            <span style="color:#555;font-size:0.8rem;">—</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
                                         <select class="dash-select statut-select" style="padding:6px 10px;font-size:0.8rem;width:auto;"
                                                 data-id="<?= (int)$r['ID_RESERVATION'] ?>">
-                                            <?php foreach (['EN ATTENTE', 'CONFIRMÉ', 'ANNULÉ', 'TERMINÉ'] as $s): ?>
+                                            <?php foreach (['EN ATTENTE', 'CONFIRMEE', 'ANNULEE', 'TERMINEE'] as $s): ?>
                                                 <option value="<?= $s ?>" <?= $r['STATUS_RESERVATION'] === $s ? 'selected' : '' ?>><?= $s ?></option>
                                             <?php endforeach; ?>
                                         </select>
@@ -174,9 +269,9 @@ overlay?.addEventListener('click', () => { sidebar.classList.remove('open'); ove
 // Changement de statut via AJAX
 const badgeMap = {
     'EN ATTENTE': 'badge-waiting',
-    'CONFIRMÉ':   'badge-confirm',
-    'ANNULÉ':     'badge-cancel',
-    'TERMINÉ':    'badge-done',
+    'CONFIRMEE':  'badge-confirm',
+    'ANNULEE':    'badge-cancel',
+    'TERMINEE':   'badge-done',
 };
 document.querySelectorAll('.statut-select').forEach(sel => {
     sel.addEventListener('change', async () => {
@@ -200,6 +295,54 @@ document.querySelectorAll('.statut-select').forEach(sel => {
         setTimeout(() => msg.innerHTML = '', 3000);
     });
 });
+const selectedRow = document.querySelector('.row-highlighted');
+if (selectedRow) {
+    selectedRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
 </script>
+
+<!-- Toastify JS -->
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+    const errorMsg = <?php echo json_encode($error ?? '', JSON_UNESCAPED_UNICODE); ?>;
+    const successMsg = <?php echo json_encode($success ?? '', JSON_UNESCAPED_UNICODE); ?>;
+    
+    if (errorMsg) {
+        Toastify({
+            text: errorMsg,
+            duration: 6000,
+            gravity: "top",
+            position: "right",
+            close: true,
+            style: {
+                background: "linear-gradient(135deg, #d93d3d, #a82c2c)",
+                borderRadius: "6px",
+                fontFamily: "system-ui, -apple-system, sans-serif",
+                fontWeight: "600",
+                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.25)"
+            }
+        }).showToast();
+    }
+    
+    if (successMsg) {
+        Toastify({
+            text: successMsg,
+            duration: 6000,
+            gravity: "top",
+            position: "right",
+            close: true,
+            style: {
+                background: "linear-gradient(135deg, #377d49, #2a5c3a)",
+                borderRadius: "6px",
+                fontFamily: "system-ui, -apple-system, sans-serif",
+                fontWeight: "600",
+                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.25)"
+            }
+        }).showToast();
+    }
+});
+</script>
+
 </body>
 </html>

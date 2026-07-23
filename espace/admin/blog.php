@@ -1,58 +1,73 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../../util/auth_guard.php';
+require_once __DIR__ . '/../../util/prg_helper.php';
 requireAdmin();
-require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../util/file_upload.php';
+require_once __DIR__ . '/../../util/delete_file.php';
+require_once __DIR__.'/composante/tolbarDto.php';
+//on changer le titre
+$titre="Gestion des Blog";
 
-$adminEmail = $_SESSION['admin_email'] ?? 'Admin';
-$adminId    = (int) ($_SESSION['admin_id'] ?? 0);
-$pdo        = getPDO();
-// Fetch admin photo
-$stmtPhoto = $pdo->prepare('SELECT PHOTO_CLIENT FROM CLIENT WHERE ID_AUTH = ?');
-$stmtPhoto->execute([$adminId]);
-$photoAdmin = $stmtPhoto->fetchColumn() ?: 'assets/images/avatar.png';
-$isDefaultPhoto = ($photoAdmin === 'assets/images/avatar.png');
-$success = $error = '';
-
-// ── CRUD Blog ─────────────────────────────────────────────────
+// ── TRAITEMENT POST (PRG Pattern) ─────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action  = $_POST['action'] ?? '';
     $idBlog  = (int) ($_POST['id_blog'] ?? 0);
 
     if ($action === 'create' || $action === 'edit') {
-        $idCat   = (int) ($_POST['id_categorie'] ?? 0);
+        $idCat   = (int) ($_POST['id_type_blog'] ?? 0);
         $titre   = trim($_POST['titre'] ?? '');
         $contenu = trim($_POST['contenu'] ?? '');
         $imgPath = trim($_POST['img_actuelle'] ?? '');
+        $status  = $_POST['status'] ?? 'PUBLIER';
 
         if (!$idCat || !$titre || !$contenu) {
-            $error = 'Veuillez remplir tous les champs obligatoires.';
+            prg_set_message('error', 'Veuillez remplir tous les champs obligatoires.');
         } else {
             // Upload image couverture si fournie
             if (!empty($_FILES['image_couverture']['name'])) {
                 $res = uploadFile($_FILES['image_couverture'], 'blog', 'image');
                 if ($res['success']) { $imgPath = $res['path']; }
-                else { $error = $res['error']; }
+                else { prg_set_message('error', $res['error']); }
             }
 
-            if (!$error) {
+            if (!$imgPath || $_POST['img_actuelle'] || empty($_FILES['image_couverture']['name'])) {
                 if ($action === 'create') {
-                    $stmt = $pdo->prepare('INSERT INTO BLOG (ID_TYPE_BLOG, TITRE_BLOG, CONTENU, IMAGE_COURVERTURE,STATUS_BLOG) VALUES (?,?,?,?)');
-                    $stmt->execute([$idCat, $titre, $contenu, $imgPath,"PUBLIER"]);
-                    $success = "Article « $titre » publié avec succès.";
+                    $stmt = $pdo->prepare('INSERT INTO BLOG (ID_TYPE_BLOG, TITRE_BLOG, CONTENU, IMAGE_COURVERTURE, STATUS_BLOG) VALUES (?,?,?,?,?)');
+                    $stmt->execute([$idCat, $titre, $contenu, $imgPath, $status]);
+                    prg_set_message('success', "Article « $titre » créé avec succès.");
                 } else {
-                    $stmt = $pdo->prepare('UPDATE BLOG SET ID_TYPE_BLOG=?, TITRE_BLOG=?, CONTENU=?, IMAGE_COURVERTURE=?, DATE_MODIFICATION=CURDATE(),STATUS_BLOG=? WHERE ID_BLOG=?');
-                    $stmt->execute([$idCat, $titre, $contenu, $imgPath,"PUBLIER", $idBlog]);
-                    $success = "Article modifié avec succès.";
+                    $stmt = $pdo->prepare('UPDATE BLOG SET ID_TYPE_BLOG=?, TITRE_BLOG=?, CONTENU=?, IMAGE_COURVERTURE=?, DATE_MODIFICATION=CURDATE(), STATUS_BLOG=? WHERE ID_BLOG=?');
+                    $stmt->execute([$idCat, $titre, $contenu, $imgPath, $status, $idBlog]);
+                    prg_set_message('success', "Article modifié avec succès.");
                 }
             }
         }
+        prg_redirect();
+    } elseif ($action === 'publish' && $idBlog) {
+        $pdo->prepare('UPDATE BLOG SET STATUS_BLOG = "PUBLIER" WHERE ID_BLOG = ?')->execute([$idBlog]);
+        prg_set_message('success', "Article publié avec succès.");
+        prg_redirect();
+    } elseif ($action === 'draft' && $idBlog) {
+        $pdo->prepare('UPDATE BLOG SET STATUS_BLOG = "BROUILLON" WHERE ID_BLOG = ?')->execute([$idBlog]);
+        prg_set_message('success', "Article mis en brouillon avec succès.");
+        prg_redirect();
     } elseif ($action === 'delete' && $idBlog) {
+        // Supprimer l'image de couverture du serveur avant de supprimer en base
+        $stmtImg = $pdo->prepare('SELECT IMAGE_COURVERTURE FROM BLOG WHERE ID_BLOG = ?');
+        $stmtImg->execute([$idBlog]);
+        $imgToDelete = $stmtImg->fetchColumn();
+        if ($imgToDelete) {
+            deleteFile($imgToDelete);
+        }
         $pdo->prepare('DELETE FROM BLOG WHERE ID_BLOG = ?')->execute([$idBlog]);
-        $success = "Article supprimé.";
+        prg_set_message('success', "Article supprimé.");
+        prg_redirect();
     }
 }
+
+// ── Récupérer les messages PRG pour affichage ──────────────────
+$prgMessages = prg_get_messages();
 
 // ── Données ───────────────────────────────────────────────────
 $articles   = $pdo->query('SELECT b.*, t.LIB_TYPE_BLOG FROM BLOG b LEFT JOIN TYPE_BLOG t ON b.ID_TYPE_BLOG  = t.ID_TYPE_BLOG ORDER BY b.DATE_PUBLICATION DESC')->fetchAll();
@@ -83,23 +98,7 @@ if (isset($_GET['edit'])) {
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <div class="dashboard-main">
-        <div class="dashboard-topbar">
-            <div style="display:flex;align-items:center;gap:14px;">
-                <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
-                <span class="topbar-title">Gestion du Blog</span>
-            </div>
-            <div class="topbar-user">
-                <div class="topbar-user-info">
-                    <span class="topbar-user-name"><?= htmlspecialchars($adminEmail) ?></span>
-                    <span class="topbar-user-role" style="color:var(--primary-red);">Administrateur</span>
-                </div>
-                <?php if ($isDefaultPhoto): ?>
-                    <div class="topbar-avatar admin-avatar"><i class="fas fa-shield-alt" style="font-size:.85rem;"></i></div>
-                <?php else: ?>
-                    <img src="../../<?= htmlspecialchars($photoAdmin) ?>" alt="Avatar" class="topbar-avatar" style="object-fit: cover;">
-                <?php endif; ?>
-            </div>
-        </div>
+        <?php include __DIR__ . '/composante/tolbar.php'; ?>
 
         <div class="dashboard-content">
             <nav class="dash-breadcrumb">
@@ -108,8 +107,6 @@ if (isset($_GET['edit'])) {
                 <span>Blog</span>
             </nav>
 
-            <?php if ($success): ?><div class="dash-alert dash-alert-success"><i class="fas fa-check-circle"></i><?= htmlspecialchars($success) ?></div><?php endif; ?>
-            <?php if ($error): ?><div class="dash-alert dash-alert-error"><i class="fas fa-exclamation-circle"></i><?= htmlspecialchars($error) ?></div><?php endif; ?>
 
             <div style="display:grid;grid-template-columns:1fr 1.8fr;gap:28px;align-items:start;">
 
@@ -137,15 +134,22 @@ if (isset($_GET['edit'])) {
                                        value="<?= htmlspecialchars($editArticle['TITRE_BLOG'] ?? '') ?>">
                             </div>
                             <div class="dash-form-group">
-                                <label for="id_categorie">Catégorie <span class="required">*</span></label>
-                                <select name="id_categorie" id="id_categorie" class="dash-select" required>
+                                <label for="id_type_blog">Type de blog <span class="required">*</span></label>
+                                <select name="id_type_blog" id="id_type_blog" class="dash-select" required>
                                     <option value="">— Choisir —</option>
                                     <?php foreach ($categories as $cat): ?>
-                                        <option value="<?= (int)$cat['ID_CATEGORIE'] ?>"
-                                            <?= isset($editArticle) && (int)$editArticle['ID_CATEGORIE'] === (int)$cat['ID_CATEGORIE'] ? 'selected' : '' ?>>
-                                            <?= htmlspecialchars($cat['LIB_CATEGORIE']) ?>
+                                        <option value="<?= (int)$cat['ID_TYPE_BLOG'] ?>"
+                                            <?= ($editArticle && (int)$editArticle['ID_TYPE_BLOG'] === (int)$cat['ID_TYPE_BLOG'] ? 'selected' : '' )?>>
+                                            <?= htmlspecialchars($cat['LIB_TYPE_BLOG']) ?>
                                         </option>
                                     <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="dash-form-group">
+                                <label for="status">Statut</label>
+                                <select name="status" id="status" class="dash-select" <?= !$editArticle ? 'required' : '' ?>>
+                                    <option value="BROUILLON" <?= (!$editArticle || $editArticle['STATUS_BLOG'] === 'BROUILLON') ? 'selected' : '' ?>>Brouillon</option>
+                                    <option value="PUBLIER" <?= ($editArticle && $editArticle['STATUS_BLOG'] === 'PUBLIER') ? 'selected' : '' ?>>Publié</option>
                                 </select>
                             </div>
                             <div class="dash-form-group">
@@ -165,7 +169,7 @@ if (isset($_GET['edit'])) {
                                 <textarea name="contenu" id="contenu" class="dash-textarea" style="min-height:160px;" required><?= htmlspecialchars($editArticle['CONTENU'] ?? '') ?></textarea>
                             </div>
                             <button type="submit" class="btn-dash btn-dash-primary" style="width:100%;justify-content:center;">
-                                <i class="fas fa-save"></i> <?= $editArticle ? 'Mettre à jour' : 'Publier l\'article' ?>
+                                <i class="fas fa-save"></i> <?= $editArticle ? 'Mettre à jour' : 'Créer l\'article' ?>
                             </button>
                         </form>
                     </div>
@@ -174,16 +178,16 @@ if (isset($_GET['edit'])) {
                 <!-- LISTE ARTICLES -->
                 <div class="dash-card">
                     <div class="dash-card-header">
-                        <h3><i class="fas fa-newspaper" style="color:var(--primary-green);margin-right:8px;"></i> Articles publiés</h3>
+                        <h3><i class="fas fa-newspaper" style="color:var(--primary-green);margin-right:8px;"></i> Articles</h3>
                         <span class="badge badge-confirm"><?= count($articles) ?></span>
                     </div>
                     <div class="dash-card-body">
                         <?php if (empty($articles)): ?>
-                            <div class="empty-state"><i class="fas fa-newspaper"></i><p>Aucun article publié.</p></div>
+                            <div class="empty-state"><i class="fas fa-newspaper"></i><p>Aucun article.</p></div>
                         <?php else: ?>
                         <div class="table-responsive">
                             <table class="dash-table">
-                                <thead><tr><th>Titre</th><th>Catégorie</th><th>Publié le</th><th>Actions</th></tr></thead>
+                                <thead><tr><th>Titre</th><th>Type</th><th>Statut</th><th>Date</th><th>Actions</th></tr></thead>
                                 <tbody>
                                 <?php foreach ($articles as $art): ?>
                                     <tr>
@@ -197,10 +201,30 @@ if (isset($_GET['edit'])) {
                                                 <strong style="font-size:0.88rem;"><?= htmlspecialchars($art['TITRE_BLOG']) ?></strong>
                                             </div>
                                         </td>
-                                        <td><?= htmlspecialchars($art['LIB_CATEGORIE'] ?? '—') ?></td>
+                                        <td><?= htmlspecialchars($art['LIB_TYPE_BLOG'] ?? '—') ?></td>
+                                        <td>
+                                            <?php if ($art['STATUS_BLOG'] === 'PUBLIER'): ?>
+                                                <span class="badge badge-confirm">Publié</span>
+                                            <?php else: ?>
+                                                <span class="badge badge-waiting">Brouillon</span>
+                                            <?php endif; ?>
+                                        </td>
                                         <td><?= date('d/m/Y', strtotime($art['DATE_PUBLICATION'])) ?></td>
                                         <td style="white-space:nowrap;">
                                             <a href="?edit=<?= (int)$art['ID_BLOG'] ?>" class="btn-dash btn-dash-outline btn-dash-sm"><i class="fas fa-edit"></i></a>
+                                            <?php if ($art['STATUS_BLOG'] === 'PUBLIER'): ?>
+                                            <form method="POST" style="display:inline;" onsubmit="return confirm('Mettre cet article en brouillon ?');">
+                                                <input type="hidden" name="action" value="draft">
+                                                <input type="hidden" name="id_blog" value="<?= (int)$art['ID_BLOG'] ?>">
+                                                <button class="btn-dash btn-dash-warning btn-dash-sm" title="Mettre en brouillon"><i class="fas fa-file-alt"></i></button>
+                                            </form>
+                                            <?php else: ?>
+                                            <form method="POST" style="display:inline;" onsubmit="return confirm('Publier cet article ?');">
+                                                <input type="hidden" name="action" value="publish">
+                                                <input type="hidden" name="id_blog" value="<?= (int)$art['ID_BLOG'] ?>">
+                                                <button class="btn-dash btn-dash-primary btn-dash-sm" title="Publier"><i class="fas fa-check"></i></button>
+                                            </form>
+                                            <?php endif; ?>
                                             <form method="POST" style="display:inline;" onsubmit="return confirm('Supprimer cet article ?');">
                                                 <input type="hidden" name="action" value="delete">
                                                 <input type="hidden" name="id_blog" value="<?= (int)$art['ID_BLOG'] ?>">
@@ -236,5 +260,21 @@ document.getElementById('image_couverture')?.addEventListener('change', function
     }
 });
 </script>
+
+<!-- Toastify pour messages PRG -->
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<?php if (!empty($prgMessages)): ?>
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+    <?= prg_render_toasts($prgMessages) ?>
+    // Nettoyer l'URL
+    const url = new URL(window.location);
+    url.searchParams.delete('edit');
+    window.history.replaceState({}, '', url);
+});
+</script>
+<?php endif; ?>
+
 </body>
 </html>

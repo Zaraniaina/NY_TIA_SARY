@@ -1,6 +1,11 @@
 <?php
-
 session_start();
+require_once __DIR__ . '/../util/redirectionpage.php';
+
+if (isset($_GET['redirect']) && isSafeRedirect($_GET['redirect'])) {
+    $_SESSION['redirect_url'] = $_GET['redirect'];
+}
+
 $error = $_SESSION['login_error'] ?? null;
 $success = $_SESSION['register_success'] ?? null;
 unset($_SESSION['login_error'], $_SESSION['register_success']);
@@ -29,12 +34,12 @@ unset($_SESSION['login_error'], $_SESSION['register_success']);
     <main class="login-container">
         <div class="login-card">
 
-           <!-- Bouton Retour vers la page vitrine -->
+            <!-- Bouton Retour vers la page vitrine -->
             <div class="back-to-home">
                 <a href="../index.php" class="btn-back">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M19 12H6"/>
-                        <path d="M12 5l-7 7 7 7"/>
+                        <path d="M19 12H6" />
+                        <path d="M12 5l-7 7 7 7" />
                     </svg>
                 </a>
             </div>
@@ -55,9 +60,9 @@ unset($_SESSION['login_error'], $_SESSION['register_success']);
             <?php if ($error): ?>
                 <div class="alert alert-danger">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="alert-icon" aria-hidden="true">
-                        <circle cx="12" cy="12" r="10"/>
-                        <line x1="12" y1="8" x2="12" y2="12"/>
-                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
                     </svg>
                     <span><?php echo htmlspecialchars($error); ?></span>
                 </div>
@@ -66,8 +71,8 @@ unset($_SESSION['login_error'], $_SESSION['register_success']);
             <?php if ($success): ?>
                 <div class="alert alert-success">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="alert-icon" aria-hidden="true">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                        <polyline points="22 4 12 14.01 9 11.01"/>
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                        <polyline points="22 4 12 14.01 9 11.01" />
                     </svg>
                     <span><?php echo htmlspecialchars($success); ?></span>
                 </div>
@@ -106,7 +111,7 @@ unset($_SESSION['login_error'], $_SESSION['register_success']);
 
                 <!-- Lien Mot de passe oublié -->
                 <div class="forgot-password">
-                    <a href="#">Mot de passe oublié ?</a>
+                    <a href="mdpOublier.php">Mot de passe oublié ?</a>
                 </div>
 
                 <!-- Bouton de soumission -->

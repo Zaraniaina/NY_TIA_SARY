@@ -2,16 +2,10 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../../util/auth_guard.php';
 requireAdmin();
-require_once __DIR__ . '/../../config/database.php';
 
-$adminEmail = $_SESSION['admin_email'] ?? 'Admin';
-$adminId    = (int) ($_SESSION['admin_id'] ?? 0);
-$pdo        = getPDO();
-// Fetch admin photo
-$stmtPhoto = $pdo->prepare('SELECT PHOTO_CLIENT FROM CLIENT WHERE ID_AUTH = ?');
-$stmtPhoto->execute([$adminId]);
-$photoAdmin = $stmtPhoto->fetchColumn() ?: 'assets/images/avatar.png';
-$isDefaultPhoto = ($photoAdmin === 'assets/images/avatar.png');
+require_once __DIR__.'/composante/tolbarDto.php';
+//on changer le titre
+$titre="Tableau de bord";
 
 // ── KPIs ─────────────────────────────────────────────────────
 $nbClients  = (int) $pdo->query("SELECT COUNT(*) FROM AUTHENTIFICATION WHERE ROLE_AUTH='CLIENT'")->fetchColumn();
@@ -61,28 +55,44 @@ $chartValues = json_encode(array_column($chartData, 'total'));
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <div class="dashboard-main">
-        <div class="dashboard-topbar">
-            <div style="display:flex;align-items:center;gap:14px;">
-                <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
-                <span class="topbar-title">Tableau de bord</span>
-            </div>
-            <div class="topbar-user">
-                <div class="topbar-user-info">
-                    <span class="topbar-user-name"><?= htmlspecialchars($adminEmail) ?></span>
-                    <span class="topbar-user-role" style="color:var(--primary-red);">Administrateur</span>
-                </div>
-                <?php if ($isDefaultPhoto): ?>
-                    <div class="topbar-avatar admin-avatar"><i class="fas fa-shield-alt" style="font-size:.85rem;"></i></div>
-                <?php else: ?>
-                    <img src="../../<?= htmlspecialchars($photoAdmin) ?>" alt="Avatar" class="topbar-avatar" style="object-fit: cover;">
-                <?php endif; ?>
-            </div>
-        </div>
+        <?php include __DIR__ . '/composante/tolbar.php'; ?>
 
         <div class="dashboard-content">
             <div class="dash-page-header">
                 <h2>Vue d'ensemble</h2>
-                <p>Aujourd'hui — <?= date('l d F Y') ?></p>
+                <?php
+                    $jours = [
+                        'Monday'    => 'Lundi',
+                        'Tuesday'   => 'Mardi',
+                        'Wednesday' => 'Mercredi',
+                        'Thursday'  => 'Jeudi',
+                        'Friday'    => 'Vendredi',
+                        'Saturday'  => 'Samedi',
+                        'Sunday'    => 'Dimanche',
+                    ];
+                    $mois = [
+                        'January'   => 'janvier',
+                        'February'  => 'février',
+                        'March'     => 'mars',
+                        'April'     => 'avril',
+                        'May'       => 'mai',
+                        'June'      => 'juin',
+                        'July'      => 'juillet',
+                        'August'    => 'août',
+                        'September' => 'septembre',
+                        'October'   => 'octobre',
+                        'November'  => 'novembre',
+                        'December'  => 'décembre',
+                    ];
+                    $dateFr = sprintf(
+                        '%s — %s %s %s',
+                        $jours[date('l')],
+                        date('d'),
+                        $mois[date('F')],
+                        date('Y')
+                    );
+                ?>
+                <p><?= $dateFr ?></p>
             </div>
 
             <!-- STATS -->

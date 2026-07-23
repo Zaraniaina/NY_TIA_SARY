@@ -1,50 +1,50 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../../util/auth_guard.php';
+require_once __DIR__ . '/../../util/prg_helper.php';
 requireAdmin();
-require_once __DIR__ . '/../../config/database.php';
 
-$adminEmail = $_SESSION['admin_email'] ?? 'Admin';
-$adminId    = (int) ($_SESSION['admin_id'] ?? 0);
-$pdo        = getPDO();
-// Fetch admin photo from CLIENT table (admin is stored as a client with role ADMIN)
-$stmtPhoto = $pdo->prepare('SELECT PHOTO_CLIENT FROM CLIENT WHERE ID_CLIENT = ?');
-$stmtPhoto->execute([$adminId]);
-$photoAdmin = $stmtPhoto->fetchColumn() ?: 'assets/images/avatar.png';
-$isDefaultPhoto = ($photoAdmin === 'assets/images/avatar.png');
-$success = $error = '';
+require_once __DIR__.'/composante/tolbarDto.php';
+//on changer le titre
+$titre="Gestion des prestations";
 
-// ── CRUD Prestations ──────────────────────────────────────────
+// ── TRAITEMENT POST (PRG Pattern) ──────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action      = $_POST['action'] ?? '';
     $idPrest     = (int) ($_POST['id_prestation'] ?? 0);
     $libPrest    = trim($_POST['lib_prestation'] ?? '');
 
     if ($action === 'create') {
-        if (!$libPrest) { $error = 'Le nom de la prestation est requis.'; }
+        if (!$libPrest) { prg_set_message('error', 'Le nom de la prestation est requis.'); }
         else {
             $pdo->prepare('INSERT INTO PRESTATIONS (LIB_PRESTATION) VALUES (?)')->execute([$libPrest]);
-            $success = "Prestation « $libPrest » ajoutée.";
+            prg_set_message('success', "Prestation « $libPrest » ajoutée.");
         }
+        prg_redirect();
     } elseif ($action === 'edit' && $idPrest) {
-        if (!$libPrest) { $error = 'Le nom de la prestation est requis.'; }
+        if (!$libPrest) { prg_set_message('error', 'Le nom de la prestation est requis.'); }
         else {
             $pdo->prepare('UPDATE PRESTATIONS SET LIB_PRESTATION = ? WHERE ID_PRESTATION = ?')->execute([$libPrest, $idPrest]);
-            $success = "Prestation mise à jour.";
+            prg_set_message('success', "Prestation mise à jour.");
         }
+        prg_redirect();
     } elseif ($action === 'delete' && $idPrest) {
         // Vérifier qu'aucune réservation n'utilise cette prestation
         $stmt = $pdo->prepare('SELECT COUNT(*) FROM RESERVATION WHERE ID_PRESTATION = ?');
         $stmt->execute([$idPrest]);
         $count = (int) $stmt->fetchColumn();
         if ($count > 0) {
-            $error = "Impossible de supprimer : $count réservation(s) utilisent cette prestation.";
+            prg_set_message('error', "Impossible de supprimer : $count réservation(s) utilisent cette prestation.");
         } else {
             $pdo->prepare('DELETE FROM PRESTATIONS WHERE ID_PRESTATION = ?')->execute([$idPrest]);
-            $success = "Prestation supprimée.";
+            prg_set_message('success', "Prestation supprimée.");
         }
+        prg_redirect();
     }
 }
+
+// ── Récupérer les messages PRG pour affichage ──────────────────
+$prgMessages = prg_get_messages();
 
 $prestations = $pdo->query(
     'SELECT p.*, COUNT(r.ID_RESERVATION) AS nb_resas
@@ -71,6 +71,10 @@ if (isset($_GET['edit'])) {
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="../../css/dashboard.css">
+
+    <!-- Toastify CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+
 </head>
 <body>
 <div class="dashboard-wrapper">
@@ -78,23 +82,7 @@ if (isset($_GET['edit'])) {
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <div class="dashboard-main">
-        <div class="dashboard-topbar">
-            <div style="display:flex;align-items:center;gap:14px;">
-                <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
-                <span class="topbar-title">Gestion des Prestations</span>
-            </div>
-            <div class="topbar-user">
-                <div class="topbar-user-info">
-                    <span class="topbar-user-name"><?= htmlspecialchars($adminEmail) ?></span>
-                    <span class="topbar-user-role" style="color:var(--primary-red);">Administrateur</span>
-                </div>
-                <?php if ($isDefaultPhoto): ?>
-                    <div class="topbar-avatar admin-avatar"><i class="fas fa-shield-alt" style="font-size:.85rem;"></i></div>
-                <?php else: ?>
-                    <img src="../../<?= htmlspecialchars($photoAdmin) ?>" alt="Avatar" class="topbar-avatar" style="object-fit: cover;">
-                <?php endif; ?>
-            </div>
-        </div>
+         <?php include __DIR__ . '/composante/tolbar.php'; ?>
 
         <div class="dashboard-content">
             <nav class="dash-breadcrumb">
@@ -103,8 +91,8 @@ if (isset($_GET['edit'])) {
                 <span>Prestations</span>
             </nav>
 
-            <?php if ($success): ?><div class="dash-alert dash-alert-success"><i class="fas fa-check-circle"></i><?= htmlspecialchars($success) ?></div><?php endif; ?>
-            <?php if ($error): ?><div class="dash-alert dash-alert-error"><i class="fas fa-exclamation-circle"></i><?= htmlspecialchars($error) ?></div><?php endif; ?>
+            
+            
 
             <div style="display:grid;grid-template-columns:1fr 2fr;gap:28px;align-items:start;">
 
@@ -199,5 +187,21 @@ const overlay = document.getElementById('sidebarOverlay');
 toggle?.addEventListener('click', () => { sidebar.classList.toggle('open'); overlay.classList.toggle('open'); });
 overlay?.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('open'); });
 </script>
+
+<!-- Toastify pour messages PRG -->
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<?php if (!empty($prgMessages)): ?>
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+    <?= prg_render_toasts($prgMessages) ?>
+    // Nettoyer l'URL
+    const url = new URL(window.location);
+    url.searchParams.delete('edit');
+    window.history.replaceState({}, '', url);
+});
+</script>
+<?php endif; ?>
+
 </body>
 </html>
