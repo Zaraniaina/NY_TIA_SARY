@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
             distance: '40px', /* Réduit pour éviter les sauts brusques sur mobile */
             easing: 'cubic-bezier(0.165, 0.84, 0.44, 1)',
             reset: false, /* Désactivé pour de meilleures perfos au scroll sur mobile */
-            mobile: true
+            mobile: false
         });
 
         // ---------- HERO (index.php) ----------

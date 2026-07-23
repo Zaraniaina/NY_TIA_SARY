@@ -195,7 +195,7 @@ try {
     </a>
 </div>
     <?php include 'composante/footer.php'; ?>
-
+    <?php include "composante/devis_visiteur.php"?> 
 </body>
 
 </html>

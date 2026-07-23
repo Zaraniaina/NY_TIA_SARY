@@ -294,6 +294,7 @@ unset($_SESSION['contact_status'], $_SESSION['contact_message']);
 </div>
 
 <?php include 'composante/footer.php'; ?>
+<?php include "composante/devis_visiteur.php"?> 
 
 <?php if ($contactStatus && $contactMessage): ?>
 <script>
