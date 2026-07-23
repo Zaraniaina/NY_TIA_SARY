@@ -610,6 +610,8 @@
     background: var(--gray-100);
     padding: 80px 0 100px;
     position: relative;
+    margin-top: 50px;
+    
 }
 
 .container {
@@ -1239,6 +1241,7 @@ body.lightbox-open {
 @media (max-width: 575px) {
     #portfolio {
         padding: 40px 0 50px;
+        margin-top: 50px;
     }
     
     .container {

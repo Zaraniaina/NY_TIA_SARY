@@ -1,0 +1,6 @@
+_MACOSX
+.vscode
+.git/
+assete/
+dompdf/
+phpMailer/

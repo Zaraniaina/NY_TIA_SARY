@@ -79,11 +79,11 @@ if (isset($_GET['id'])) {
                             </strong>
                         </div>
                         <table style="width:100%;font-size:0.85rem;line-height:2.2;">
-                            <tr><td style="color:#888;width:40%;">Email</td><td><?= htmlspecialchars($detailClient['EMAIL_AUTH']) ?></td></tr>
-                            <tr><td style="color:#888;">Tél.</td><td><?= htmlspecialchars($detailClient['TEL_CLIENT']) ?></td></tr>
-                            <tr><td style="color:#888;">Type</td><td><?= htmlspecialchars($detailClient['TYPE_CLIENT']) ?></td></tr>
-                            <tr><td style="color:#888;">Rôle</td><td><?= htmlspecialchars($detailClient['ROLE_AUTH']) ?></td></tr>
-                            <tr><td style="color:#888;">Réservations</td><td><?= count($detailResas) ?></td></tr>
+                            <tr><td data-label="Email" style="color:#888;width:40%;">Email</td><td><?= htmlspecialchars($detailClient['EMAIL_AUTH']) ?></td></tr>
+                            <tr><td data-label="Tél." style="color:#888;">Tél.</td><td><?= htmlspecialchars($detailClient['TEL_CLIENT']) ?></td></tr>
+                            <tr><td data-label="Type" style="color:#888;">Type</td><td><?= htmlspecialchars($detailClient['TYPE_CLIENT']) ?></td></tr>
+                            <tr><td data-label="Rôle" style="color:#888;">Rôle</td><td><?= htmlspecialchars($detailClient['ROLE_AUTH']) ?></td></tr>
+                            <tr><td data-label="Réservations" style="color:#888;">Réservations</td><td><?= count($detailResas) ?></td></tr>
                         </table>
                     </div>
                 </div>
@@ -140,22 +140,22 @@ if (isset($_GET['id'])) {
                             <tbody>
                             <?php foreach ($clients as $c): ?>
                                 <?php $isDefaultClientPhoto = ($c['PHOTO_CLIENT'] === 'assets/images/avatar.png'); ?>
-                                <tr>
-                                    <td>
-                                        <img src="../../<?= htmlspecialchars($c['PHOTO_CLIENT']) ?>" alt="Avatar" class="topbar-avatar" style="object-fit: cover;">
-                                    </td>
-                                    <td>
-                                        <div style="display:flex;align-items:center;gap:10px;">
-                                            <strong><?= htmlspecialchars($c['PRENOM_CLIENT'] . ' ' . $c['NOM_CLIENT']) ?></strong>
-                                        </div>
-                                    </td>
-                                    <td><?= htmlspecialchars($c['EMAIL_AUTH']) ?></td>
-                                    <td><?= htmlspecialchars($c['TEL_CLIENT']) ?></td>
-                                    <td><?= htmlspecialchars($c['TYPE_CLIENT']) ?></td>
-                                    <td><span class="badge badge-confirm"><?= htmlspecialchars($c['ROLE_AUTH']) ?></span></td>
-                                    <td><span class="badge badge-confirm"><?= (int)$c['nb_resas'] ?></span></td>
-                                    <td><a href="?id=<?= (int)$c['ID_CLIENT'] ?>" class="btn-dash btn-dash-outline btn-dash-sm"><i class="fas fa-eye"></i> Voir</a></td>
-                                </tr>
+                                    <tr>
+                                        <td data-label="Photo de profil">
+                                            <img src="../../<?= htmlspecialchars($c['PHOTO_CLIENT']) ?>" alt="Avatar" class="topbar-avatar" style="object-fit: cover;">
+                                        </td>
+                                        <td data-label="Nom complet">
+                                            <div style="display:flex;align-items:center;gap:10px;">
+                                                <strong><?= htmlspecialchars($c['PRENOM_CLIENT'] . ' ' . $c['NOM_CLIENT']) ?></strong>
+                                            </div>
+                                        </td>
+                                        <td data-label="Email"><?= htmlspecialchars($c['EMAIL_AUTH']) ?></td>
+                                        <td data-label="Téléphone"><?= htmlspecialchars($c['TEL_CLIENT']) ?></td>
+                                        <td data-label="Type"><?= htmlspecialchars($c['TYPE_CLIENT']) ?></td>
+                                        <td data-label="Rôle"><span class="badge badge-confirm"><?= htmlspecialchars($c['ROLE_AUTH']) ?></span></td>
+                                        <td data-label="Réservations"><span class="badge badge-confirm"><?= (int)$c['nb_resas'] ?></span></td>
+                                        <td data-label="Détails"><a href="?id=<?= (int)$c['ID_CLIENT'] ?>" class="btn-dash btn-dash-outline btn-dash-sm"><i class="fas fa-eye"></i> Voir</a></td>
+                                    </tr>
                             <?php endforeach; ?>
                             </tbody>
                         </table>

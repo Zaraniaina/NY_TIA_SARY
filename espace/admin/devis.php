@@ -196,17 +196,17 @@ $selectedDevisId = (int) ($_GET['id'] ?? 0);
                         $searchBlob     = mb_strtolower($d['PRENOMS'] . ' ' . $d['NOM'] . ' ' . $d['TELEPHONE'] . ' ' . $d['LIB_PRESTATION'] . ' ' . $categoriesTxt);
                         $pjPaths        = !empty($d['PJ_PATHS']) ? explode(',', $d['PJ_PATHS']) : [];
                         ?>
-                        <tr<?= $isSelected ? ' class="row-highlighted" id="devis-selected"' : '' ?> data-search="<?= htmlspecialchars($searchBlob, ENT_QUOTES) ?>">
-                            <td>#<?= (int)$d['ID'] ?></td>
-                            <td>
+                            <tr<?= $isSelected ? ' class="row-highlighted" id="devis-selected"' : '' ?> data-search="<?= htmlspecialchars($searchBlob, ENT_QUOTES) ?>">
+                            <td data-label="#">#<?= (int)$d['ID'] ?></td>
+                            <td data-label="Client">
                                 <strong><?= htmlspecialchars($d['PRENOMS'] . ' ' . $d['NOM']) ?></strong>
                                 <?php if ($d['TYPE_VISITEUR'] && $d['TYPE_VISITEUR'] !== '—'): ?>
                                     <br><small style="color:#888;"><?= htmlspecialchars($d['TYPE_VISITEUR']) ?></small>
                                 <?php endif; ?>
                             </td>
-                            <td><?= htmlspecialchars($d['TELEPHONE']) ?></td>
-                            <td><?= htmlspecialchars($d['LIB_PRESTATION']) ?></td>
-                            <td>
+                            <td data-label="Téléphone"><?= htmlspecialchars($d['TELEPHONE']) ?></td>
+                            <td data-label="Prestation"><?= htmlspecialchars($d['LIB_PRESTATION']) ?></td>
+                            <td data-label="Catégorie">
                                 <?php if (empty($categoriesArr)): ?>
                                     <span style="color:#aaa;">—</span>
                                 <?php else: ?>
@@ -217,16 +217,16 @@ $selectedDevisId = (int) ($_GET['id'] ?? 0);
                                     </div>
                                 <?php endif; ?>
                             </td>
-                            <td><strong><?= htmlspecialchars($d['BUGET_ESTIMATIF']) . ' AR' ?></strong></td>
-                            <td><?= date('d/m/Y', strtotime($d['DATE_SOUHAITE'])) ?></td>
-                            <td>
+                            <td data-label="Budget"><strong><?= htmlspecialchars($d['BUGET_ESTIMATIF']) . ' AR' ?></strong></td>
+                            <td data-label="Date"><?= date('d/m/Y', strtotime($d['DATE_SOUHAITE'])) ?></td>
+                            <td data-label="Pièces jointes">
                                 <?php if ((int)$d['nb_pj'] > 0): ?>
                                     <span class="badge badge-confirm"><i class="fas fa-paperclip"></i> <?= (int)$d['nb_pj'] ?></span>
                                 <?php else: ?>
                                     <span class="badge badge-confirm"><i class="fas fa-paperclip"></i>0</span>
                                 <?php endif; ?>
                             </td>
-                            <td>
+                            <td data-label="Actions">
                                 <button class="btn-dash btn-dash-sm btn-dash-outline" onclick="toggleDevisDetail(<?= $d['ID'] ?>)">
                                     <i class="fas fa-eye"></i>
                                 </button>

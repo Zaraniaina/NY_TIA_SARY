@@ -134,7 +134,7 @@ $chartValues = json_encode(array_column($chartData, 'total'));
                 </div>
             </div>
 
-            <div style="display:grid;grid-template-columns:2fr 1fr;gap:28px;align-items:start;">
+            <div class="dash-main-grid">
 
                 <!-- GRAPHIQUE -->
                 <div class="dash-card">
