@@ -45,6 +45,49 @@ body {
     min-height: 100vh;
 }
 
+/* Ensure proper stacking on mobile */
+@media (max-width: 768px) {
+    .dashboard-wrapper {
+        display: block !important;
+    }
+
+    .dashboard-main {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+
+    .dashboard-content {
+        width: 100% !important;
+        padding-top: 85px !important;
+        /* Account for fixed topbar */
+        box-sizing: border-box;
+    }
+
+    /* Make sure cards take full width */
+    .dash-card {
+        width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    /* Ensure stats cards take full width */
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .stat-card {
+        width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    /* Ensure main grid items take full width */
+    .dash-main-grid {
+        grid-template-columns: 1fr !important;
+        gap: 20px !important;
+    }
+}
+
 /* ── SIDEBAR (Fixed Left) ── */
 .dashboard-sidebar {
     width: 280px;
@@ -993,6 +1036,14 @@ body {
     margin-bottom: 25px;
 }
 
+/* ── MAIN GRID (Graphique + Actions) ── */
+.dash-main-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 28px;
+    align-items: start;
+}
+
 /* ── CHART CONTAINER ── */
 .chart-container {
     position: relative;
@@ -1290,14 +1341,49 @@ body {
     /* No adjustments needed as base styles are desktop-first */
 }
 
-/* Tablets (Max 1024px) */
+/* Tablets (Max 1024px) - Drawer menu behavior */
 @media (max-width: 1024px) {
     .dashboard-sidebar {
+        transform: translateX(-100%);
         width: 250px;
+        z-index: 2000 !important;
+    }
+
+    .dashboard-sidebar.open {
+        transform: translateX(0);
+    }
+
+    .sidebar-overlay.open {
+        display: block;
+        z-index: 1900 !important;
     }
 
     .dashboard-main {
-        margin-left: 250px;
+        margin-left: 0;
+    }
+
+    .sidebar-toggle {
+        display: block;
+    }
+
+    .dashboard-topbar {
+        padding: 0 15px;
+        height: 65px;
+        position: fixed;
+        width: 100%;
+        top: 0;
+        left: 0;
+        justify-content: flex-start;
+        gap: 10px;
+        z-index: 1050 !important;
+    }
+
+    .topbar-user {
+        margin-left: auto;
+    }
+
+    .dashboard-content {
+        padding: 85px 15px 20px;
     }
 
     .stats-grid {
@@ -1325,7 +1411,7 @@ body {
     .dashboard-sidebar {
         transform: translateX(-100%);
         width: 270px;
-        z-index: 1100;
+        z-index: 2000 !important;
     }
 
     .dashboard-sidebar.open {
@@ -1334,6 +1420,7 @@ body {
 
     .sidebar-overlay.open {
         display: block;
+        z-index: 1900 !important;
     }
 
     .dashboard-main {
@@ -1345,15 +1432,27 @@ body {
     }
 
     .dashboard-topbar {
-        padding: 0 20px;
+        padding: 0 15px;
+        height: 65px;
+        position: fixed;
+        width: 100%;
+        top: 0;
+        left: 0;
+        justify-content: flex-start;
+        gap: 10px;
+        z-index: 1050 !important;
+    }
+
+    .topbar-user {
+        margin-left: auto;
     }
 
     .dashboard-content {
-        padding: 25px 20px;
+        padding: 85px 15px 20px;
     }
 
     .stats-grid {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr;
         gap: 15px;
     }
 
@@ -1370,6 +1469,11 @@ body {
         /* Hide name/role on mobile to save space */
     }
 
+    .dash-main-grid {
+        grid-template-columns: 1fr !important;
+        gap: 20px !important;
+    }
+
     .form-grid-2 {
         grid-template-columns: 1fr;
         gap: 0;
@@ -1380,9 +1484,58 @@ body {
         align-items: stretch;
     }
 
+    .dash-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .dash-card-header .btn-dash {
+        width: 100%;
+        margin-top: 10px;
+    }
+
     .dash-search-bar {
         width: 100%;
         min-width: unset;
+    }
+
+    /* Force single column layout for specific grid sections on mobile */
+    .dashboard-content>.dash-card>.dash-card-body>div[style*="display:grid"][style*="grid-template-columns:1fr 2fr"],
+    .dashboard-content>.dash-card>.dash-card-body>div[style*="display:grid"][style*="grid-template-columns:1fr 1fr"] {
+        display: block !important;
+    }
+
+    .dashboard-content>.dash-card>.dash-card-body>div[style*="display:grid"][style*="grid-template-columns:1fr 2fr"]>.dash-card,
+    .dashboard-content>.dash-card>.dash-card-body>div[style*="display:grid"][style*="grid-template-columns:1fr 1fr"]>.dash-card {
+        width: 100% !important;
+        margin-bottom: 20px !important;
+    }
+
+    /* Ensure proper ordering: form (first child) on top, table (second child) on bottom */
+    .dashboard-content>.dash-card>.dash-card-body>div[style*="display:grid"][style*="grid-template-columns:1fr 2fr"]>.dash-card:nth-child(1),
+    .dashboard-content>.dash-card>.dash-card-body>div[style*="display:grid"][style*="grid-template-columns:1fr 1fr"]>.dash-card:nth-child(1) {
+        order: 1 !important;
+    }
+
+    .dashboard-content>.dash-card>.dash-card-body>div[style*="display:grid"][style*="grid-template-columns:1fr 2fr"]>.dash-card:nth-child(2),
+    .dashboard-content>.dash-card>.dash-card-body>div[style*="display:grid"][style*="grid-template-columns:1fr 1fr"]>.dash-card:nth-child(2) {
+        order: 2 !important;
+    }
+
+    /* Force single column layout for client details on mobile */
+    .dashboard-content>div[style*="display:grid"] {
+        display: block !important;
+    }
+
+    .dashboard-content>div[style*="display:grid"]>.dash-card {
+        width: 100% !important;
+        margin-bottom: 20px !important;
+    }
+
+    /* Keep tables as tables but add horizontal scrolling when needed */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     /* Calendrier — mobile */
@@ -1450,6 +1603,11 @@ body {
 @media (max-width: 480px) {
     .stats-grid {
         grid-template-columns: 1fr;
+    }
+
+    .notification-dropdown {
+        width: calc(100vw - 40px);
+        right: 10px;
     }
 
     .dash-card-header {
