@@ -171,6 +171,112 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         }
         prg_redirect();
     }
+
+    // ── ACTION : CRUD Partenaire ──────────────────────────────────────────────
+    if ($_POST['action'] === 'crud_partenaire') {
+        $subAction    = $_POST['sub_action'] ?? '';
+        $idPartenaire = (int) ($_POST['id_partenaire'] ?? 0);
+        $description  = trim($_POST['description_partenaire'] ?? '');
+        $lien         = trim($_POST['lien_partenaire'] ?? '');
+
+        if ($subAction === 'create') {
+            if (!$description || !$lien) {
+                prg_set_message('error', 'La description et le lien du partenaire sont requis.');
+                prg_redirect();
+            }
+            if (empty($_FILES['logo_partenaire']['name'])) {
+                prg_set_message('error', 'Le logo du partenaire est requis.');
+                prg_redirect();
+            }
+            $upload = uploadFile($_FILES['logo_partenaire'], 'partenaires', 'image');
+            if (!$upload['success']) {
+                prg_set_message('error', 'Erreur logo : ' . $upload['error']);
+                prg_redirect();
+            }
+            $pdo->prepare(
+                'INSERT INTO partenaire (PATH_LOGO, DESCRIPTIONS, LIEN_PARTENAIRE) VALUES (?, ?, ?)'
+            )->execute([$upload['path'], $description, $lien]);
+            prg_set_message('success', "Partenaire ajouté avec succès.");
+            prg_redirect();
+
+        } elseif ($subAction === 'edit' && $idPartenaire) {
+            if (!$description || !$lien) {
+                prg_set_message('error', 'La description et le lien sont requis.');
+                prg_redirect();
+            }
+            $stmtOld = $pdo->prepare('SELECT PATH_LOGO FROM partenaire WHERE ID_PARTENAIRE = ?');
+            $stmtOld->execute([$idPartenaire]);
+            $oldLogo = $stmtOld->fetchColumn();
+
+            $newLogoPath = $oldLogo;
+            if (!empty($_FILES['logo_partenaire']['name'])) {
+                $upload = uploadFile($_FILES['logo_partenaire'], 'partenaires', 'image');
+                if (!$upload['success']) {
+                    prg_set_message('error', 'Erreur logo : ' . $upload['error']);
+                    prg_redirect();
+                }
+                if ($oldLogo) { deleteUploadedFile($oldLogo); }
+                $newLogoPath = $upload['path'];
+            }
+            $pdo->prepare(
+                'UPDATE partenaire SET PATH_LOGO = ?, DESCRIPTIONS = ?, LIEN_PARTENAIRE = ? WHERE ID_PARTENAIRE = ?'
+            )->execute([$newLogoPath, $description, $lien, $idPartenaire]);
+            prg_set_message('success', 'Partenaire mis à jour.');
+            prg_redirect();
+
+        } elseif ($subAction === 'delete' && $idPartenaire) {
+            $stmtOld = $pdo->prepare('SELECT PATH_LOGO FROM partenaire WHERE ID_PARTENAIRE = ?');
+            $stmtOld->execute([$idPartenaire]);
+            $oldLogo = $stmtOld->fetchColumn();
+            if ($oldLogo) { deleteUploadedFile($oldLogo); }
+            $pdo->prepare('DELETE FROM partenaire WHERE ID_PARTENAIRE = ?')->execute([$idPartenaire]);
+            prg_set_message('success', 'Partenaire supprimé.');
+            prg_redirect();
+        }
+    }
+
+    // ── ACTION : CRUD Contact Entreprise (un seul actif) ──────────────────────
+    if ($_POST['action'] === 'crud_contact') {
+        $subAction = $_POST['sub_action'] ?? '';
+        $adresse   = trim($_POST['adresse_contact'] ?? '');
+        $tel       = trim($_POST['tel_contact'] ?? '');
+        $whatsapp  = trim($_POST['whatsapp_lien'] ?? '');
+        $messenger = trim($_POST['messenger_lien'] ?? '');
+        $emailCt   = trim($_POST['email_contact'] ?? '');
+        $horaire   = trim($_POST['horaire_contact'] ?? '');
+
+        if (!$adresse || !$tel || !$emailCt || !$horaire) {
+            prg_set_message('error', 'Veuillez remplir tous les champs obligatoires du contact.');
+            prg_redirect();
+        }
+
+        if ($subAction === 'create') {
+            $count = (int) $pdo->query('SELECT COUNT(*) FROM contact')->fetchColumn();
+            if ($count > 0) {
+                prg_set_message('error', 'Un contact entreprise existe déjà. Veuillez le modifier.');
+            } else {
+                $pdo->prepare(
+                    'INSERT INTO contact (ADRESSE_CONTACT, TEL_CONTACT, WHATSAPP_LIEN, MESSENGER_LIEN, EMAIL_CONTACT, HORAIRE_CONTACT)
+                     VALUES (?, ?, ?, ?, ?, ?)'
+                )->execute([$adresse, $tel, $whatsapp, $messenger, $emailCt, $horaire]);
+                prg_set_message('success', 'Contact entreprise créé avec succès.');
+            }
+            prg_redirect();
+
+        } elseif ($subAction === 'edit') {
+            $idContact = (int) ($_POST['id_contact'] ?? 0);
+            if (!$idContact) {
+                prg_set_message('error', 'Identifiant du contact invalide.');
+                prg_redirect();
+            }
+            $pdo->prepare(
+                'UPDATE contact SET ADRESSE_CONTACT = ?, TEL_CONTACT = ?, WHATSAPP_LIEN = ?, MESSENGER_LIEN = ?, EMAIL_CONTACT = ?, HORAIRE_CONTACT = ?
+                 WHERE ID_CONTACT = ?'
+            )->execute([$adresse, $tel, $whatsapp, $messenger, $emailCt, $horaire, $idContact]);
+            prg_set_message('success', 'Contact entreprise mis à jour.');
+            prg_redirect();
+        }
+    }
 }
 
 // ── Récupérer les messages PRG pour affichage ──────────────────
@@ -211,6 +317,18 @@ $photoAdmin  = $adminData['PHOTO_CLIENT'] ?? 'assets/images/avatar.png';
 $isDefaultPhoto = ($photoAdmin === 'assets/images/avatar.png');
 
 $adminEmail = $_SESSION['admin_email'] ?? $adminData['EMAIL_AUTH'] ?? 'Admin';
+
+// Récupérer les partenaires
+$partenaires = $pdo->query('SELECT * FROM partenaire ORDER BY ID_PARTENAIRE DESC')->fetchAll();
+$editPartenaire = null;
+if (isset($_GET['edit_partenaire'])) {
+    $stmtP = $pdo->prepare('SELECT * FROM partenaire WHERE ID_PARTENAIRE = ?');
+    $stmtP->execute([(int)$_GET['edit_partenaire']]);
+    $editPartenaire = $stmtP->fetch();
+}
+
+// Récupérer le contact entreprise (un seul actif)
+$contact = $pdo->query('SELECT * FROM contact LIMIT 1')->fetch();
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -413,6 +531,219 @@ $adminEmail = $_SESSION['admin_email'] ?? $adminData['EMAIL_AUTH'] ?? 'Admin';
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+        </div>
+
+            <!-- ═══════════════════════════════════════════════════════════
+                 CARTE : GESTION DES PARTENAIRES
+            ════════════════════════════════════════════════════════════ -->
+            <div class="dash-card" style="margin-top: 30px;">
+                <div class="dash-card-header">
+                    <h3><i class="fas fa-handshake"></i> Partenaires</h3>
+                    <span class="badge badge-confirm"><?= count($partenaires) ?></span>
+                </div>
+                <div class="dash-card-body padded">
+                    <div style="display:grid;grid-template-columns:1fr 2fr;gap:28px;align-items:start;">
+
+                        <!-- FORMULAIRE PARTENAIRE -->
+                        <div class="dash-card">
+                            <div class="dash-card-header">
+                                <h3><i class="fas fa-<?= $editPartenaire ? 'edit' : 'plus' ?>" style="color:var(--primary-green);margin-right:8px;"></i>
+                                    <?= $editPartenaire ? 'Modifier' : 'Ajouter' ?> un partenaire
+                                </h3>
+                                <?php if ($editPartenaire): ?>
+                                    <a href="parametres.php" class="btn-dash btn-dash-outline btn-dash-sm"><i class="fas fa-times"></i> Annuler</a>
+                                <?php endif; ?>
+                            </div>
+                            <div class="dash-card-body padded">
+                                <form method="POST" action="" enctype="multipart/form-data">
+                                    <input type="hidden" name="action" value="crud_partenaire">
+                                    <input type="hidden" name="sub_action" value="<?= $editPartenaire ? 'edit' : 'create' ?>">
+                                    <?php if ($editPartenaire): ?>
+                                        <input type="hidden" name="id_partenaire" value="<?= (int)$editPartenaire['ID_PARTENAIRE'] ?>">
+                                    <?php endif; ?>
+
+                                    <div class="dash-form-group">
+                                        <label for="description_partenaire">Description <span class="required">*</span></label>
+                                        <input type="text" name="description_partenaire" id="description_partenaire" class="dash-input"
+                                               placeholder="Ex: Partenaire officiel de Ny Tia Sary"
+                                               value="<?= htmlspecialchars($editPartenaire['DESCRIPTIONS'] ?? '') ?>" required>
+                                    </div>
+
+                                    <div class="dash-form-group">
+                                        <label for="lien_partenaire">Lien (URL) <span class="required">*</span></label>
+                                        <input type="url" name="lien_partenaire" id="lien_partenaire" class="dash-input"
+                                               placeholder="https://www.exemple.com"
+                                               value="<?= htmlspecialchars($editPartenaire['LIEN_PARTENAIRE'] ?? '') ?>" required>
+                                    </div>
+
+                                    <div class="dash-form-group">
+                                        <label>Logo <?= $editPartenaire ? '(laisser vide pour conserver l\'actuel)' : '<span class="required">*</span>' ?></label>
+                                        <?php if ($editPartenaire && $editPartenaire['PATH_LOGO']): ?>
+                                            <div style="margin-bottom:8px;">
+                                                <img src="../../../<?= htmlspecialchars($editPartenaire['PATH_LOGO']) ?>" alt="Logo actuel" style="max-height:50px;border-radius:4px;border:1px solid #eee;padding:4px;">
+                                            </div>
+                                        <?php endif; ?>
+                                        <label class="upload-zone" style="padding:15px;cursor:pointer;">
+                                            <i class="fas fa-cloud-upload-alt" style="font-size:1.5rem;margin-bottom:6px;"></i>
+                                            <p style="font-size:0.85rem;font-weight:600;">Choisir un logo</p>
+                                            <input type="file" name="logo_partenaire" id="logo_partenaire" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none;" onchange="previewLogo(this)">
+                                        </label>
+                                        <img id="logoPreview" src="" alt="" style="max-height:50px;margin-top:8px;border-radius:4px;display:none;">
+                                    </div>
+
+                                    <button type="submit" class="btn-dash btn-dash-primary" style="width:100%;justify-content:center;">
+                                        <i class="fas fa-save"></i> <?= $editPartenaire ? 'Mettre à jour' : 'Ajouter le partenaire' ?>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- LISTE DES PARTENAIRES -->
+                        <div class="dash-card">
+                            <div class="dash-card-header">
+                                <h3><i class="fas fa-handshake" style="color:var(--primary-green);margin-right:8px;"></i> Liste des partenaires</h3>
+                            </div>
+                            <div class="dash-card-body">
+                                <?php if (empty($partenaires)): ?>
+                                    <div class="empty-state">
+                                        <i class="fas fa-handshake"></i>
+                                        <p>Aucun partenaire. Commencez par en ajouter un.</p>
+                                    </div>
+                                <?php else: ?>
+                                <div class="table-responsive">
+                                    <table class="dash-table">
+                                        <thead><tr><th>Logo</th><th>Description</th><th>Lien</th><th>Actions</th></tr></thead>
+                                        <tbody>
+                                        <?php foreach ($partenaires as $p): ?>
+                                            <tr>
+                                                <td>
+                                                    <?php if ($p['PATH_LOGO']): ?>
+                                                        <img src="../../<?= htmlspecialchars($p['PATH_LOGO']) ?>" alt="Logo" style="max-height:38px;max-width:80px;object-fit:contain;border-radius:4px;">
+                                                    <?php else: ?>
+                                                        <span style="color:#ccc;"><i class="fas fa-image"></i></span>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td><strong><?= htmlspecialchars($p['DESCRIPTIONS']) ?></strong></td>
+                                                <td>
+                                                    <a href="<?= htmlspecialchars($p['LIEN_PARTENAIRE']) ?>" target="_blank" rel="noopener noreferrer" style="color:var(--primary-green);font-size:0.85rem;">
+                                                        <i class="fas fa-external-link-alt"></i> Visiter
+                                                    </a>
+                                                </td>
+                                                <td style="display:flex;gap:6px;">
+                                                    <a href="?edit_partenaire=<?= (int)$p['ID_PARTENAIRE'] ?>" class="btn-dash btn-dash-outline btn-dash-sm">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <form method="POST" style="display:inline;" onsubmit="return confirm('Supprimer ce partenaire et son logo ?');">
+                                                        <input type="hidden" name="action" value="crud_partenaire">
+                                                        <input type="hidden" name="sub_action" value="delete">
+                                                        <input type="hidden" name="id_partenaire" value="<?= (int)$p['ID_PARTENAIRE'] ?>">
+                                                        <button class="btn-dash btn-dash-danger btn-dash-sm"><i class="fas fa-trash"></i></button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════════════════════════════════════════════════════
+                 CARTE : CONTACT ENTREPRISE (1 seul actif)
+            ════════════════════════════════════════════════════════════ -->
+            <div class="dash-card" style="margin-top: 30px;">
+                <div class="dash-card-header">
+                    <h3><i class="fas fa-address-card"></i> Contact Entreprise</h3>
+                    <?php if ($contact): ?>
+                        <button type="button" class="btn-dash btn-dash-primary btn-dash-sm" id="openContactModal">
+                            <i class="fas fa-edit"></i> Modifier
+                        </button>
+                    <?php endif; ?>
+                </div>
+                <div class="dash-card-body padded">
+                    <?php if (!$contact): ?>
+                        <!-- Aucun contact : formulaire de création -->
+                        <p style="font-size:0.9rem;color:#666;margin-bottom:20px;">Aucun contact entreprise défini. Remplissez le formulaire ci-dessous pour en créer un.</p>
+                        <form method="POST" action="">
+                            <input type="hidden" name="action" value="crud_contact">
+                            <input type="hidden" name="sub_action" value="create">
+                            <div class="form-grid-2">
+                                <div class="dash-form-group">
+                                    <label for="adresse_contact_create">Adresse <span class="required">*</span></label>
+                                    <input type="text" name="adresse_contact" id="adresse_contact_create" class="dash-input" placeholder="Ex: Antananarivo, Madagascar" required>
+                                </div>
+                                <div class="dash-form-group">
+                                    <label for="tel_contact_create">Téléphone <span class="required">*</span></label>
+                                    <input type="text" name="tel_contact" id="tel_contact_create" class="dash-input" placeholder="+261 XX XXX XXXX" required>
+                                </div>
+                                <div class="dash-form-group">
+                                    <label for="email_contact_create">E-mail <span class="required">*</span></label>
+                                    <input type="email" name="email_contact" id="email_contact_create" class="dash-input" placeholder="contact@nytiasary.com" required>
+                                </div>
+                                <div class="dash-form-group">
+                                    <label for="horaire_contact_create">Horaires <span class="required">*</span></label>
+                                    <input type="text" name="horaire_contact" id="horaire_contact_create" class="dash-input" placeholder="Lun-Ven 08h-18h" required>
+                                </div>
+                                <div class="dash-form-group">
+                                    <label for="whatsapp_create">Lien WhatsApp</label>
+                                    <input type="url" name="whatsapp_lien" id="whatsapp_create" class="dash-input" placeholder="https://wa.me/261XXXXXXXXX">
+                                </div>
+                                <div class="dash-form-group">
+                                    <label for="messenger_create">Lien Messenger</label>
+                                    <input type="url" name="messenger_lien" id="messenger_create" class="dash-input" placeholder="https://m.me/nytiasary">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn-dash btn-dash-primary" style="margin-top:10px;">
+                                <i class="fas fa-save"></i> Enregistrer le contact
+                            </button>
+                        </form>
+                    <?php else: ?>
+                        <!-- Contact existant : affichage en lecture -->
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                            <div>
+                                <p style="font-size:0.9rem;color:#666;margin-bottom:8px;">
+                                    <i class="fas fa-map-marker-alt" style="color:var(--primary-green);width:18px;"></i>
+                                    <strong>Adresse :</strong> <?= htmlspecialchars($contact['ADRESSE_CONTACT']) ?>
+                                </p>
+                                <p style="font-size:0.9rem;color:#666;margin-bottom:8px;">
+                                    <i class="fas fa-phone" style="color:var(--primary-green);width:18px;"></i>
+                                    <strong>Téléphone :</strong> <?= htmlspecialchars($contact['TEL_CONTACT']) ?>
+                                </p>
+                                <p style="font-size:0.9rem;color:#666;margin-bottom:8px;">
+                                    <i class="fas fa-envelope" style="color:var(--primary-green);width:18px;"></i>
+                                    <strong>E-mail :</strong> <?= htmlspecialchars($contact['EMAIL_CONTACT']) ?>
+                                </p>
+                                <p style="font-size:0.9rem;color:#666;">
+                                    <i class="fas fa-clock" style="color:var(--primary-green);width:18px;"></i>
+                                    <strong>Horaires :</strong> <?= htmlspecialchars($contact['HORAIRE_CONTACT']) ?>
+                                </p>
+                            </div>
+                            <div>
+                                <?php if ($contact['WHATSAPP_LIEN']): ?>
+                                <p style="font-size:0.9rem;color:#666;margin-bottom:8px;">
+                                    <i class="fab fa-whatsapp" style="color:#25d366;width:18px;"></i>
+                                    <strong>WhatsApp :</strong>
+                                    <a href="<?= htmlspecialchars($contact['WHATSAPP_LIEN']) ?>" target="_blank" rel="noopener noreferrer" style="color:var(--primary-green);"><?= htmlspecialchars($contact['WHATSAPP_LIEN']) ?></a>
+                                </p>
+                                <?php endif; ?>
+                                <?php if ($contact['MESSENGER_LIEN']): ?>
+                                <p style="font-size:0.9rem;color:#666;">
+                                    <i class="fab fa-facebook-messenger" style="color:#0084ff;width:18px;"></i>
+                                    <strong>Messenger :</strong>
+                                    <a href="<?= htmlspecialchars($contact['MESSENGER_LIEN']) ?>" target="_blank" rel="noopener noreferrer" style="color:var(--primary-green);"><?= htmlspecialchars($contact['MESSENGER_LIEN']) ?></a>
+                                </p>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
 

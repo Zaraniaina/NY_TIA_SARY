@@ -1,3 +1,12 @@
+<?php
+require_once __DIR__ . '/config/database.php';
+$pdo = getPDO();
+
+$partenaires = [];
+try {
+    $partenaires = $pdo->query("SELECT * FROM partenaire")->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -147,6 +156,35 @@
             </div>
         </div>
     </section>
+
+    <!-- PARTENAIRES DÉTAILLÉS -->
+    <?php if (!empty($partenaires)): ?>
+    <section id="partenaires-details" class="partenaires-details" style="padding: 60px 0; background-color: #f9f9f9;">
+        <div class="container">
+            <h2 class="section-title">Nos <span>Partenaires</span></h2>
+            <p style="text-align: center; max-width: 800px; margin: 0 auto 40px auto; color: var(--text-body);">Nous collaborons avec des acteurs de confiance pour vous offrir les meilleurs services.</p>
+            
+            <div class="services-grid" style="gap: 30px;">
+                <?php foreach ($partenaires as $partenaire): ?>
+                    <div class="service-card" style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 30px;">
+                        <div class="partenaire-logo" style="height: 100px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+                            <img src="<?= htmlspecialchars($partenaire['PATH_LOGO']) ?>" alt="Logo partenaire" style="max-height: 100%; max-width: 100%; object-fit: contain;">
+                        </div>
+                        <div class="service-card-content" style="flex: 1; display: flex; flex-direction: column;">
+                            <p style="margin-bottom: 20px; font-size: 0.95rem; color: #555;"><?= nl2br(htmlspecialchars($partenaire['DESCRIPTIONS'])) ?></p>
+                            <?php if (!empty($partenaire['LIEN_PARTENAIRE'])): ?>
+                                <a href="<?= htmlspecialchars($partenaire['LIEN_PARTENAIRE']) ?>" target="_blank" rel="noopener noreferrer" class="btn btn-outline" style="margin-top: auto; align-self: center;">
+                                    Visiter le site <i class="fas fa-external-link-alt" style="font-size: 0.8rem; margin-left: 5px;"></i>
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    </section>
+    <?php endif; ?>
+
     <!-- Boutons Flottants -->
 <div class="floating-buttons">
     <button class="btn-float btn-devis" id="btn-open-devis-float" title="Demander un Devis">

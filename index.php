@@ -62,6 +62,14 @@ try {
 
 $devisStatus  = $_GET['devis'] ?? null;
 $devisMessage = $_GET['message'] ?? null;
+
+// Fetch partenaires
+$partenaires = [];
+try {
+    $partenaires = $pdo->query("SELECT * FROM partenaire")->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    // Graceful fallback
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -284,6 +292,42 @@ $devisMessage = $_GET['message'] ?? null;
             </div>
         </div>
     </section>
+
+    <!-- SECTION PARTENAIRES -->
+    <?php if (!empty($partenaires)): ?>
+    <section id="partenaires" class="partenaires-section" style="padding: 60px 0; background: #fff; overflow: hidden;">
+        <div class="container">
+            <h2 class="section-title" style="text-align: center; margin-bottom: 40px;">Nos <span>Partenaires</span></h2>
+            <div class="partenaires-slider">
+                <div class="partenaires-track">
+                    <?php 
+                    // Make sure we have enough items to fill the screen (at least ~8 items)
+                    $multiplier = ceil(8 / (count($partenaires) ?: 1));
+                    $baseItems = [];
+                    for ($i = 0; $i < $multiplier; $i++) {
+                        $baseItems = array_merge($baseItems, $partenaires);
+                    }
+                    // Duplicate exactly once for infinite scroll effect (50% translation)
+                    $sliderItems = array_merge($baseItems, $baseItems);
+                    foreach ($sliderItems as $partenaire): 
+                    ?>
+                        <div class="partenaire-slide">
+                            <?php if (!empty($partenaire['LIEN_PARTENAIRE'])): ?>
+                                <a href="<?= htmlspecialchars($partenaire['LIEN_PARTENAIRE']) ?>" target="_blank" rel="noopener noreferrer">
+                            <?php endif; ?>
+                            
+                            <img src="<?= htmlspecialchars($partenaire['PATH_LOGO']) ?>" alt="Logo partenaire" title="<?= htmlspecialchars($partenaire['DESCRIPTIONS'] ?? '') ?>">
+                            
+                            <?php if (!empty($partenaire['LIEN_PARTENAIRE'])): ?>
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+    </section>
+    <?php endif; ?>
 
     <!-- Footer page -->
     <?php include "composante/footer.php"; ?>

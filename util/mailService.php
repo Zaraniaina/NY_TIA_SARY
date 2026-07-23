@@ -545,4 +545,69 @@ class MailService
         // Fallback si le fichier n'est pas trouvé
         return $this->send($email, 'Votre devis - NY TIA SARY', $body, true);
     }
+
+    /**
+     * Envoyer un message de contact à l'administrateur
+     *
+     * @param string $adminEmail Email de l'administrateur
+     * @param array $contactData Données du formulaire de contact
+     * @return bool
+     */
+    public function sendContactMessage(string $adminEmail, array $contactData): bool
+    {
+        $nom = $contactData['nom'] ?? '';
+        $prenom = $contactData['prenom'] ?? '';
+        $email = $contactData['email'] ?? '';
+        $telephone = $contactData['telephone'] ?? '';
+        $objet = $contactData['objet'] ?? 'Nouveau message de contact';
+        $message = $contactData['message'] ?? '';
+
+        $body = '
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+            <h2 style="color: #2c5f2d; border-bottom: 2px solid #377d49; padding-bottom: 10px;">Nouveau Message de Contact</h2>
+            
+            <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                <tr>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd; font-weight: bold; width: 30%;">Nom / Prénom :</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">' . htmlspecialchars($nom . ' ' . $prenom) . '</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd; font-weight: bold;">E-mail :</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">' . htmlspecialchars($email) . '</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd; font-weight: bold;">Téléphone :</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">' . htmlspecialchars($telephone) . '</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd; font-weight: bold;">Objet :</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">' . htmlspecialchars($objet) . '</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; font-weight: bold;" colspan="2">Message :</td>
+                </tr>
+                <tr>
+                    <td style="padding: 15px; background: #f9f9f9; border-radius: 5px; font-style: italic;" colspan="2">
+                        ' . nl2br(htmlspecialchars($message)) . '
+                    </td>
+                </tr>
+            </table>
+            
+            <p style="color: #666; font-size: 12px; text-align: center; margin-top: 20px;">
+                Ce message a été envoyé depuis le formulaire de contact du site NY TIA SARY.
+            </p>
+        </div>';
+
+        $subject = 'Contact: ' . htmlspecialchars($objet);
+
+        // Optionnel : on peut mettre le "Reply-To" vers l'email du client
+        $this->mailer->addReplyTo($email, $nom . ' ' . $prenom);
+        
+        $result = $this->send($adminEmail, $subject, $body, true);
+        
+        // Reset the reply-to for future emails if needed, although clearAddresses usually doesn't clear ReplyTo in some PHPMailer versions. Let's explicitly clear it to be safe.
+        $this->mailer->clearReplyTos();
+        
+        return $result;
+    }
 }
