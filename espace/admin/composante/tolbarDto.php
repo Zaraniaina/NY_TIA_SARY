@@ -15,7 +15,7 @@ $isDefaultPhoto = ($photoAdmin === 'assets/images/avatar.png');
 $titre="";
 
 try {
-    $stmtNotif = $pdo->prepare("SELECT COUNT(*) FROM notification WHERE LU_NOTIF = 0");
+    $stmtNotif = $pdo->prepare("SELECT COUNT(*) FROM notification WHERE LU_NOTIF = 0 AND SUP_NOTIF = 0 AND ID_CLIENT IS NULL");
     $stmtNotif->execute();
     $notifCount = (int) $stmtNotif->fetchColumn();
 } catch (PDOException $e) {

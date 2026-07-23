@@ -175,7 +175,7 @@ require_once __DIR__.'/composante/tolbarDto.php';
             LEFT JOIN devis d ON n.TYPE_NOTIF = 'devis' AND n.ID_REF_NOTIF = d.ID
             LEFT JOIN RESERVATION r ON n.TYPE_NOTIF = 'Reservation' AND n.ID_REF_NOTIF = r.ID_RESERVATION
             LEFT JOIN CLIENT c ON c.ID_CLIENT = r.ID_CLIENT
-            WHERE n.SUP_NOTIF = 0
+            WHERE n.SUP_NOTIF = 0 AND n.ID_CLIENT IS NULL
             ORDER BY n.DATE_NOTIF DESC
         ");
         $stmt->execute();
