@@ -91,8 +91,4 @@ foreach ($notifications as $n) {
             <?php endforeach; ?>
         <?php endif; ?>
     </div>
-
-    <div class="notification-dropdown-footer">
-        <a href="notifications.php" class="notification-view-all">Voir toutes les notifications</a>
-    </div>
 </div>

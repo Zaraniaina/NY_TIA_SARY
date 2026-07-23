@@ -60,12 +60,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_statut'])) {
             $dateFormatee = date('d/m/Y', strtotime($dateResa));
             $heureFormatee = substr($heureResa, 0, 5);
 
-            // Récupérer le ID du contrat
-            $stmtContrat = $pdo->prepare('SELECT ID_CONTRAT FROM CONTRAT WHERE ID_RESERVATION = ?');
-            $stmtContrat->execute([$id]);
-            $idContrat = $stmtContrat->fetchColumn();
+             // Récupérer le ID du contrat
+             $stmtContrat = $pdo->prepare('SELECT ID_CONTRAT FROM CONTRAT WHERE ID_RESERVATION = ?');
+             $stmtContrat->execute([$id]);
+             $idContrat = $stmtContrat->fetchColumn();
 
-            if ($clientEmail) {
+             // Créer une notification pour le client concernant le contrat
+             if ($resaInfo && $idContrat) {
+                 $stmtNotif = $pdo->prepare("INSERT INTO notification (ID_CLIENT, TYPE_NOTIF, ID_REF_NOTIF, TITRE_NOTIF, MESS_NOTIF, LU_NOTIF, SUP_NOTIF, DATE_NOTIF) 
+                                             VALUES (?, ?, ?, ?, ?, 0, 0, NOW())");
+                 $stmtNotif->execute([
+                     $resaInfo['ID_CLIENT'],
+                     'client_contrat',
+                     $idContrat,
+                     'Votre contrat est prêt',
+                     'Votre réservation du ' . date('d/m/Y', strtotime($resaInfo['DATE_RESERVATION'])) . ' a été confirmée et votre contrat est disponible.'
+                 ]);
+             }
+
+             if ($clientEmail) {
                 $mailService = new MailService();
                 $reservationData = [
                     'client_nom' => $clientNom,

@@ -98,9 +98,4 @@ foreach ($notifications as $n) {
             <?php endforeach; ?>
         <?php endif; ?>
     </div>
-
-    <div class="notification-dropdown-footer">
-        <!-- Lien vers la future page de notifications globales du client, on la créera si besoin -->
-        <a href="home.php" class="notification-view-all">Fermer</a>
-    </div>
 </div>
