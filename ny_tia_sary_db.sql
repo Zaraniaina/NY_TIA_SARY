@@ -4,6 +4,7 @@
 --
 -- Hôte : 127.0.0.1
 -- Généré le : mer. 15 juil. 2026 à 12:28
+-- Mise à jour : ajout des tables `contact` et `partenaire`
 -- Version du serveur : 10.4.32-MariaDB
 -- Version de PHP : 8.1.25
 
@@ -131,6 +132,23 @@ INSERT INTO `client` (`ID_CLIENT`, `ID_AUTH`, `NOM_CLIENT`, `PRENOM_CLIENT`, `TE
 -- --------------------------------------------------------
 
 --
+-- Structure de la table `contact`
+--
+
+CREATE TABLE `contact` (
+  `ID_CONTACT` bigint(4) NOT NULL,
+  `ADRESSE_CONTACT` varchar(255) NOT NULL,
+  `TEL_CONTACT` varchar(128) NOT NULL,
+  `WHATSAPP_LIEN` varchar(255) NOT NULL,
+  `MESSENGER_LIEN` varchar(255) NOT NULL,
+  `EMAIL_CONTACT` varchar(100) NOT NULL,
+  `HORAIRE_CONTACT` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+-- --------------------------------------------------------
+
+--
 -- Structure de la table `contrat`
 --
 
@@ -253,6 +271,20 @@ CREATE TABLE `paiement` (
   `DATE_PAIEMENT` date NOT NULL DEFAULT curdate(),
   `MONTANT_PAIEMENT` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `partenaire`
+--
+
+CREATE TABLE `partenaire` (
+  `ID_PARTENAIRE` bigint(4) NOT NULL,
+  `PATH_LOGO` varchar(255) NOT NULL,
+  `DESCRIPTIONS` varchar(255) NOT NULL,
+  `LIEN_PARTENAIRE` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 
 -- --------------------------------------------------------
 
@@ -420,6 +452,12 @@ ALTER TABLE `client`
   ADD UNIQUE KEY `I_FK_CLIENT_AUTHENTIFICATION` (`ID_AUTH`);
 
 --
+-- Index pour la table `contact`
+--
+ALTER TABLE `contact`
+  ADD PRIMARY KEY (`ID_CONTACT`);
+
+--
 -- Index pour la table `contrat`
 --
 ALTER TABLE `contrat`
@@ -468,6 +506,12 @@ ALTER TABLE `notification`
 ALTER TABLE `paiement`
   ADD PRIMARY KEY (`ID_PAIEMENT`),
   ADD KEY `I_FK_PAIEMENT_FACTURE` (`ID_FACTURE`);
+
+--
+-- Index pour la table `partenaire`
+--
+ALTER TABLE `partenaire`
+  ADD PRIMARY KEY (`ID_PARTENAIRE`);
 
 --
 -- Index pour la table `pieces_jointes`
@@ -547,6 +591,12 @@ ALTER TABLE `client`
   MODIFY `ID_CLIENT` bigint(4) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
+-- AUTO_INCREMENT pour la table `contact`
+--
+ALTER TABLE `contact`
+  MODIFY `ID_CONTACT` bigint(4) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT pour la table `contrat`
 --
 ALTER TABLE `contrat`
@@ -581,6 +631,12 @@ ALTER TABLE `notification`
 --
 ALTER TABLE `paiement`
   MODIFY `ID_PAIEMENT` bigint(4) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT pour la table `partenaire`
+--
+ALTER TABLE `partenaire`
+  MODIFY `ID_PARTENAIRE` bigint(4) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT pour la table `pieces_jointes`
