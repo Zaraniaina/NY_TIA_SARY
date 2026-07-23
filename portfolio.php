@@ -1,101 +1,112 @@
+<?php
+// Connexion à la base de données
+try {
+    $pdo = new PDO('mysql:host=127.0.0.1;dbname=ny_tia_sary_db;charset=utf8mb4', 'root', '');
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (Exception $e) {
+    die('Erreur de connexion : ' . $e->getMessage());
+}
+
+// 1. Récupérer toutes les prestations pour créer les boutons de filtres dynamiques
+try {
+    $prestationsQuery = $pdo->query("SELECT * FROM prestations");
+    $prestationsList = $prestationsQuery->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    $prestationsList = [];
+}
+
+// 2. Récupérer les médias avec leurs prestations et catégories associées
+try {
+    $query = $pdo->query("
+        SELECT m.PATH_MEDIA, m.TYPE_MEDIA, c.LIB_CATEGORIE, p.ID_PRESTATION, p.LIB_PRESTATION 
+        FROM media m
+        JOIN reservation r ON m.ID_RESERVATION = r.ID_RESERVATION
+        JOIN reservation_categorie rc ON r.ID_RESERVATION = rc.ID_RESERVATION
+        JOIN categorie c ON rc.ID_CATEGORIE = c.ID_CATEGORIE
+        JOIN prestations p ON c.ID_PRESTATION = p.ID_PRESTATION
+        GROUP BY m.PATH_MEDIA
+    ");
+    $portfolioItems = $query->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    $portfolioItems = [];
+}
+?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <?php include 'composante/csslink.php'; ?>
-    <title>Portfolio</title>
+    <title>Portfolio - Ny Tia Sary</title>
 </head>
 
 <body>
-    <?php include "composante/header.php";?>
-    <!-- SECTION PORTFOLIO (Hatsaraina miaraka amin'ireo sary mivantana) -->
+    <?php include "composante/header.php"; ?>
+
+    <!-- SECTION PORTFOLIO -->
     <section id="portfolio" class="portfolio">
         <div class="container">
             <h2 class="section-title">Notre <span>Savoir-Faire</span></h2>
 
+            <!-- Boutons de filtres générés dynamiquement depuis la table prestations -->
             <div class="portfolio-filters">
                 <button class="filter-btn active" data-filter="all">Tout</button>
-                <button class="filter-btn" data-filter="corporate">Corporate</button>
-                <button class="filter-btn" data-filter="evenement">Événements</button>
-                <button class="filter-btn" data-filter="video">Vidéo</button>
-                <button class="filter-btn" data-filter="design">Design</button>
+                <?php foreach ($prestationsList as $pres): ?>
+                    <button class="filter-btn" data-filter="pres-<?= $pres['ID_PRESTATION']; ?>">
+                        <?= htmlspecialchars($pres['LIB_PRESTATION']); ?>
+                    </button>
+                <?php endforeach; ?>
             </div>
 
             <div class="portfolio-grid" id="portfolio-grid">
-                <!-- Sary 1: Corporate (Portrait olona mitsiky, tsotra sy matihanina) -->
-                <div class="portfolio-item" data-category="corporate">
-                    <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80"
-                        alt="Executive Portrait NY TIA SARY">
-                    <div class="portfolio-overlay">
-                        <span>Corporate</span>
-                        <h4>Executive Portrait</h4>
-                    </div>
-                </div>
+                <?php if (!empty($portfolioItems)): ?>
+                    <?php foreach ($portfolioItems as $item): 
+                        $idPresta = $item['ID_PRESTATION'];
+                        $isvideo = (strtolower($item['TYPE_MEDIA'] ?? '') === 'video');
+                    ?>
+                        <div class="portfolio-item" data-category="pres-<?= $idPresta; ?>">
+                            <?php if ($isvideo): ?>
+                                <video controls width="100%">
+                                    <source src="<?= htmlspecialchars($item['PATH_MEDIA']); ?>" type="video/mp4">
+                                    Votre navigateur ne supporte pas la vidéo.
+                                </video>
+                            <?php else: ?>
+                                <img src="<?= htmlspecialchars($item['PATH_MEDIA']); ?>" 
+                                     alt="<?= htmlspecialchars($item['LIB_CATEGORIE']); ?> NY TIA SARY">
+                            <?php endif; ?>
 
-                <!-- Sary 2: Événement (Fankalazana sy fiaraha-monina feno hafaliana) -->
-                <div class="portfolio-item" data-category="evenement">
-                    <img src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=800&q=80"
-                        alt="Événementiel NY TIA SARY">
-                    <div class="portfolio-overlay">
-                        <span>Événements</span>
-                        <h4>Gala & Conférence</h4>
+                            <div class="portfolio-overlay">
+                                <span><?= htmlspecialchars($item['LIB_PRESTATION']); ?></span>
+                                <h4><?= htmlspecialchars($item['LIB_CATEGORIE']); ?></h4>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="portfolio-item" data-category="pres-1">
+                        <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80" alt="Exemple NY TIA SARY">
+                        <div class="portfolio-overlay">
+                            <span>Exemple</span>
+                            <h4>Aucun média dans la base de données</h4>
+                        </div>
                     </div>
-                </div>
-
-                <!-- Sary 3: Vidéo (Sehatra fitarihana sy fakana sary mihetsika) -->
-                <div class="portfolio-item" data-category="video">
-                    <img src="https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=800&q=80"
-                        alt="Production Vidéo NY TIA SARY">
-                    <div class="portfolio-overlay">
-                        <span>Production Vidéo</span>
-                        <h4>Tournage Institutionnel</h4>
-                    </div>
-                </div>
-
-                <!-- Sary 4: Design / Conception Graphique (Fandrafetana sy logo) -->
-                <div class="portfolio-item" data-category="design">
-                    <img src="https://images.unsplash.com/photo-1626785774573-4b799315345d?auto=format&fit=crop&w=800&q=80"
-                        alt="Conception Graphique NY TIA SARY">
-                    <div class="portfolio-overlay">
-                        <span>Conception Graphique</span>
-                        <h4>Identité Visuelle</h4>
-                    </div>
-                </div>
-
-                <!-- Sary 5: Corporate / Produit (Packshot vokatra madio) -->
-                <div class="portfolio-item" data-category="corporate">
-                    <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=80"
-                        alt="Photographie Produit NY TIA SARY">
-                    <div class="portfolio-overlay">
-                        <span>Corporate / Produit</span>
-                        <h4>Packshot Studio</h4>
-                    </div>
-                </div>
-
-                <!-- Sary 6: Événement / Drone (Fijery ambony nampiasana Drone) -->
-                <div class="portfolio-item" data-category="evenement">
-                    <img src="https://images.unsplash.com/photo-1508849789987-4e5333c12b78?auto=format&fit=crop&w=800&q=80"
-                        alt="Drone View NY TIA SARY">
-                    <div class="portfolio-overlay">
-                        <span>Drone / Événements</span>
-                        <h4>Vue Aérienne Festival</h4>
-                    </div>
-                </div>
+                <?php endif; ?>
             </div>
         </div>
     </section>
+
     <!-- Boutons Flottants -->
-<div class="floating-buttons">
-    <button class="btn-float btn-devis" id="btn-open-devis-float" title="Demander un Devis">
-        <i class="fas fa-file-invoice-dollar"></i> Demander devis
-    </button>
-    <a href="login/login.php" class="btn-float btn-reserver" title="Réserver">
-        <i class="far fa-calendar-check"></i> Réserver
-    </a>
-</div>
+    <div class="floating-buttons">
+        <button class="btn-float btn-devis" id="btn-open-devis-float" title="Demander un Devis">
+            <i class="fas fa-file-invoice-dollar"></i> Demander devis
+        </button>
+        <a href="login/login.php" class="btn-float btn-reserver" title="Réserver">
+            <i class="far fa-calendar-check"></i> Réserver
+        </a>
+    </div>
+
     <!-- Footer page -->
+
     <?php include "composante/footer.php" ?>
     <?php include "composante/devis_visiteur.php"?> 
 </body>
