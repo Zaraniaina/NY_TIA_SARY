@@ -94,6 +94,15 @@ if ($totalPaye >= $montantTotal && $montantTotal > 0) {
 $pct = $montantTotal > 0 ? min(100, round($totalPaye / $montantTotal * 100)) : 0;
 $pctFill = $pct . '%';
 
+$contact_info = null;
+try {
+    $contact_info = $pdo->query("SELECT * FROM contact LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+} catch (Exception $e) {}
+
+$adresse = $contact_info['ADRESSE_CONTACT'] ?? 'Toamasina, Madagascar';
+$telephone = $contact_info['TEL_CONTACT'] ?? '+261 34 xx xxx xx';
+$email = $contact_info['EMAIL_CONTACT'] ?? 'contact@nytiasary.mg';
+
 // ── Génération du HTML pour le PDF ────────────────────────────
 $html = '
 <!DOCTYPE html>
@@ -217,10 +226,9 @@ $html = '
             <td>
                 <div class="company-block">
                     <strong>NY TIA SARY Production</strong>
-                    Mangarano, Toamasina<br>
-                    Madagascar<br>
-                    Tél : +261 34 12 345 67<br>
-                    Email : contact@nytiasary.mg
+                     ' . htmlspecialchars($contact_info['ADRESSE_CONTACT'] ?? 'Mangarano, Toamasina, Madagascar') . '<br>
+                     Tél : ' . htmlspecialchars($contact_info['TEL_CONTACT'] ?? '+261 34 12 345 67') . '<br>
+                     Email : ' . htmlspecialchars($contact_info['EMAIL_CONTACT'] ?? 'contact@nytiasary.mg') . '
                 </div>
             </td>
             <td>
