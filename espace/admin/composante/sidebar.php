@@ -13,65 +13,65 @@ $root    = '../../';
     <nav class="sidebar-nav">
         <div class="sidebar-section-label">Tableau de bord</div>
         <a href="<?= $root ?>espace/admin/home.php"
-           class="<?= $current === 'home.php' ? 'active' : '' ?>">
+            class="<?= $current === 'home.php' ? 'active' : '' ?>">
             <i class="fas fa-th-large"></i> Dashboard
         </a>
 
         <div class="sidebar-section-label">Gestion</div>
         <a href="<?= $root ?>espace/admin/reservations.php"
-           class="<?= $current === 'reservations.php' ? 'active' : '' ?>">
+            class="<?= $current === 'reservations.php' ? 'active' : '' ?>">
             <i class="fas fa-calendar-check"></i> Réservations
         </a>
         <a href="<?= $root ?>espace/admin/contrats.php"
-           class="<?= $current === 'contrats.php' ? 'active' : '' ?>" style="padding-left:2.2rem;font-size:0.88rem;">
+            class="<?= $current === 'contrats.php' ? 'active' : '' ?>" style="padding-left:2.2rem;font-size:0.88rem;">
             <i class="fas fa-file-signature"></i> Contrats
         </a>
         <a href="<?= $root ?>espace/admin/factures.php"
-           class="<?= $current === 'factures.php' ? 'active' : '' ?>" style="padding-left:2.2rem;font-size:0.88rem;">
+            class="<?= $current === 'factures.php' ? 'active' : '' ?>" style="padding-left:2.2rem;font-size:0.88rem;">
             <i class="fas fa-file-invoice"></i> Factures
         </a>
         <a href="<?= $root ?>espace/admin/paiements.php"
-           class="<?= $current === 'paiements.php' ? 'active' : '' ?>" style="padding-left:2.2rem;font-size:0.88rem;">
+            class="<?= $current === 'paiements.php' ? 'active' : '' ?>" style="padding-left:2.2rem;font-size:0.88rem;">
             <i class="fas fa-coins"></i> Paiements
         </a>
         <a href="<?= $root ?>espace/admin/clients.php"
-           class="<?= $current === 'clients.php' ? 'active' : '' ?>">
+            class="<?= $current === 'clients.php' ? 'active' : '' ?>">
             <i class="fas fa-users"></i> Clients
         </a>
         <a href="<?= $root ?>espace/admin/devis.php"
-           class="<?= $current === 'devis.php' ? 'active' : '' ?>">
+            class="<?= $current === 'devis.php' ? 'active' : '' ?>">
             <i class="fas fa-file-alt"></i> Devis
         </a>
         <a href="<?= $root ?>espace/admin/calendrier.php"
-           class="<?= $current === 'calendrier.php' ? 'active' : '' ?>">
+            class="<?= $current === 'calendrier.php' ? 'active' : '' ?>">
             <i class="fas fa-calendar"></i> Calendrier
         </a>
 
         <div class="sidebar-section-label">Contenu</div>
         <a href="<?= $root ?>espace/admin/blog.php"
-           class="<?= $current === 'blog.php' ? 'active' : '' ?>">
+            class="<?= $current === 'blog.php' ? 'active' : '' ?>">
             <i class="fas fa-newspaper"></i> Blog
         </a>
         <a href="<?= $root ?>espace/admin/temoignages.php"
-           class="<?= $current === 'temoignages.php' ? 'active' : '' ?>">
+            class="<?= $current === 'temoignages.php' ? 'active' : '' ?>">
             <i class="fas fa-star"></i> Témoignages
         </a>
         <a href="<?= $root ?>espace/admin/medias.php"
-           class="<?= $current === 'medias.php' ? 'active' : '' ?>">
+            class="<?= $current === 'medias.php' ? 'active' : '' ?>">
             <i class="fas fa-photo-video"></i> Médias livrés
         </a>
         <a href="<?= $root ?>espace/admin/prestations.php"
-           class="<?= $current === 'prestations.php' ? 'active' : '' ?>">
+            class="<?= $current === 'prestations.php' ? 'active' : '' ?>">
             <i class="fas fa-concierge-bell"></i> Prestations
         </a>
         <a href="<?= $root ?>espace/admin/categories.php"
-           class="<?= $current === 'categories.php' ? 'active' : '' ?>" style="padding-left:2.2rem;font-size:0.88rem;">
+            class="<?= $current === 'categories.php' ? 'active' : '' ?>" style="padding-left:2.2rem;font-size:0.88rem;">
             <i class="fas fa-tags"></i> Catégories &amp; tarifs
         </a>
 
         <div class="sidebar-divider"></div>
         <a href="<?= $root ?>espace/admin/parametres.php"
-           class="<?= $current === 'parametres.php' ? 'active' : '' ?>">
+            class="<?= $current === 'parametres.php' ? 'active' : '' ?>">
             <i class="fas fa-cogs"></i> Paramètres
         </a>
         <!-- Déconnexion avec confirmation modal -->
@@ -84,3 +84,31 @@ $root    = '../../';
 // le modal de déconnexion est inclus ici
 include __DIR__ . '/../../composante/modalDeconexionAdmin.php';
 ?>
+<script>
+    (function() {
+        const sidebar = document.getElementById('sidebar');
+        if (!sidebar) return;
+
+        const STORAGE_KEY = 'sidebarScrollPos';
+
+        // Restaurer la position de scroll au chargement de la page
+        const savedPos = sessionStorage.getItem(STORAGE_KEY);
+        if (savedPos !== null) {
+            sidebar.scrollTop = parseInt(savedPos, 10);
+        }
+
+        // Sauvegarder la position de scroll avant de quitter la page
+        // (à chaque clic sur un lien de navigation du sidebar)
+        sidebar.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                sessionStorage.setItem(STORAGE_KEY, sidebar.scrollTop);
+            });
+        });
+
+        // Filet de sécurité : sauvegarder aussi en continu pendant le scroll
+        // (utile si l'utilisateur ferme l'onglet ou navigue autrement)
+        sidebar.addEventListener('scroll', () => {
+            sessionStorage.setItem(STORAGE_KEY, sidebar.scrollTop);
+        });
+    })();
+</script>
