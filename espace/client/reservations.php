@@ -12,7 +12,7 @@ $titre = "Mes Réservations";
 // ── TRAITEMENT POST (PRG Pattern) ─────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
-    
+
     // ── Nouvelle réservation ──────────────────────────────────
     if ($action === 'new_resa') {
         $idPrestation    = (int) ($_POST['id_prestation'] ?? 0);
@@ -38,83 +38,83 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 try {
                     $pdo->beginTransaction();
 
-                $stmt = $pdo->prepare(
-                    'INSERT INTO RESERVATION (ID_PRESTATION, ID_CLIENT, DATE_RESERVATION, HEURE_RESERVATION, LIEU_RESERVATION, COMME_RESERVATION, STATUS_RESERVATION)
+                    $stmt = $pdo->prepare(
+                        'INSERT INTO RESERVATION (ID_PRESTATION, ID_CLIENT, DATE_RESERVATION, HEURE_RESERVATION, LIEU_RESERVATION, COMME_RESERVATION, STATUS_RESERVATION)
                      VALUES (?, ?, ?, ?, ?, ?, ?)'
-                );
-                $stmt->execute([$idPrestation, $clientId, $dateResa, $heureResa, $lieuResa, $commentaire, 'EN ATTENTE']);
+                    );
+                    $stmt->execute([$idPrestation, $clientId, $dateResa, $heureResa, $lieuResa, $commentaire, 'EN ATTENTE']);
 
-                $idResa = $pdo->lastInsertId();
+                    $idResa = $pdo->lastInsertId();
 
-                $stmtCat = $pdo->prepare('SELECT TARIF_CATEGORIE FROM CATEGORIE WHERE ID_CATEGORIE = ?');
-                $stmtRc  = $pdo->prepare('INSERT INTO RESERVATION_CATEGORIE (ID_RESERVATION, ID_CATEGORIE, PRIX) VALUES (?, ?, ?)');
+                    $stmtCat = $pdo->prepare('SELECT TARIF_CATEGORIE FROM CATEGORIE WHERE ID_CATEGORIE = ?');
+                    $stmtRc  = $pdo->prepare('INSERT INTO RESERVATION_CATEGORIE (ID_RESERVATION, ID_CATEGORIE, PRIX) VALUES (?, ?, ?)');
 
-                $categoriesLib = [];
-                $totalPrix = 0;
-                foreach ($idCategories as $idCat) {
-                    $idCat = (int) $idCat;
-                    if ($idCat > 0) {
-                        $stmtCat->execute([$idCat]);
-                        $prix = (int) $stmtCat->fetchColumn();
-                        $stmtRc->execute([$idResa, $idCat, $prix]);
-                        $totalPrix += $prix;
-                        $stmtCatLib = $pdo->prepare('SELECT LIB_CATEGORIE FROM CATEGORIE WHERE ID_CATEGORIE = ?');
-                        $stmtCatLib->execute([$idCat]);
-                        $libCat = $stmtCatLib->fetchColumn();
-                        if ($libCat) {
-                            $categoriesLib[] = $libCat;
+                    $categoriesLib = [];
+                    $totalPrix = 0;
+                    foreach ($idCategories as $idCat) {
+                        $idCat = (int) $idCat;
+                        if ($idCat > 0) {
+                            $stmtCat->execute([$idCat]);
+                            $prix = (int) $stmtCat->fetchColumn();
+                            $stmtRc->execute([$idResa, $idCat, $prix]);
+                            $totalPrix += $prix;
+                            $stmtCatLib = $pdo->prepare('SELECT LIB_CATEGORIE FROM CATEGORIE WHERE ID_CATEGORIE = ?');
+                            $stmtCatLib->execute([$idCat]);
+                            $libCat = $stmtCatLib->fetchColumn();
+                            if ($libCat) {
+                                $categoriesLib[] = $libCat;
+                            }
                         }
                     }
-                }
 
-                // ── Notification pour l'admin ────────────────────────
-                $nomComplet = trim(($clientNom ?? 'Client') . ' ' . ($clientPrenom ?? ''));
+                    // ── Notification pour l'admin ────────────────────────
+                    $nomComplet = trim(($clientNom ?? 'Client') . ' ' . ($clientPrenom ?? ''));
 
-                $stmtNotif = $pdo->prepare(
-                    'INSERT INTO notification (TYPE_NOTIF, ID_REF_NOTIF, TITRE_NOTIF, MESS_NOTIF, LU_NOTIF, SUP_NOTIF)
+                    $stmtNotif = $pdo->prepare(
+                        'INSERT INTO notification (TYPE_NOTIF, ID_REF_NOTIF, TITRE_NOTIF, MESS_NOTIF, LU_NOTIF, SUP_NOTIF)
                      VALUES (:type_notif, :id_ref_notif, :titre_notif, :mess_notif, :lu_notif, :sup_notif)'
-                );
-                $stmtNotif->execute([
-                    ':type_notif'   => 'Reservation',
-                    ':id_ref_notif' => $idResa,
-                    ':titre_notif'  => 'Demande de reservation',
-                    ':mess_notif'   => "Reservation de {$nomComplet}",
-                    ':lu_notif'     => 0,
-                    ':sup_notif'    => 0,
-                ]);
+                    );
+                    $stmtNotif->execute([
+                        ':type_notif'   => 'Reservation',
+                        ':id_ref_notif' => $idResa,
+                        ':titre_notif'  => 'Demande de reservation',
+                        ':mess_notif'   => "Reservation de {$nomComplet}",
+                        ':lu_notif'     => 0,
+                        ':sup_notif'    => 0,
+                    ]);
 
-                $pdo->commit();
+                    $pdo->commit();
 
-                // ── Envoi email de notification à l'admin ──────────────
-                $stmtPrestation = $pdo->prepare('SELECT LIB_PRESTATION FROM PRESTATIONS WHERE ID_PRESTATION = ?');
-                $stmtPrestation->execute([$idPrestation]);
-                $prestationLib = $stmtPrestation->fetchColumn() ?: 'Non spécifiée';
+                    // ── Envoi email de notification à l'admin ──────────────
+                    $stmtPrestation = $pdo->prepare('SELECT LIB_PRESTATION FROM PRESTATIONS WHERE ID_PRESTATION = ?');
+                    $stmtPrestation->execute([$idPrestation]);
+                    $prestationLib = $stmtPrestation->fetchColumn() ?: 'Non spécifiée';
 
-                $mailService = new MailService();
-                $reservationData = [
-                    'client_nom' => $clientNom ?? 'Inconnu',
-                    'client_prenom' => $clientPrenom ?? '',
-                    'prestation' => $prestationLib,
-                    'date_reservation' => $dateResa,
-                    'heure_reservation' => $heureResa,
-                    'lieu_reservation' => $lieuResa,
-                    'categories' => $categoriesLib,
-                    'total_prix' => $totalPrix,
-                    'id_reservation' => $idResa
-                ];
-                $mailService->sendReservationNew('admin@gmail.com', $reservationData);
+                    $mailService = new MailService();
+                    $reservationData = [
+                        'client_nom' => $clientNom ?? 'Inconnu',
+                        'client_prenom' => $clientPrenom ?? '',
+                        'prestation' => $prestationLib,
+                        'date_reservation' => $dateResa,
+                        'heure_reservation' => $heureResa,
+                        'lieu_reservation' => $lieuResa,
+                        'categories' => $categoriesLib,
+                        'total_prix' => $totalPrix,
+                        'id_reservation' => $idResa
+                    ];
+                    $mailService->sendReservationNew('admin@gmail.com', $reservationData);
 
-                prg_set_message('success', 'Votre réservation a été soumise avec succès ! Nous vous contacterons bientôt.');
-            } catch (Throwable $e) {
-                $pdo->rollBack();
-                error_log('[reservation.php] ' . $e->getMessage());
-                prg_set_message('error', 'Une erreur est survenue lors de la création de votre réservation.');
+                    prg_set_message('success', 'Votre réservation a été soumise avec succès ! Nous vous contacterons bientôt.');
+                } catch (Throwable $e) {
+                    $pdo->rollBack();
+                    error_log('[reservation.php] ' . $e->getMessage());
+                    prg_set_message('error', 'Une erreur est survenue lors de la création de votre réservation.');
+                }
             }
         }
-    }
         prg_redirect();
     }
-    
+
     // ── Annulation d'une réservation ─────────────────────────────
     if ($action === 'cancel') {
         $idResa = (int) ($_POST['id_reservation'] ?? 0);
@@ -129,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         prg_redirect();
     }
-    
+
     // ── Soumission d'un témoignage ────────────────────────────────
     if ($action === 'temoignage') {
         $idResa = (int) ($_POST['id_reservation'] ?? 0);
@@ -340,10 +340,14 @@ $reservations = $stmtResas->fetchAll();
                                                 <td><span class="badge <?= $badgeClass ?>"><?= htmlspecialchars($r['STATUS_RESERVATION']) ?></span></td>
                                                 <td style="white-space:nowrap;">
                                                     <?php if ($r['STATUS_RESERVATION'] === 'EN ATTENTE'): ?>
-                                                        <form method="POST" style="display:inline;" onsubmit="return confirm('Annuler cette réservation ?');">
+                                                        <form method="POST" style="display:inline;" id="cancelResaForm-<?= (int)$r['ID_RESERVATION'] ?>">
                                                             <input type="hidden" name="action" value="cancel">
                                                             <input type="hidden" name="id_reservation" value="<?= (int)$r['ID_RESERVATION'] ?>">
-                                                            <button class="btn-dash btn-dash-danger btn-dash-sm"><i class="fas fa-times"></i> Annuler</button>
+                                                            <button type="button" class="btn-dash btn-dash-danger btn-dash-sm confirm-delete-btn"
+                                                                data-form-id="cancelResaForm-<?= (int)$r['ID_RESERVATION'] ?>"
+                                                                data-message="Annuler cette réservation ?">
+                                                                <i class="fas fa-times"></i> Annuler
+                                                            </button>
                                                         </form>
                                                     <?php elseif ($r['STATUS_RESERVATION'] === 'TERMINEE' && !(int)$r['a_temoigne']): ?>
                                                         <button class="btn-dash btn-dash-outline btn-dash-sm" onclick="openTemoModal(<?= (int)$r['ID_RESERVATION'] ?>)">
@@ -397,7 +401,18 @@ $reservations = $stmtResas->fetchAll();
             </form>
         </div>
     </div>
-
+    <!-- ── MODAL CONFIRMATION ─────────────────────────────────────────── -->
+    <div class="dash-modal" id="confirmDeleteModal">
+        <div class="dash-modal-content">
+            <button class="dash-modal-close" id="confirmDeleteModalClose">&times;</button>
+            <h3>Confirmation</h3>
+            <p id="confirmDeleteMessage">Êtes-vous sûr ?</p>
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+                <button type="button" class="btn-dash btn-dash-danger" id="confirmDeleteYes">Oui, confirmer</button>
+                <button type="button" class="btn-dash btn-dash-outline" id="confirmDeleteCancel">Annuler</button>
+            </div>
+        </div>
+    </div>
     <script>
         // Sidebar toggle
         const toggle = document.getElementById('sidebarToggle');
@@ -410,6 +425,37 @@ $reservations = $stmtResas->fetchAll();
         overlay?.addEventListener('click', () => {
             sidebar.classList.remove('open');
             overlay.classList.remove('open');
+        });
+
+        // ── Modal générique de confirmation ──
+        let formToConfirmDelete = null;
+        const confirmDeleteModal = document.getElementById('confirmDeleteModal');
+        const confirmDeleteMessage = document.getElementById('confirmDeleteMessage');
+        const confirmDeleteClose = document.getElementById('confirmDeleteModalClose');
+        const confirmDeleteCancel = document.getElementById('confirmDeleteCancel');
+        const confirmDeleteYes = document.getElementById('confirmDeleteYes');
+
+        document.querySelectorAll('.confirm-delete-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                formToConfirmDelete = document.getElementById(btn.dataset.formId);
+                confirmDeleteMessage.textContent = btn.dataset.message || 'Êtes-vous sûr ?';
+                confirmDeleteModal.classList.add('open');
+            });
+        });
+
+        function closeConfirmDeleteModal() {
+            confirmDeleteModal.classList.remove('open');
+            formToConfirmDelete = null;
+        }
+
+        confirmDeleteClose.addEventListener('click', closeConfirmDeleteModal);
+        confirmDeleteCancel.addEventListener('click', closeConfirmDeleteModal);
+        confirmDeleteModal.addEventListener('click', (e) => {
+            if (e.target === confirmDeleteModal) closeConfirmDeleteModal();
+        });
+
+        confirmDeleteYes.addEventListener('click', () => {
+            if (formToConfirmDelete) formToConfirmDelete.submit();
         });
 
         // Toggle formulaire
@@ -522,15 +568,15 @@ $reservations = $stmtResas->fetchAll();
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <?php if (!empty($prgMessages)): ?>
-    <script>
-    window.addEventListener('DOMContentLoaded', () => {
-        <?= prg_render_toasts($prgMessages) ?>
-        // Nettoyer l'URL
-        const url = new URL(window.location);
-        url.searchParams.delete('action');
-        window.history.replaceState({}, '', url);
-    });
-    </script>
+        <script>
+            window.addEventListener('DOMContentLoaded', () => {
+                <?= prg_render_toasts($prgMessages) ?>
+                // Nettoyer l'URL
+                const url = new URL(window.location);
+                url.searchParams.delete('action');
+                window.history.replaceState({}, '', url);
+            });
+        </script>
     <?php endif; ?>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>

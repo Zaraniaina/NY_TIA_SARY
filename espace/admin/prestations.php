@@ -1,12 +1,13 @@
 <?php
+
 declare(strict_types=1);
 require_once __DIR__ . '/../../util/auth_guard.php';
 require_once __DIR__ . '/../../util/prg_helper.php';
 requireAdmin();
 
-require_once __DIR__.'/composante/tolbarDto.php';
+require_once __DIR__ . '/composante/tolbarDto.php';
 //on changer le titre
-$titre="Gestion des prestations";
+$titre = "Gestion des prestations";
 
 // ── TRAITEMENT POST (PRG Pattern) ──────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -15,15 +16,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $libPrest    = trim($_POST['lib_prestation'] ?? '');
 
     if ($action === 'create') {
-        if (!$libPrest) { prg_set_message('error', 'Le nom de la prestation est requis.'); }
-        else {
+        if (!$libPrest) {
+            prg_set_message('error', 'Le nom de la prestation est requis.');
+        } else {
             $pdo->prepare('INSERT INTO PRESTATIONS (LIB_PRESTATION) VALUES (?)')->execute([$libPrest]);
             prg_set_message('success', "Prestation « $libPrest » ajoutée.");
         }
         prg_redirect();
     } elseif ($action === 'edit' && $idPrest) {
-        if (!$libPrest) { prg_set_message('error', 'Le nom de la prestation est requis.'); }
-        else {
+        if (!$libPrest) {
+            prg_set_message('error', 'Le nom de la prestation est requis.');
+        } else {
             $pdo->prepare('UPDATE PRESTATIONS SET LIB_PRESTATION = ? WHERE ID_PRESTATION = ?')->execute([$libPrest, $idPrest]);
             prg_set_message('success', "Prestation mise à jour.");
         }
@@ -63,6 +66,7 @@ if (isset($_GET['edit'])) {
 ?>
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -76,132 +80,192 @@ if (isset($_GET['edit'])) {
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 
 </head>
+
 <body>
-<div class="dashboard-wrapper">
-    <?php include __DIR__ . '/composante/sidebar.php'; ?>
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="dashboard-wrapper">
+        <?php include __DIR__ . '/composante/sidebar.php'; ?>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <div class="dashboard-main">
-         <?php include __DIR__ . '/composante/tolbar.php'; ?>
+        <div class="dashboard-main">
+            <?php include __DIR__ . '/composante/tolbar.php'; ?>
 
-        <div class="dashboard-content">
-            <nav class="dash-breadcrumb">
-                <a href="home.php">Dashboard</a>
-                <i class="fas fa-chevron-right" style="font-size:.65rem;"></i>
-                <span>Prestations</span>
-            </nav>
+            <div class="dashboard-content">
+                <nav class="dash-breadcrumb">
+                    <a href="home.php">Dashboard</a>
+                    <i class="fas fa-chevron-right" style="font-size:.65rem;"></i>
+                    <span>Prestations</span>
+                </nav>
 
-            
-            
 
-            <div style="display:grid;grid-template-columns:1fr 2fr;gap:28px;align-items:start;">
 
-                <!-- FORMULAIRE -->
-                <div class="dash-card">
-                    <div class="dash-card-header">
-                        <h3><i class="fas fa-<?= $editPrest ? 'edit' : 'plus' ?>" style="color:var(--primary-green);margin-right:8px;"></i>
-                            <?= $editPrest ? 'Modifier' : 'Ajouter' ?>
-                        </h3>
-                        <?php if ($editPrest): ?>
-                            <a href="prestations.php" class="btn-dash btn-dash-outline btn-dash-sm"><i class="fas fa-times"></i></a>
-                        <?php endif; ?>
-                    </div>
-                    <div class="dash-card-body padded">
-                        <form method="POST" action="">
-                            <input type="hidden" name="action" value="<?= $editPrest ? 'edit' : 'create' ?>">
+
+                <div style="display:grid;grid-template-columns:1fr 2fr;gap:28px;align-items:start;">
+
+                    <!-- FORMULAIRE -->
+                    <div class="dash-card">
+                        <div class="dash-card-header">
+                            <h3><i class="fas fa-<?= $editPrest ? 'edit' : 'plus' ?>" style="color:var(--primary-green);margin-right:8px;"></i>
+                                <?= $editPrest ? 'Modifier' : 'Ajouter' ?>
+                            </h3>
                             <?php if ($editPrest): ?>
-                                <input type="hidden" name="id_prestation" value="<?= (int)$editPrest['ID_PRESTATION'] ?>">
+                                <a href="prestations.php" class="btn-dash btn-dash-outline btn-dash-sm"><i class="fas fa-times"></i></a>
                             <?php endif; ?>
-                            <div class="dash-form-group">
-                                <label for="lib_prestation">Nom de la prestation <span class="required">*</span></label>
-                                <input type="text" name="lib_prestation" id="lib_prestation" class="dash-input"
-                                       placeholder="Ex: Mariage, Corporate, Mode..."
-                                       value="<?= htmlspecialchars($editPrest['LIB_PRESTATION'] ?? '') ?>" required>
-                            </div>
-                            <button type="submit" class="btn-dash btn-dash-primary" style="width:100%;justify-content:center;">
-                                <i class="fas fa-save"></i> <?= $editPrest ? 'Mettre à jour' : 'Ajouter la prestation' ?>
-                            </button>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- LISTE -->
-                <div class="dash-card">
-                    <div class="dash-card-header">
-                        <h3><i class="fas fa-concierge-bell" style="color:var(--primary-green);margin-right:8px;"></i> Liste des prestations</h3>
-                        <span class="badge badge-confirm"><?= count($prestations) ?></span>
-                    </div>
-                    <div class="dash-card-body">
-                        <?php if (empty($prestations)): ?>
-                            <div class="empty-state"><i class="fas fa-concierge-bell"></i><p>Aucune prestation.</p></div>
-                        <?php else: ?>
-                        <div class="table-responsive">
-                            <table class="dash-table">
-                                <thead><tr><th>#</th><th>Prestation</th><th>Réservations</th><th>Actions</th></tr></thead>
-                                <tbody>
-                                <?php foreach ($prestations as $p): ?>
-                                    <tr>
-                                        <td>#<?= (int)$p['ID_PRESTATION'] ?></td>
-                                        <td>
-                                            <div style="display:flex;align-items:center;gap:10px;">
-                                                <div class="stat-icon green" style="width:36px;height:36px;border-radius:8px;font-size:0.9rem;flex-shrink:0;">
-                                                    <i class="fas fa-camera"></i>
-                                                </div>
-                                                <strong><?= htmlspecialchars($p['LIB_PRESTATION']) ?></strong>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="badge <?= (int)$p['nb_resas'] > 0 ? 'badge-confirm' : 'badge-waiting' ?>">
-                                                <?= (int)$p['nb_resas'] ?> résa
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <a href="?edit=<?= (int)$p['ID_PRESTATION'] ?>" class="btn-dash btn-dash-outline btn-dash-sm"><i class="fas fa-edit"></i></a>
-                                            <?php if ((int)$p['nb_resas'] === 0): ?>
-                                            <form method="POST" style="display:inline;" onsubmit="return confirm('Supprimer cette prestation ?');">
-                                                <input type="hidden" name="action" value="delete">
-                                                <input type="hidden" name="id_prestation" value="<?= (int)$p['ID_PRESTATION'] ?>">
-                                                <button class="btn-dash btn-dash-danger btn-dash-sm"><i class="fas fa-trash"></i></button>
-                                            </form>
-                                            <?php else: ?>
-                                                <span title="Utilisée par des réservations" style="color:#ccc;font-size:1rem;margin-left:6px;"><i class="fas fa-lock"></i></span>
-                                            <?php endif; ?>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                                </tbody>
-                            </table>
                         </div>
-                        <?php endif; ?>
+                        <div class="dash-card-body padded">
+                            <form method="POST" action="">
+                                <input type="hidden" name="action" value="<?= $editPrest ? 'edit' : 'create' ?>">
+                                <?php if ($editPrest): ?>
+                                    <input type="hidden" name="id_prestation" value="<?= (int)$editPrest['ID_PRESTATION'] ?>">
+                                <?php endif; ?>
+                                <div class="dash-form-group">
+                                    <label for="lib_prestation">Nom de la prestation <span class="required">*</span></label>
+                                    <input type="text" name="lib_prestation" id="lib_prestation" class="dash-input"
+                                        placeholder="Ex: Mariage, Corporate, Mode..."
+                                        value="<?= htmlspecialchars($editPrest['LIB_PRESTATION'] ?? '') ?>" required>
+                                </div>
+                                <button type="submit" class="btn-dash btn-dash-primary" style="width:100%;justify-content:center;">
+                                    <i class="fas fa-save"></i> <?= $editPrest ? 'Mettre à jour' : 'Ajouter la prestation' ?>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- LISTE -->
+                    <div class="dash-card">
+                        <div class="dash-card-header">
+                            <h3><i class="fas fa-concierge-bell" style="color:var(--primary-green);margin-right:8px;"></i> Liste des prestations</h3>
+                            <span class="badge badge-confirm"><?= count($prestations) ?></span>
+                        </div>
+                        <div class="dash-card-body">
+                            <?php if (empty($prestations)): ?>
+                                <div class="empty-state"><i class="fas fa-concierge-bell"></i>
+                                    <p>Aucune prestation.</p>
+                                </div>
+                            <?php else: ?>
+                                <div class="table-responsive">
+                                    <table class="dash-table">
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Prestation</th>
+                                                <th>Réservations</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($prestations as $p): ?>
+                                                <tr>
+                                                    <td>#<?= (int)$p['ID_PRESTATION'] ?></td>
+                                                    <td>
+                                                        <div style="display:flex;align-items:center;gap:10px;">
+                                                            <div class="stat-icon green" style="width:36px;height:36px;border-radius:8px;font-size:0.9rem;flex-shrink:0;">
+                                                                <i class="fas fa-camera"></i>
+                                                            </div>
+                                                            <strong><?= htmlspecialchars($p['LIB_PRESTATION']) ?></strong>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge <?= (int)$p['nb_resas'] > 0 ? 'badge-confirm' : 'badge-waiting' ?>">
+                                                            <?= (int)$p['nb_resas'] ?> résa
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <a href="?edit=<?= (int)$p['ID_PRESTATION'] ?>" class="btn-dash btn-dash-outline btn-dash-sm"><i class="fas fa-edit"></i></a>
+                                                        <?php if ((int)$p['nb_resas'] === 0): ?>
+                                                            <form method="POST" style="display:inline;" id="deletePrestForm-<?= (int)$p['ID_PRESTATION'] ?>">
+                                                                <input type="hidden" name="action" value="delete">
+                                                                <input type="hidden" name="id_prestation" value="<?= (int)$p['ID_PRESTATION'] ?>">
+                                                                <button type="button" class="btn-dash btn-dash-danger btn-dash-sm confirm-delete-btn"
+                                                                    data-form-id="deletePrestForm-<?= (int)$p['ID_PRESTATION'] ?>"
+                                                                    data-message="Supprimer cette prestation ?">
+                                                                    <i class="fas fa-trash"></i>
+                                                                </button>
+                                                            </form>
+                                                        <?php else: ?>
+                                                            <span title="Utilisée par des réservations" style="color:#ccc;font-size:1rem;margin-left:6px;"><i class="fas fa-lock"></i></span>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+    <!-- ── MODAL CONFIRMATION ─────────────────────────────────────────── -->
+    <div class="dash-modal" id="confirmDeleteModal">
+        <div class="dash-modal-content">
+            <button class="dash-modal-close" id="confirmDeleteModalClose">&times;</button>
+            <h3>Confirmation</h3>
+            <p id="confirmDeleteMessage">Êtes-vous sûr ?</p>
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+                <button type="button" class="btn-dash btn-dash-danger" id="confirmDeleteYes">Oui, supprimer</button>
+                <button type="button" class="btn-dash btn-dash-outline" id="confirmDeleteCancel">Annuler</button>
+            </div>
+        </div>
+    </div>
 
-<script>
-const toggle  = document.getElementById('sidebarToggle');
-const sidebar = document.getElementById('sidebar');
-const overlay = document.getElementById('sidebarOverlay');
-toggle?.addEventListener('click', () => { sidebar.classList.toggle('open'); overlay.classList.toggle('open'); });
-overlay?.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('open'); });
-</script>
+    <script>
+        const toggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        toggle?.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        });
+        overlay?.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+        });
 
-<!-- Toastify pour messages PRG -->
-<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-<?php if (!empty($prgMessages)): ?>
-<script>
-window.addEventListener('DOMContentLoaded', () => {
-    <?= prg_render_toasts($prgMessages) ?>
-    // Nettoyer l'URL
-    const url = new URL(window.location);
-    url.searchParams.delete('edit');
-    window.history.replaceState({}, '', url);
-});
-</script>
-<?php endif; ?>
+        // ── Modal générique de confirmation ──
+        let formToConfirmDelete = null;
+        const confirmDeleteModal = document.getElementById('confirmDeleteModal');
+        const confirmDeleteMessage = document.getElementById('confirmDeleteMessage');
+        const confirmDeleteClose = document.getElementById('confirmDeleteModalClose');
+        const confirmDeleteCancel = document.getElementById('confirmDeleteCancel');
+        const confirmDeleteYes = document.getElementById('confirmDeleteYes');
+
+        document.querySelectorAll('.confirm-delete-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                formToConfirmDelete = document.getElementById(btn.dataset.formId);
+                confirmDeleteMessage.textContent = btn.dataset.message || 'Êtes-vous sûr ?';
+                confirmDeleteModal.classList.add('open');
+            });
+        });
+
+        function closeConfirmDeleteModal() {
+            confirmDeleteModal.classList.remove('open');
+            formToConfirmDelete = null;
+        }
+
+        confirmDeleteClose.addEventListener('click', closeConfirmDeleteModal);
+        confirmDeleteCancel.addEventListener('click', closeConfirmDeleteModal);
+        confirmDeleteModal.addEventListener('click', (e) => {
+            if (e.target === confirmDeleteModal) closeConfirmDeleteModal();
+        });
+
+        confirmDeleteYes.addEventListener('click', () => {
+            if (formToConfirmDelete) formToConfirmDelete.submit();
+        });
+    </script>
+    <?php if (!empty($prgMessages)): ?>
+        <script>
+            window.addEventListener('DOMContentLoaded', () => {
+                <?= prg_render_toasts($prgMessages) ?>
+                // Nettoyer l'URL
+                const url = new URL(window.location);
+                url.searchParams.delete('edit');
+                window.history.replaceState({}, '', url);
+            });
+        </script>
+    <?php endif; ?>
 
 </body>
+
 </html>

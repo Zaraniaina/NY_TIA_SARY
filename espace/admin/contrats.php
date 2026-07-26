@@ -1,16 +1,17 @@
 <?php
+
 declare(strict_types=1);
 require_once __DIR__ . '/../../util/auth_guard.php';
 require_once __DIR__ . '/../../util/prg_helper.php';
 requireAdmin();
 
-require_once __DIR__.'/composante/tolbarDto.php';
+require_once __DIR__ . '/composante/tolbarDto.php';
 $titre = "Gestion des contrats";
 
 // ── TRAITEMENT POST (PRG Pattern) ──────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
-    
+
     // ── Création d'un contrat ─────────────────────────────────────
     if ($action === 'create') {
         $idResa      = (int) ($_POST['id_reservation'] ?? 0);
@@ -30,20 +31,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Mettre la réservation en CONFIRMEE si pas déjà
                 $pdo->prepare("UPDATE RESERVATION SET STATUS_RESERVATION='CONFIRMEE' WHERE ID_RESERVATION=? AND STATUS_RESERVATION='EN ATTENTE'")
                     ->execute([$idResa]);
-                
+
                 // --- Notification Client ---
                 // Récupérer l'ID du client pour cette réservation
                 $stmtCli = $pdo->prepare('SELECT ID_CLIENT FROM RESERVATION WHERE ID_RESERVATION = ?');
                 $stmtCli->execute([$idResa]);
                 $idClient = $stmtCli->fetchColumn();
-                
+
                 if ($idClient) {
                     $pdo->prepare("
                         INSERT INTO notification (TYPE_NOTIF, ID_REF_NOTIF, TITRE_NOTIF, MESS_NOTIF, LU_NOTIF, SUP_NOTIF, ID_CLIENT) 
                         VALUES ('client_contrat', ?, 'Réservation Confirmée', 'Votre réservation a été confirmée et un contrat a été généré.', 0, 0, ?)
                     ")->execute([$idResa, $idClient]);
                 }
-                
+
                 prg_set_message('success', 'Contrat créé avec succès.');
             }
         }
@@ -99,6 +100,7 @@ $contrats = $pdo->query(
 ?>
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -112,112 +114,166 @@ $contrats = $pdo->query(
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 
 </head>
+
 <body>
-<div class="dashboard-wrapper">
-    <?php include __DIR__ . '/composante/sidebar.php'; ?>
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="dashboard-wrapper">
+        <?php include __DIR__ . '/composante/sidebar.php'; ?>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <div class="dashboard-main">
-        <?php include __DIR__ . '/composante/tolbar.php'; ?>
+        <div class="dashboard-main">
+            <?php include __DIR__ . '/composante/tolbar.php'; ?>
 
-        <div class="dashboard-content">
-            <nav class="dash-breadcrumb">
-                <a href="home.php">Dashboard</a>
-                <i class="fas fa-chevron-right" style="font-size:.65rem;"></i>
-                <span>Contrats</span>
-            </nav>
+            <div class="dashboard-content">
+                <nav class="dash-breadcrumb">
+                    <a href="home.php">Dashboard</a>
+                    <i class="fas fa-chevron-right" style="font-size:.65rem;"></i>
+                    <span>Contrats</span>
+                </nav>
 
-            
-            
 
-            <div style="width: 100%;">
 
-                <!-- LISTE DES CONTRATS -->
-                <div class="dash-card">
-                    <div class="dash-card-header">
-                        <h3><i class="fas fa-folder-open" style="color:var(--primary-green);margin-right:8px;"></i> Contrats signés</h3>
-                        <span class="badge badge-confirm"><?= count($contrats) ?></span>
-                    </div>
-                    <div class="dash-card-body">
-                        <?php if (empty($contrats)): ?>
-                            <div class="empty-state"><i class="fas fa-file-signature"></i><p>Aucun contrat enregistré.</p></div>
-                        <?php else: ?>
-                        <div class="table-responsive">
-                            <table class="dash-table">
-                                <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Client</th>
-                                        <th>Prestation</th>
-                                        <th>Date contrat</th>
-                                        <th>Facture</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                <?php foreach ($contrats as $ct): ?>
-                                    <tr>
-                                        <td>#<?= (int)$ct['ID_CONTRAT'] ?></td>
-                                        <td><strong><?= htmlspecialchars($ct['PRENOM_CLIENT'].' '.$ct['NOM_CLIENT']) ?></strong></td>
-                                        <td><?= htmlspecialchars($ct['LIB_PRESTATION']) ?></td>
-                                        <td><?= date('d/m/Y', strtotime($ct['DATE_CONTRAT'])) ?></td>
-                                        <td>
-                                            <?php if ($ct['ID_FACTURE']): ?>
-                                                <a href="factures.php" class="badge badge-confirm" style="text-decoration:none;">
-                                                    <i class="fas fa-file-invoice"></i> <?= htmlspecialchars($ct['NUM_FACTURE']) ?>
-                                                </a>
-                                            <?php else: ?>
-                                                
-                                                    <span class="badge badge-danger" style="color: red;">Aucune facture</span> 
-                                                
-                                            <?php endif; ?>
-                                        </td>
-                                        <td>
-                                            <span><?= htmlspecialchars($ct['STATUS_CONTRAT']) ?></span>
-                                        </td>
-                                        <td>
-                                            <?php if (!$ct['ID_FACTURE']): ?>
-                                            <form method="POST" style="display:inline;" onsubmit="return confirm('Supprimer ce contrat ?');">
-                                                <input type="hidden" name="action" value="delete">
-                                                <input type="hidden" name="id_contrat" value="<?= (int)$ct['ID_CONTRAT'] ?>">
-                                                <button class="btn-dash btn-dash-danger btn-dash-sm"><i class="fas fa-trash"></i></button>
-                                            </form>
-                                            <?php else: ?>
-                                                <span title="Contrat avec facture — non supprimable" style="color:#ccc;font-size:1rem;"><i class="fas fa-lock"></i></span>
-                                            <?php endif; ?>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                                </tbody>
-                            </table>
+
+                <div style="width: 100%;">
+
+                    <!-- LISTE DES CONTRATS -->
+                    <div class="dash-card">
+                        <div class="dash-card-header">
+                            <h3><i class="fas fa-folder-open" style="color:var(--primary-green);margin-right:8px;"></i> Contrats signés</h3>
+                            <span class="badge badge-confirm"><?= count($contrats) ?></span>
                         </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
+                        <div class="dash-card-body">
+                            <?php if (empty($contrats)): ?>
+                                <div class="empty-state"><i class="fas fa-file-signature"></i>
+                                    <p>Aucun contrat enregistré.</p>
+                                </div>
+                            <?php else: ?>
+                                <div class="table-responsive">
+                                    <table class="dash-table">
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Client</th>
+                                                <th>Prestation</th>
+                                                <th>Date contrat</th>
+                                                <th>Facture</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($contrats as $ct): ?>
+                                                <tr>
+                                                    <td>#<?= (int)$ct['ID_CONTRAT'] ?></td>
+                                                    <td><strong><?= htmlspecialchars($ct['PRENOM_CLIENT'] . ' ' . $ct['NOM_CLIENT']) ?></strong></td>
+                                                    <td><?= htmlspecialchars($ct['LIB_PRESTATION']) ?></td>
+                                                    <td><?= date('d/m/Y', strtotime($ct['DATE_CONTRAT'])) ?></td>
+                                                    <td>
+                                                        <?php if ($ct['ID_FACTURE']): ?>
+                                                            <a href="factures.php" class="badge badge-confirm" style="text-decoration:none;">
+                                                                <i class="fas fa-file-invoice"></i> <?= htmlspecialchars($ct['NUM_FACTURE']) ?>
+                                                            </a>
+                                                        <?php else: ?>
 
+                                                            <span class="badge badge-danger" style="color: red;">Aucune facture</span>
+
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <td>
+                                                        <span><?= htmlspecialchars($ct['STATUS_CONTRAT']) ?></span>
+                                                    </td>
+                                                    <td>
+                                                        <?php if (!$ct['ID_FACTURE']): ?>
+                                                            <form method="POST" style="display:inline;" id="deleteContratForm-<?= (int)$ct['ID_CONTRAT'] ?>">
+                                                                <input type="hidden" name="action" value="delete">
+                                                                <input type="hidden" name="id_contrat" value="<?= (int)$ct['ID_CONTRAT'] ?>">
+                                                                <button type="button" class="btn-dash btn-dash-danger btn-dash-sm delete-contrat-btn"
+                                                                    data-form-id="deleteContratForm-<?= (int)$ct['ID_CONTRAT'] ?>">
+                                                                    <i class="fas fa-trash"></i>
+                                                                </button>
+                                                            </form>
+                                                        <?php else: ?>
+                                                            <span title="Contrat avec facture — non supprimable" style="color:#ccc;font-size:1rem;"><i class="fas fa-lock"></i></span>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <!-- Modal de confirmation de suppression de contrat -->
+        <div class="dash-modal" id="deleteContratModal">
+            <div class="dash-modal-content">
+                <button class="dash-modal-close" id="deleteContratModalClose">&times;</button>
+                <h3>Confirmation</h3>
+                <p>Êtes-vous sûr de vouloir supprimer ce contrat ?</p>
+                <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+                    <button type="button" class="btn-dash btn-dash-danger" id="confirmDeleteContrat">Oui, supprimer</button>
+                    <button type="button" class="btn-dash btn-dash-outline" id="cancelDeleteContrat">Annuler</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-const toggle  = document.getElementById('sidebarToggle');
-const sidebar = document.getElementById('sidebar');
-const overlay = document.getElementById('sidebarOverlay');
-toggle?.addEventListener('click', () => { sidebar.classList.toggle('open'); overlay.classList.toggle('open'); });
-overlay?.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('open'); });
-</script>
+    <script>
+        const toggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        toggle?.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        });
+        overlay?.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+        });
 
-<!-- Toastify pour messages PRG -->
-<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-<?php if (!empty($prgMessages)): ?>
-<script>
-window.addEventListener('DOMContentLoaded', () => {
-    <?= prg_render_toasts($prgMessages) ?>
-});
-</script>
-<?php endif; ?>
+        // Modal de confirmation de suppression de contrat
+        let formToDelete = null;
+        const deleteContratModal = document.getElementById('deleteContratModal');
+        const deleteContratClose = document.getElementById('deleteContratModalClose');
+        const cancelDeleteContrat = document.getElementById('cancelDeleteContrat');
+        const confirmDeleteContrat = document.getElementById('confirmDeleteContrat');
+
+        document.querySelectorAll('.delete-contrat-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                formToDelete = document.getElementById(btn.dataset.formId);
+                deleteContratModal.classList.add('open');
+            });
+        });
+
+        function closeDeleteContratModal() {
+            deleteContratModal.classList.remove('open');
+            formToDelete = null;
+        }
+
+        deleteContratClose.addEventListener('click', closeDeleteContratModal);
+        cancelDeleteContrat.addEventListener('click', closeDeleteContratModal);
+        deleteContratModal.addEventListener('click', (e) => {
+            if (e.target === deleteContratModal) closeDeleteContratModal();
+        });
+
+        confirmDeleteContrat.addEventListener('click', () => {
+            if (formToDelete) formToDelete.submit();
+        });
+    </script>
+
+    <!-- Toastify pour messages PRG -->
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <?php if (!empty($prgMessages)): ?>
+        <script>
+            window.addEventListener('DOMContentLoaded', () => {
+                <?= prg_render_toasts($prgMessages) ?>
+            });
+        </script>
+    <?php endif; ?>
 
 </body>
+
 </html>
