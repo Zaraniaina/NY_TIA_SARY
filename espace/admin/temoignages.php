@@ -1,10 +1,11 @@
 <?php
+
 declare(strict_types=1);
 require_once __DIR__ . '/../../util/auth_guard.php';
 require_once __DIR__ . '/../../util/prg_helper.php';
 requireAdmin();
 
-require_once __DIR__.'/composante/tolbarDto.php';
+require_once __DIR__ . '/composante/tolbarDto.php';
 $titre = "Témoignages clients";
 
 // ── TRAITEMENT POST (PRG Pattern) ──────────────────────────────────────────
@@ -39,6 +40,7 @@ $notesMoy = count($temoignages) > 0
 ?>
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -50,7 +52,7 @@ $notesMoy = count($temoignages) > 0
     <style>
         .temo-card {
             background: rgba(255, 255, 255, 1);
-            border: 1px solid rgba(255,255,255,0.08);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 14px;
             padding: 20px 22px;
             display: flex;
@@ -58,114 +60,214 @@ $notesMoy = count($temoignages) > 0
             gap: 12px;
             transition: border-color .2s;
         }
-        .temo-card:hover { border-color: rgba(255,255,255,0.18); }
-        .temo-header { display:flex; align-items:center; gap:14px; }
-        .temo-avatar { width:46px; height:46px; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,.15); flex-shrink:0; }
-        .temo-stars { color:#f5c518; letter-spacing:2px; font-size:1rem; }
-        .temo-msg { font-size:0.92rem; color:black; line-height:1.6; font-style:italic; }
-        .temo-meta { font-size:0.78rem; color:#888; }
-        .star-bar { display:flex; gap:4px; align-items:center; }
-        .star-full { color:#f5c518; }
-        .star-empty { color:#444; }
+
+        .temo-card:hover {
+            border-color: rgba(255, 255, 255, 0.18);
+        }
+
+        .temo-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .temo-avatar {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, .15);
+            flex-shrink: 0;
+        }
+
+        .temo-stars {
+            color: #f5c518;
+            letter-spacing: 2px;
+            font-size: 1rem;
+        }
+
+        .temo-msg {
+            font-size: 0.92rem;
+            color: black;
+            line-height: 1.6;
+            font-style: italic;
+        }
+
+        .temo-meta {
+            font-size: 0.78rem;
+            color: #888;
+        }
+
+        .star-bar {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .star-full {
+            color: #f5c518;
+        }
+
+        .star-empty {
+            color: #444;
+        }
     </style>
 
     <!-- Toastify CSS -->
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 
 </head>
+
 <body>
-<div class="dashboard-wrapper">
-    <?php include __DIR__ . '/composante/sidebar.php'; ?>
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="dashboard-wrapper">
+        <?php include __DIR__ . '/composante/sidebar.php'; ?>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <div class="dashboard-main">
-        <?php include __DIR__ . '/composante/tolbar.php'; ?>
+        <div class="dashboard-main">
+            <?php include __DIR__ . '/composante/tolbar.php'; ?>
 
-        <div class="dashboard-content">
-            <nav class="dash-breadcrumb">
-                <a href="home.php">Dashboard</a>
-                <i class="fas fa-chevron-right" style="font-size:.65rem;"></i>
-                <span>Témoignages</span>
-            </nav>
+            <div class="dashboard-content">
+                <nav class="dash-breadcrumb">
+                    <a href="home.php">Dashboard</a>
+                    <i class="fas fa-chevron-right" style="font-size:.65rem;"></i>
+                    <span>Témoignages</span>
+                </nav>
 
-            
 
-            <!-- Stats rapides -->
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:28px;">
-                <div class="dash-stat-card">
-                    <div class="stat-icon green"><i class="fas fa-star"></i></div>
-                    <div class="stat-info">
-                        <div class="stat-value"><?= count($temoignages) ?></div>
-                        <div class="stat-label">Avis reçus</div>
+
+                <!-- Stats rapides -->
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:28px;">
+                    <div class="dash-stat-card">
+                        <div class="stat-icon green"><i class="fas fa-star"></i></div>
+                        <div class="stat-info">
+                            <div class="stat-value"><?= count($temoignages) ?></div>
+                            <div class="stat-label">Avis reçus</div>
+                        </div>
+                    </div>
+                    <div class="dash-stat-card">
+                        <div class="stat-icon green"><i class="fas fa-trophy"></i></div>
+                        <div class="stat-info">
+                            <div class="stat-value"><?= $notesMoy ?><span style="font-size:0.8rem;color:#aaa;"> / 5</span></div>
+                            <div class="stat-label">Note moyenne</div>
+                        </div>
                     </div>
                 </div>
-                <div class="dash-stat-card">
-                    <div class="stat-icon green"><i class="fas fa-trophy"></i></div>
-                    <div class="stat-info">
-                        <div class="stat-value"><?= $notesMoy ?><span style="font-size:0.8rem;color:#aaa;"> / 5</span></div>
-                        <div class="stat-label">Note moyenne</div>
+
+                <!-- LISTE DES TEMOIGNAGES -->
+                <?php if (empty($temoignages)): ?>
+                    <div class="dash-card">
+                        <div class="dash-card-body">
+                            <div class="empty-state">
+                                <i class="fas fa-comment-slash"></i>
+                                <p>Aucun témoignage pour l'instant.</p>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                <?php else: ?>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px;">
+                        <?php foreach ($temoignages as $t): ?>
+                            <div class="temo-card">
+                                <div class="temo-header">
+                                    <img src="../../<?= htmlspecialchars($t['PHOTO_CLIENT']) ?>"
+                                        alt="<?= htmlspecialchars($t['PRENOM_CLIENT']) ?>"
+                                        class="temo-avatar"
+                                        onerror="this.src='../../assets/images/avatar.png'">
+                                    <div style="flex:1;">
+                                        <div style="font-weight:700;font-size:0.95rem;"><?= htmlspecialchars($t['PRENOM_CLIENT'] . ' ' . $t['NOM_CLIENT']) ?></div>
+                                        <div class="temo-meta"><?= htmlspecialchars($t['LIB_PRESTATION']) ?> — <?= date('d/m/Y', strtotime($t['DATE_RESERVATION'])) ?></div>
+                                    </div>
+                                    <div class="star-bar">
+                                        <?php for ($i = 1; $i <= 5; $i++): ?>
+                                            <i class="fas fa-star <?= $i <= (int)$t['NOTE'] ? 'star-full' : 'star-empty' ?>"></i>
+                                        <?php endfor; ?>
+                                    </div>
+                                </div>
+                                <blockquote class="temo-msg">"<?= htmlspecialchars($t['MESS_RESERVATION']) ?>"</blockquote>
+                                <div style="display:flex;justify-content:flex-end;">
+                                    <form method="POST" id="deleteTemoForm-<?= (int)$t['ID_TEMOIGNAGE'] ?>">
+                                        <input type="hidden" name="action" value="delete">
+                                        <input type="hidden" name="id_temoignage" value="<?= (int)$t['ID_TEMOIGNAGE'] ?>">
+                                        <button type="button" class="btn-dash btn-dash-danger btn-dash-sm confirm-delete-btn"
+                                            data-form-id="deleteTemoForm-<?= (int)$t['ID_TEMOIGNAGE'] ?>"
+                                            data-message="Supprimer ce témoignage ?">
+                                            <i class="fas fa-trash"></i> Supprimer
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
             </div>
-
-            <!-- LISTE DES TEMOIGNAGES -->
-            <?php if (empty($temoignages)): ?>
-                <div class="dash-card"><div class="dash-card-body"><div class="empty-state">
-                    <i class="fas fa-comment-slash"></i>
-                    <p>Aucun témoignage pour l'instant.</p>
-                </div></div></div>
-            <?php else: ?>
-                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px;">
-                <?php foreach ($temoignages as $t): ?>
-                    <div class="temo-card">
-                        <div class="temo-header">
-                            <img src="../../<?= htmlspecialchars($t['PHOTO_CLIENT']) ?>"
-                                 alt="<?= htmlspecialchars($t['PRENOM_CLIENT']) ?>"
-                                 class="temo-avatar"
-                                 onerror="this.src='../../assets/images/avatar.png'">
-                            <div style="flex:1;">
-                                <div style="font-weight:700;font-size:0.95rem;"><?= htmlspecialchars($t['PRENOM_CLIENT'].' '.$t['NOM_CLIENT']) ?></div>
-                                <div class="temo-meta"><?= htmlspecialchars($t['LIB_PRESTATION']) ?> — <?= date('d/m/Y', strtotime($t['DATE_RESERVATION'])) ?></div>
-                            </div>
-                            <div class="star-bar">
-                                <?php for ($i = 1; $i <= 5; $i++): ?>
-                                    <i class="fas fa-star <?= $i <= (int)$t['NOTE'] ? 'star-full' : 'star-empty' ?>"></i>
-                                <?php endfor; ?>
-                            </div>
-                        </div>
-                        <blockquote class="temo-msg">"<?= htmlspecialchars($t['MESS_RESERVATION']) ?>"</blockquote>
-                        <div style="display:flex;justify-content:flex-end;">
-                            <form method="POST" onsubmit="return confirm('Supprimer ce témoignage ?');">
-                                <input type="hidden" name="action" value="delete">
-                                <input type="hidden" name="id_temoignage" value="<?= (int)$t['ID_TEMOIGNAGE'] ?>">
-                                <button class="btn-dash btn-dash-danger btn-dash-sm"><i class="fas fa-trash"></i> Supprimer</button>
-                            </form>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
         </div>
     </div>
-</div>
+    <!-- ── MODAL CONFIRMATION ─────────────────────────────────────────── -->
+    <div class="dash-modal" id="confirmDeleteModal">
+        <div class="dash-modal-content">
+            <button class="dash-modal-close" id="confirmDeleteModalClose">&times;</button>
+            <h3>Confirmation</h3>
+            <p id="confirmDeleteMessage">Êtes-vous sûr ?</p>
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+                <button type="button" class="btn-dash btn-dash-danger" id="confirmDeleteYes">Oui, supprimer</button>
+                <button type="button" class="btn-dash btn-dash-outline" id="confirmDeleteCancel">Annuler</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        const toggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        toggle?.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        });
+        overlay?.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+        });
 
-<script>
-const toggle  = document.getElementById('sidebarToggle');
-const sidebar = document.getElementById('sidebar');
-const overlay = document.getElementById('sidebarOverlay');
-toggle?.addEventListener('click', () => { sidebar.classList.toggle('open'); overlay.classList.toggle('open'); });
-overlay?.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('open'); });
-</script>
+        // ── Modal générique de confirmation ──
+        let formToConfirmDelete = null;
+        const confirmDeleteModal = document.getElementById('confirmDeleteModal');
+        const confirmDeleteMessage = document.getElementById('confirmDeleteMessage');
+        const confirmDeleteClose = document.getElementById('confirmDeleteModalClose');
+        const confirmDeleteCancel = document.getElementById('confirmDeleteCancel');
+        const confirmDeleteYes = document.getElementById('confirmDeleteYes');
 
-<!-- Toastify pour messages PRG -->
-<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-<?php if (!empty($prgMessages)): ?>
-<script>
-window.addEventListener('DOMContentLoaded', () => {
-    <?= prg_render_toasts($prgMessages) ?>
-});
-</script>
-<?php endif; ?>
+        document.querySelectorAll('.confirm-delete-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                formToConfirmDelete = document.getElementById(btn.dataset.formId);
+                confirmDeleteMessage.textContent = btn.dataset.message || 'Êtes-vous sûr ?';
+                confirmDeleteModal.classList.add('open');
+            });
+        });
+
+        function closeConfirmDeleteModal() {
+            confirmDeleteModal.classList.remove('open');
+            formToConfirmDelete = null;
+        }
+
+        confirmDeleteClose.addEventListener('click', closeConfirmDeleteModal);
+        confirmDeleteCancel.addEventListener('click', closeConfirmDeleteModal);
+        confirmDeleteModal.addEventListener('click', (e) => {
+            if (e.target === confirmDeleteModal) closeConfirmDeleteModal();
+        });
+
+        confirmDeleteYes.addEventListener('click', () => {
+            if (formToConfirmDelete) formToConfirmDelete.submit();
+        });
+    </script>
+
+    <!-- Toastify pour messages PRG -->
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <?php if (!empty($prgMessages)): ?>
+        <script>
+            window.addEventListener('DOMContentLoaded', () => {
+                <?= prg_render_toasts($prgMessages) ?>
+            });
+        </script>
+    <?php endif; ?>
 
 </body>
+
 </html>

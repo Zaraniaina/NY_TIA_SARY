@@ -782,11 +782,14 @@ if ($viewFacId) {
                                                 <div class="pay-amount"><i class="fas fa-coins" style="font-size:.8rem;"></i> <?= number_format((int)$pay['MONTANT_PAIEMENT'], 0, ',', ' ') ?> Ar</div>
                                                 <div class="pay-date"><i class="fas fa-calendar-alt" style="font-size:.72rem;"></i> <?= date('d/m/Y', strtotime($pay['DATE_PAIEMENT'])) ?></div>
                                             </div>
-                                            <form method="POST" style="margin:0;" onsubmit="return confirm('Supprimer ce paiement ?');">
+                                            <form method="POST" style="margin:0;" id="deletePaymentForm-<?= (int)$pay['ID_PAIEMENT'] ?>">
                                                 <input type="hidden" name="action" value="delete_payment">
                                                 <input type="hidden" name="id_paiement" value="<?= (int)$pay['ID_PAIEMENT'] ?>">
                                                 <input type="hidden" name="id_facture" value="<?= (int)$facSelected['ID_FACTURE'] ?>">
-                                                <button type="submit" class="pay-delete-btn" title="Supprimer ce paiement">
+                                                <button type="button" class="pay-delete-btn confirm-delete-btn"
+                                                    data-form-id="deletePaymentForm-<?= (int)$pay['ID_PAIEMENT'] ?>"
+                                                    data-message="Supprimer ce paiement ?"
+                                                    title="Supprimer ce paiement">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </form>
@@ -818,16 +821,18 @@ if ($viewFacId) {
                         </div>
                         <div class="dash-card-body">
                             <!-- BARRE DE RECHERCHE -->
-                            <form method="GET" action="" style="display:flex;gap:8px;margin-bottom:16px;">
-                                <div class="dash-search-bar" style="margin:0;flex:1;">
-                                    <i class="fas fa-search"></i>
-                                    <input type="text" name="q" value="<?= htmlspecialchars($search) ?>" placeholder="Rechercher par n° de facture ou client...">
-                                </div>
-                                <button type="submit" class="btn-dash btn-dash-primary" style="padding:10px 14px;"><i class="fas fa-search"></i> Filtrer</button>
-                                <?php if ($search !== ''): ?>
-                                    <a href="factures.php" class="btn-dash btn-dash-outline" style="padding:10px 14px;text-decoration:none;"><i class="fas fa-times"></i> Ràz</a>
-                                <?php endif; ?>
-                            </form>
+                            <div style="padding:16px 20px;">
+                                <form method="GET" action="" style="display:flex;gap:8px;">
+                                    <div class="dash-search-bar" style="margin:0;flex:1;">
+                                        <i class="fas fa-search"></i>
+                                        <input type="text" name="q" value="<?= htmlspecialchars($search) ?>" placeholder="Rechercher par n° de facture ou client...">
+                                    </div>
+                                    <button type="submit" class="btn-dash btn-dash-primary" style="padding:10px 14px;"><i class="fas fa-search"></i> Filtrer</button>
+                                    <?php if ($search !== ''): ?>
+                                        <a href="factures.php" class="btn-dash btn-dash-outline" style="padding:10px 14px;text-decoration:none;"><i class="fas fa-times"></i> Ràz</a>
+                                    <?php endif; ?>
+                                </form>
+                            </div>
 
                             <?php if (empty($factures)): ?>
                                 <div class="empty-state"><i class="fas fa-file-invoice"></i>
@@ -907,10 +912,14 @@ if ($viewFacId) {
                                                                 class="btn-dash btn-dash-outline btn-dash-sm" title="Télécharger le PDF">
                                                                 <i class="fas fa-file-pdf"></i>
                                                             </a>
-                                                            <form method="POST" style="display:inline;margin:0;" onsubmit="return confirm('Supprimer cette facture et tous ses paiements ?');">
+                                                            <form method="POST" style="display:inline;margin:0;" id="deleteFactureForm-<?= (int)$f['ID_FACTURE'] ?>">
                                                                 <input type="hidden" name="action" value="delete">
                                                                 <input type="hidden" name="id_facture" value="<?= (int)$f['ID_FACTURE'] ?>">
-                                                                <button class="btn-dash btn-dash-danger btn-dash-sm"><i class="fas fa-trash"></i></button>
+                                                                <button type="button" class="btn-dash btn-dash-danger btn-dash-sm confirm-delete-btn"
+                                                                    data-form-id="deleteFactureForm-<?= (int)$f['ID_FACTURE'] ?>"
+                                                                    data-message="Supprimer cette facture et tous ses paiements ?">
+                                                                    <i class="fas fa-trash"></i>
+                                                                </button>
                                                             </form>
                                                         </div>
                                                     </td>
@@ -982,7 +991,18 @@ if ($viewFacId) {
             </form>
         </div>
     </div>
-
+    <!-- ── MODAL CONFIRMATION SUPPRESSION (générique) ─────────────────── -->
+    <div class="dash-modal" id="confirmDeleteModal">
+        <div class="dash-modal-content">
+            <button class="dash-modal-close" id="confirmDeleteModalClose">&times;</button>
+            <h3>Confirmation</h3>
+            <p id="confirmDeleteMessage">Êtes-vous sûr ?</p>
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+                <button type="button" class="btn-dash btn-dash-danger" id="confirmDeleteYes">Oui, supprimer</button>
+                <button type="button" class="btn-dash btn-dash-outline" id="confirmDeleteCancel">Annuler</button>
+            </div>
+        </div>
+    </div>
     <script>
         const toggle = document.getElementById('sidebarToggle');
         const sidebar = document.getElementById('sidebar');
@@ -1012,6 +1032,36 @@ if ($viewFacId) {
         }
         document.getElementById('payModal').addEventListener('click', function(e) {
             if (e.target === this) closePayModal();
+        });
+        // ── Modal générique de confirmation de suppression ──
+        let formToConfirmDelete = null;
+        const confirmDeleteModal = document.getElementById('confirmDeleteModal');
+        const confirmDeleteMessage = document.getElementById('confirmDeleteMessage');
+        const confirmDeleteClose = document.getElementById('confirmDeleteModalClose');
+        const confirmDeleteCancel = document.getElementById('confirmDeleteCancel');
+        const confirmDeleteYes = document.getElementById('confirmDeleteYes');
+
+        document.querySelectorAll('.confirm-delete-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                formToConfirmDelete = document.getElementById(btn.dataset.formId);
+                confirmDeleteMessage.textContent = btn.dataset.message || 'Êtes-vous sûr ?';
+                confirmDeleteModal.classList.add('open');
+            });
+        });
+
+        function closeConfirmDeleteModal() {
+            confirmDeleteModal.classList.remove('open');
+            formToConfirmDelete = null;
+        }
+
+        confirmDeleteClose.addEventListener('click', closeConfirmDeleteModal);
+        confirmDeleteCancel.addEventListener('click', closeConfirmDeleteModal);
+        confirmDeleteModal.addEventListener('click', (e) => {
+            if (e.target === confirmDeleteModal) closeConfirmDeleteModal();
+        });
+
+        confirmDeleteYes.addEventListener('click', () => {
+            if (formToConfirmDelete) formToConfirmDelete.submit();
         });
     </script>
 
