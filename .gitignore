@@ -6,3 +6,5 @@ assets/uploads/
 __MACOSX/
 .DS_Store
 *.log
+graphify-out
+docs
